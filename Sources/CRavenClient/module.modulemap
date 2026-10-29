@@ -1,0 +1,7 @@
+// raven_client.h (the Raven engine's C ABI: raven_call / raven_free) as the Swift module CRavenClient.
+// Used only when Package.swift links the engine (RAVEN_ENGINE=1); the static library itself is
+// linked by Package.swift by its full path, so there is no `link` line here.
+module CRavenClient [system] {
+    header "../../core/node/crates/raven-client/include/raven_client.h"
+    export *
+}
