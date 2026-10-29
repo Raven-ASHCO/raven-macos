@@ -14,8 +14,12 @@ submodule at `core/`.
 
 **In development.** There is no Developer ID signed or notarised build. `scripts/make-release.sh`
 makes a DMG signed ad hoc (see "Install from the DMG"); nothing is published for download yet. The
-app uses whatever the engine allows: in a release engine only direct messaging on the local network
-is on, and every other way to reach friends is a lab feature that stays off (see `core/README.md`).
+app uses whatever the engine allows. A release engine of version 0.1.0 reaches friends on the local
+network, over the internet (direct, by hole punching or through a friend's relay) and through the Tor
+network, which with the default settings is the way between two different networks; Bluetooth nearby
+is on for macOS (you turn it on), and so are friend custody and groups. Cards carry no internet
+address. Everything else stays a lab feature (see `core/README.md` and
+`core/docs/HOW_RAVEN_CONNECTS.md`).
 Without the engine (a plain `swift build`) the app shows the engine-missing screen. **MockRaven**,
 an in-memory engine that follows the contract and replays demo events, is compiled only into debug
 and demo builds and runs only when asked (`RAVEN_DEMO=1`).
@@ -85,6 +89,24 @@ this app completely. Only do it if you trust where your copy of Raven came from.
 4. It shows your security words. Compare them with a friend's (in person or on a call) to verify
    each other.
 
+**Friends on other networks: Tor.** On the same Wi-Fi or network, Raven connects to your friend
+directly. Between different networks (home and office, a phone hotspot, another country), Raven goes
+through the Tor network by default, with `raven-tor-helper` inside the app; there is nothing to set
+up and no port to open. Your friend does not see your IP address on this path, and you do not see
+theirs. Tor is slower:
+
+- **The first start can take a minute or two** (sometimes a few minutes) before friends on other
+  networks can reach you. Leave Raven open meanwhile.
+- A message over Tor takes longer than on the same network (about 10 to 30 seconds in the October
+  2026 field test).
+- Some networks block Tor. Raven then has only the direct ways, which do not always work between
+  different networks.
+
+**Who else Raven talks to.** Tor relays (the first one sees your IP address and that you use Tor,
+never what you send), and two public STUN servers, Cloudflare's and Google's, which Raven asks what
+your public internet address is. That question carries no key, no name and nothing about your
+friends.
+
 **Keychain.** macOS may ask whether "Raven" or "raven-node" may use an item in your keychain (the
 window can be hidden behind other windows). Enter your login password and click **Always Allow**,
 not Deny. Raven and raven-node are two programs, so each may ask once.
@@ -111,10 +133,14 @@ If you clicked Don't Allow, or are not sure:
 Raven can reach a verified friend whose Mac is close by (a room or two) over Bluetooth, with no Wi-Fi
 or internet at all. It uses Bluetooth only for this, and never pairs with devices.
 
+**Turn it on first.** Bluetooth nearby is off until you turn it on: in Raven, open Settings >
+Network > **Open the Network page**, and turn on **Bluetooth nearby**. Do the same on your friend's
+Mac.
+
 **The permission is for "RavenNearby", not "Raven".** Raven's Bluetooth work runs in a small helper
 inside the app, called RavenNearby (macOS may also show it as "Raven Nearby"). It holds no keys and
-sees only encrypted data. The first time Raven uses Bluetooth, macOS asks: **Allow "RavenNearby" to
-use Bluetooth?** Click **Allow**.
+sees only encrypted data. The first time Raven uses Bluetooth (right after you turn it on), macOS
+asks: **Allow "RavenNearby" to use Bluetooth?** Click **Allow**.
 
 If you clicked Don't Allow, or Raven's Network page says Bluetooth is not allowed:
 
@@ -459,8 +485,8 @@ Everything behind `RavenEngine`. `MockRaven` (compiled only with `DEBUG` or `-DR
   `profile.state`;
 - node start/stop (listening comes up 1.5 s after start; `node.stop` says `stopped`, or `managed` for
   a raven-node a login service runs, see `runNodeAsLoginService`) and settings;
-- the network ops as a release build by default (LAN direct on, every other way `preview`, a held way
-  refused with `NOT_AVAILABLE_YET`), or with `network: .lab` (`RAVEN_MOCK_NETWORK=lab`) as a developer
+- the network ops as a release build before version 0.1.0 by default (LAN direct on, every other way
+  `preview`, a held way refused with `NOT_AVAILABLE_YET`), or with `network: .lab` (`RAVEN_MOCK_NETWORK=lab`) as a developer
   build with `MockRaven.labSwitches`: Internet direct, port mapping and friend custody `off`, p2p
   and route hints `lab` (p2p running with one relay), handoff `off`, Bluetooth nearby
   `not_on_this_os`; `CONSENT_NEEDED` without `agreed`; `restart_needed` for Internet, p2p, port
@@ -562,8 +588,8 @@ SwiftUI timing curves with the prototype's overshoot) and springs.
 ## Groups
 
 Built on `groups.*` (API.md "Groups", from feature/groups; 16 members, the creator is the only admin
-and can't leave, joining is automatic). `groups.list` `available: false` (a release engine, or no
-`RAVEN_LAB_GROUPS`) hides the Groups section and New group. Events: `group_message` (a member's
+and can't leave, joining is automatic; on in a release engine since version 0.1.0). `groups.list`
+`available: false` (an engine whose groups gate is held) hides the Groups section and New group. Events: `group_message` (a member's
 message; the event's `message` is decoded as a GroupMessage) and `group_changed` (the group is read
 again: `groups.get`, `groups.history`). MockRaven has one demo group, "Book club" (you are its admin;
 Ali, Mina, and Sam who is not your friend), with per-member receipts, and plays a receipt and a
