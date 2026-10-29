@@ -1,10 +1,12 @@
 #!/bin/bash
-# Make an unsigned developer DMG with the "Drag Raven to Applications" layout:
-# the volume holds Raven.app and a symlink to /Applications.
+# Make a DMG with the "Drag Raven to Applications" layout: the volume holds Raven.app and a symlink
+# to /Applications. The image itself is not signed; the app in it is signed as make-app.sh left it.
 #
 #   scripts/make-dmg.sh [path/to/Raven.app] [output.dmg] [--layout]
 #
-# Defaults: dist/Raven.app -> dist/Raven.dmg (next to the app).
+# Defaults: dist/Raven.app -> dist/Raven.dmg (next to the app). Next to the image it writes
+# <output.dmg>.sha256 (`shasum -a 256`, with the file name only, so `shasum -a 256 -c` works in that
+# folder).
 #
 # --layout also sets the Finder window (background with the arrow and "Drag Raven to Applications",
 # icon positions). That needs the image mounted and Finder scripted, so it OPENS A FINDER WINDOW;
@@ -18,6 +20,8 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP="${1:-$HERE/dist/Raven.app}"
 APP="$(cd "$(dirname "$APP")" && pwd)/$(basename "$APP")"
 DMG="${2:-$(dirname "$APP")/Raven.dmg}"
+mkdir -p "$(dirname "$DMG")"
+DMG="$(cd "$(dirname "$DMG")" && pwd)/$(basename "$DMG")"
 LAYOUT=0
 if [ "${3:-}" = "--layout" ]; then LAYOUT=1; fi
 VOLUME="Raven"
@@ -30,7 +34,7 @@ STAGE="$WORK/stage"
 mkdir -p "$STAGE"
 cp -R "$APP" "$STAGE/"
 ln -s /Applications "$STAGE/Applications"
-rm -f "$DMG"
+rm -f "$DMG" "$DMG.sha256"
 
 if [ "$LAYOUT" = "0" ]; then
     echo "==> Creating $DMG"
@@ -71,4 +75,6 @@ OSA
 fi
 
 hdiutil verify "$DMG" >/dev/null
+(cd "$(dirname "$DMG")" && shasum -a 256 "$(basename "$DMG")") > "$DMG.sha256"
 echo "==> Done: $DMG ($(du -h "$DMG" | cut -f1))"
+echo "==> SHA-256: $(cut -d' ' -f1 "$DMG.sha256") ($DMG.sha256)"

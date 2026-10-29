@@ -12,12 +12,160 @@ submodule at `core/`.
 
 ## Status
 
-**In development.** There is no signed or notarised build and nothing to download yet. The app
-uses whatever the engine allows: in a release engine only direct messaging on the local network is
-on, and every other way to reach friends is a lab feature that stays off (see `core/README.md`).
+**In development.** There is no Developer ID signed or notarised build. `scripts/make-release.sh`
+makes a DMG signed ad hoc (see "Install from the DMG"); nothing is published for download yet. The
+app uses whatever the engine allows: in a release engine only direct messaging on the local network
+is on, and every other way to reach friends is a lab feature that stays off (see `core/README.md`).
 Without the engine (a plain `swift build`) the app shows the engine-missing screen. **MockRaven**,
 an in-memory engine that follows the contract and replays demo events, is compiled only into debug
 and demo builds and runs only when asked (`RAVEN_DEMO=1`).
+
+## Install from the DMG
+
+Raven for macOS comes as a disk image, `Raven-0.1.0.dmg`. You need a Mac with Apple silicon (M1 or
+newer) and macOS 13 or later. It does not run on Intel Macs.
+
+Raven is not notarised by Apple, so macOS stops it the first time. The steps below get past that
+once. Please read "An honest note" at the end before you install.
+
+### 1. Check the download (optional)
+
+Next to the disk image there is `Raven-0.1.0.dmg.sha256`. In Terminal, in the folder with both files:
+
+```sh
+shasum -a 256 -c Raven-0.1.0.dmg.sha256
+```
+
+It must say `Raven-0.1.0.dmg: OK`. If it does not, do not open the file.
+
+### 2. Install
+
+1. Double-click `Raven-0.1.0.dmg`. A window opens with Raven and an Applications folder.
+2. Drag **Raven** onto **Applications**.
+3. Eject the disk image (the eject button next to "Raven" in the Finder sidebar).
+
+Always open Raven from Applications, not from the disk image window.
+
+### 3. Open Raven the first time
+
+macOS checks every app from the internet. Raven has no Apple Developer ID and is not notarised, so
+macOS cannot check it and stops it. You allow it once:
+
+1. Open **Applications** and double-click **Raven**. macOS says **"Raven" Not Opened** ("Apple could
+   not verify "Raven" is free of malware..."). Click **Done**, not Move to Trash.
+2. Open **System Settings** (Apple menu) > **Privacy & Security**. Scroll down to **Security**. It
+   says **"Raven" was blocked to protect your Mac.** Click **Open Anyway**.
+   The button stays there for about an hour after you tried to open Raven. If you do not see it,
+   double-click Raven again, then come back.
+3. macOS asks once more. Click **Open Anyway**, then enter your login password (or use Touch ID).
+
+Raven opens. From now on it opens like any other app.
+
+Right-click (or Control-click) > Open no longer gets past this check on recent macOS (since macOS 15;
+these steps were checked on macOS 27.2). Use System Settings as above.
+
+**If you use Terminal:** instead of the steps above you can run
+
+```sh
+xattr -dr com.apple.quarantine /Applications/Raven.app
+```
+
+Warning: this removes the "downloaded from the internet" mark from Raven, so macOS skips its check of
+this app completely. Only do it if you trust where your copy of Raven came from.
+
+### 4. What Raven does on first start
+
+1. It asks for a name. The name is only shown on this computer and is never sent to anyone.
+2. It asks whether to receive messages. If you say yes, Raven starts a small background program
+   (`raven-node`, inside the app) that listens on your network (port 7420), so your friends can
+   reach you. Only friends you add can send you anything.
+3. It creates your Raven identity: a private key that never leaves this Mac. Your keys are stored in
+   your login Keychain; your friends and messages are in the hidden folder `~/.raven` in your home
+   folder, encrypted.
+4. It shows your security words. Compare them with a friend's (in person or on a call) to verify
+   each other.
+
+**Keychain.** macOS may ask whether "Raven" or "raven-node" may use an item in your keychain (the
+window can be hidden behind other windows). Enter your login password and click **Always Allow**,
+not Deny. Raven and raven-node are two programs, so each may ask once.
+
+**Firewall.** If the macOS firewall is on, macOS may ask whether "raven-node" may accept incoming
+network connections. Click **Allow**, or friends cannot reach you. (Later: System Settings >
+Network > Firewall > Options.)
+
+### 5. Local Network: allow it
+
+When Raven starts receiving, macOS asks: **Allow "Raven" to find devices on local networks?**
+Click **Allow**. Without it, friends on the same Wi-Fi or network cannot reach you, and you cannot
+reach them.
+
+If you clicked Don't Allow, or are not sure:
+
+1. Open **System Settings** > **Privacy & Security** > **Local Network**.
+2. Turn on **Raven**.
+3. Restart Raven's background program: click the Raven icon in the menu bar > **Quit and stop the
+   background program**, then open Raven again.
+
+### 6. Bluetooth
+
+Raven can reach a verified friend whose Mac is close by (a room or two) over Bluetooth, with no Wi-Fi
+or internet at all. It uses Bluetooth only for this, and never pairs with devices.
+
+**The permission is for "RavenNearby", not "Raven".** Raven's Bluetooth work runs in a small helper
+inside the app, called RavenNearby (macOS may also show it as "Raven Nearby"). It holds no keys and
+sees only encrypted data. The first time Raven uses Bluetooth, macOS asks: **Allow "RavenNearby" to
+use Bluetooth?** Click **Allow**.
+
+If you clicked Don't Allow, or Raven's Network page says Bluetooth is not allowed:
+
+1. Open **System Settings** > **Privacy & Security** > **Bluetooth**.
+2. Turn on **RavenNearby**.
+3. Click the Raven icon in the menu bar > **Quit and stop the background program**, then open Raven
+   again. (Raven also tries again by itself after a while.)
+
+Good to know:
+
+- **Bluetooth must be on**, on both Macs (Control Center or System Settings > Bluetooth).
+- **Mac to Mac only for now.** Raven for Windows and Raven for Linux have no Bluetooth yet.
+- **Verified friends only.** You must have compared security words with the friend, and your two
+  computers must have connected at least once before in another way (same network or internet).
+  Both clocks must be right (within about 15 minutes).
+- **After an update, macOS may ask again.** Raven is signed without an Apple Developer ID, so macOS
+  can treat a new version as a new app. If it asks again for Bluetooth (or Local Network, or the
+  keychain), allow it again. If Bluetooth stops working after an update, check that RavenNearby is
+  still turned on in System Settings > Privacy & Security > Bluetooth.
+
+### 7. Quit, and remove Raven
+
+**Quit.** Closing the window keeps Raven receiving in the background. Click the Raven icon in the menu
+bar:
+
+- **Quit window (keeps receiving)**: friends can still reach you.
+- **Quit and stop the background program**: Raven stops completely until you open it again.
+
+Settings > When I quit sets what Quit does by default.
+
+**Remove.**
+
+1. Click the Raven icon in the menu bar > **Quit and stop the background program**.
+2. Drag **Raven** from Applications to the Trash.
+
+Your identity, friends and messages stay on this Mac (`~/.raven` and your keychain), so installing
+Raven again brings them back. To erase them too: delete the folder `~/.raven` (Finder > Go > Go to
+Folder, type `~/.raven`), and in Keychain Access delete the items whose names start with
+`app.raven.node`. **This cannot be undone:** your identity is gone and your friends must add you
+again. You can also remove Raven and RavenNearby from System Settings > Privacy & Security > Local
+Network and Bluetooth.
+
+### An honest note
+
+- **Not notarised.** This Raven is signed "ad hoc", not with an Apple Developer ID, and Apple has not
+  scanned it. macOS cannot tell you who made it. Get it only from Raven's own site or repository and
+  check its SHA-256 (step 1).
+- **Not independently reviewed.** Raven's security has not been reviewed by an independent security
+  firm yet. Do not rely on it where your safety depends on it.
+- Problems: please open an issue in the repository. Security problems: please write to
+  security@raven-messager.com, not a public issue.
 
 ## Requirements
 
@@ -72,9 +220,15 @@ it, which `-lraven_client` would pick instead) plus what the engine needs from t
 link). SwiftPM re-reads the manifest when these variables change, so switching between them in one
 build folder works (it rebuilds RavenUI).
 
-`scripts/build-engine.sh [release|dev]` runs `cargo build -p raven-client -p raven-node` (with
+`scripts/build-engine.sh [release|dev]` runs `cargo build --locked -p raven-client -p raven-node` (with
 `--release` for release) in `core/node/`, with `MACOSX_DEPLOYMENT_TARGET=13.0`, the app's minimum (without it
-the SQLCipher C code is built for the SDK's macOS 27). It builds for this Mac's architecture only. The
+the SQLCipher C code is built for the SDK's macOS 27), and with the raven-node features a release needs,
+`raven-node/tor` (the Tor helper `raven-tor-helper`) and `raven-node/nearby-radio` (the Bluetooth helper
+`raven-nearby-helper`; `RAVEN_NODE_FEATURES` overrides the list). The output goes to `$CARGO_TARGET_DIR`
+when it is set, else `core/node/target`. A release build rewrites home-folder paths in the binaries
+(the dependencies' source paths in panic messages, `__FILE__` in the bundled C code) to start with `~`,
+so no user name ships (`RUSTFLAGS` `--remap-path-prefix`, `CFLAGS` `-ffile-prefix-map`;
+`RAVEN_REMAP_PATHS=0|1` overrides). It builds for this Mac's architecture only. The
 **dev** engine exists for tests and smoke runs: a release engine refuses the file-backed secret stores
 (`RAVEN_*_BACKEND=locked-file`), so on a test profile it can only report the profile as unreadable.
 
@@ -146,16 +300,36 @@ file-backed stores.
 ## App bundle and DMG
 
 ```sh
+scripts/make-release.sh [out-dir]              # out-dir/Raven-<version>.dmg and .dmg.sha256 (default: dist/)
 scripts/make-app.sh [out-dir]                  # out-dir/Raven.app on the engine, arm64 (default: dist/)
 RAVEN_DEMO=1 scripts/make-app.sh [out-dir]     # the demo on MockRaven, universal (arm64 + x86_64)
-scripts/make-dmg.sh [Raven.app] [out.dmg]      # unsigned developer DMG: Raven.app + Applications link
+scripts/make-dmg.sh [Raven.app] [out.dmg]      # DMG: Raven.app + Applications link, and out.dmg.sha256
 ```
 
-- **Engine.** `make-app.sh` runs `scripts/build-engine.sh` (release), builds the app with
-  `RAVEN_ENGINE=1`, and copies `raven-node` to `Contents/MacOS/raven-node`: the engine starts the
-  `raven-node` next to the app's executable (`RAVEN_NODE_BIN` overrides it; then the CLI's lookup).
-  `raven-node` is signed ad hoc before the bundle. `RAVEN_ENGINE=dev scripts/make-app.sh` links the
-  dev engine and its raven-node instead, for smoke runs on a test profile only (never ship it).
+- **Release.** `make-release.sh` runs `make-app.sh` into a temporary folder, then `make-dmg.sh` (without
+  `--layout`, so no Finder window opens) into `out-dir/Raven-<version>.dmg` with its SHA-256 next to it,
+  and removes the temporary app: no release `Raven.app` is left to be opened by accident (a release build
+  runs on the real profile `~/.raven` and the login Keychain).
+- **Engine and helpers.** `make-app.sh` runs `scripts/build-engine.sh` (release) and links the app with
+  that engine (`RAVEN_ENGINE_LIB`). The bundle carries everything the app needs to reach friends:
+
+  ```
+  Raven.app/Contents/MacOS/Raven                  the app, with the engine (raven-client) linked in
+  Raven.app/Contents/Helpers/raven-node           the background program the app starts
+  Raven.app/Contents/Helpers/raven-tor-helper     Tor (Arti) in its own process, started by raven-node
+  Raven.app/Contents/Helpers/RavenNearby.app      Bluetooth (CoreBluetooth), started by raven-node
+  Raven.app/Contents/Resources/                   Raven.icns, Raven_RavenUI.bundle (texts, word list)
+  ```
+
+  The engine starts the program `RAVEN_NODE_BIN` names, else the `raven-node` next to the app's
+  executable; at start the app sets `RAVEN_NODE_BIN` to `Contents/Helpers/raven-node` unless it is set
+  already (`BundledNode.swift`). raven-node finds `raven-tor-helper` and `RavenNearby.app` next to
+  itself. `RavenNearby.app` gets the core's Info.plist (`core/node/crates/raven-node/macos/`: bundle id
+  `org.raven.nearby`, `NSBluetoothAlwaysUsageDescription`) with this release's version and macOS 13 as
+  its minimum. raven-node starts it as its own responsible process
+  (`responsibility_spawnattrs_setdisclaim`), so macOS asks for Bluetooth for "RavenNearby", not for
+  Raven. `RAVEN_ENGINE=dev scripts/make-app.sh` links the dev engine and its raven-node and helpers
+  instead (Swift build in `.build/engine-dev`), for smoke runs on a test profile only (never ship it).
 - **arm64 only with the engine.** The engine is built with the Rust targets already installed, which
   here is `aarch64-apple-darwin` only (the x86_64 target is not installed and the scripts install
   nothing). An Intel slice without the engine and raven-node could only show the engine-missing
@@ -167,8 +341,17 @@ scripts/make-dmg.sh [Raven.app] [out.dmg]      # unsigned developer DMG: Raven.a
   `lipo`), writes `Info.plist` (bundle id `io.github.raven-ashco.Raven`, the macOS spelling
   of the shared app id in `core/desktop/README.md`, `LSUIElement` false, macOS 13 minimum,
   `NSLocalNetworkUsageDescription` taken from `setup.receive.body`), draws `Raven.icns`, copies the
-  resource bundle into `Contents/Resources`, and signs the bundle ad hoc (`codesign --sign -`;
-  `RAVEN_SIGN=0` skips it). This is not a Developer ID signature and not notarised.
+  resource bundle into `Contents/Resources`, and signs ad hoc (`codesign --sign -`; `RAVEN_SIGN=0` skips
+  it), inside out: the resource bundle, `RavenNearby.app`, `raven-tor-helper`
+  (`io.github.raven-ashco.Raven.tor-helper`), `raven-node` (`io.github.raven-ashco.Raven.node`), then the
+  app, every piece of code with the hardened runtime (`RAVEN_HARDENED=0` leaves it off; none of them needs
+  an entitlement), and checks the result with `codesign --verify --deep --strict`. Before signing it
+  removes the rpath the Swift driver adds to the toolchain's folder (the app loads only system
+  libraries, by absolute path; a load through `@rpath` stops the build), and a release build stops if
+  any binary still names the home folder. This is not a
+  Developer ID signature and not notarised: Gatekeeper rejects the app until the user allows it (see
+  "Install from the DMG"), and macOS may ask again for Bluetooth, Local Network and the keychain after
+  an update, because an ad-hoc signature changes with every build.
 - **Universal demo build.** The Command Line Tools build x86_64 (`swift build -c release --arch x86_64`
   works), but for the macOS 27 SDK they ship Swift's back-deployment libraries
   (`libswiftCompatibility*.a`, among them `CompatibilityPacks`) for arm64 only, so an x86_64 build for
@@ -185,8 +368,9 @@ scripts/make-dmg.sh [Raven.app] [out.dmg]      # unsigned developer DMG: Raven.a
   as a 40% grey) and centred at 66% of the tile. `iconutil` turns the iconset into `Raven.icns`.
 - A release build has no mock. For a clickable demo bundle use `RAVEN_DEMO=1 scripts/make-app.sh`
   (adds `-DRAVEN_MOCK`; no engine, no raven-node).
-- `make-dmg.sh` stages `Raven.app` with a symlink to `/Applications` and runs `hdiutil create`
-  (UDZO) and `hdiutil verify`; it never mounts or opens the image. `--layout` as a third argument
+- `make-dmg.sh` stages `Raven.app` with a symlink to `/Applications`, runs `hdiutil create`
+  (UDZO) and `hdiutil verify`, and writes `out.dmg.sha256` (`shasum -a 256`); it never mounts or opens
+  the image. `--layout` as a third argument
   also sets the Finder window (background with the arrow and "Drag Raven to Applications", icon
   positions); that mounts the image and scripts Finder, so it opens a Finder window. The background
   is `dmg-background.png` from `RavenSnapshots`.
@@ -211,6 +395,7 @@ Sources/
     Support/  Strings.swift       `Str`: every key the app uses (all in strings.en.json)
               TimeText.swift      `{when}`, `{left}`, `{time}`, `{secs}` from the `time.*` texts
               AppIdentity.swift   the bundle id `io.github.raven-ashco.Raven`
+              BundledNode.swift   the app bundle's own raven-node (`Contents/Helpers`, `RAVEN_NODE_BIN`)
               Theme.swift         tokens.json -> palette (light/dark), sizes, durations
               Sanitizer.swift     strips control, bidi, zero-width and invisible characters
               WordInput.swift     splitting typed security words (Persian/Arabic-Indic digits ignored), old-code key and groups
@@ -222,10 +407,10 @@ Sources/
              DebugSnapshotHook.swift  RAVEN_DEBUG_SNAPSHOT_DIR for the running app (debug only)
     Resources/                    copies of strings.en.json, tokens.json, the word list and the mark
 Tests/RavenUITests/               MockRaven, events and motion triggers, words, old code, privacy, strings,
-                                  time texts, polling, threading, app id, sanitiser, engine extras,
-                                  NetworkModelTests (the Network screens on MockRaven),
+                                  time texts, polling, threading, app id, bundled raven-node, sanitiser,
+                                  engine extras, NetworkModelTests (the Network screens on MockRaven),
                                   EngineTests.swift (the real engine; only with RAVEN_ENGINE)
-scripts/  build-engine.sh, make-app.sh, make-icon.swift, make-dmg.sh, sync-design.sh
+scripts/  build-engine.sh, make-app.sh, make-icon.swift, make-dmg.sh, make-release.sh, sync-design.sh
 ```
 
 `Resources/` holds copies of the design files (SwiftPM resources must live inside the target). After

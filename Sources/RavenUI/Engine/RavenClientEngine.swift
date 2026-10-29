@@ -10,9 +10,12 @@ import CRavenClient
 ///
 /// The engine is one per process and works on the profile the CLI uses (`RAVEN_DATA_DIR`, else
 /// `~/.raven`), read on the first call. `raven_call` may block (`node.start` takes a few seconds), so
-/// it runs on `EngineQueue`, never on the main thread (see `call`).
+/// it runs on `EngineQueue`, never on the main thread (see `call`). In an app bundle the engine starts
+/// the bundle's own raven-node (`BundledNode`, `Contents/Helpers/raven-node`).
 public final class RavenClientEngine: RavenEngine, @unchecked Sendable {
-    public init() {}
+    public init() {
+        BundledNode.useBundledNode()
+    }
 
     public func call(op: String, args: [String: JSONValue]) async throws -> JSONValue {
         let response = await EngineQueue.run(RavenEnvelope.request(op: op, args: args)) { request in
