@@ -238,19 +238,28 @@ enum EngineProfile {
         #expect(try EngineProfile.raw("verify.word_hint", ["prefix": "tur"])["result"]?["known"]?.bool == true)
     }
 
-    /// Groups without the lab switches: `groups.list` says not available (the app shows no Groups
-    /// section) and every other group op is NOT_AVAILABLE_YET, through the app's own wrappers.
-    @Test func groupsAreHeldWithoutTheLabSwitch() async throws {
-        guard ProcessInfo.processInfo.environment["RAVEN_LAB_GROUPS"] == nil else { return }
+    /// Groups follow the engine's gate, through the app's own wrappers: on since raven-core 0.1.0,
+    /// in release and debug builds; a debug build closes them with `RAVEN_LAB_GROUPS=0`. Closed,
+    /// `groups.list` says not available (the app shows no Groups section) and every other group op is
+    /// NOT_AVAILABLE_YET; open, it lists this profile's groups (none yet) once the identity exists.
+    @Test(.enabled(if: EngineProfile.isDevEngine, "needs the engine's debug build (RAVEN_ENGINE=dev)"))
+    func groupsFollowTheEnginesGate() async throws {
         _ = EngineProfile.ready()
         let engine = RavenClientEngine()
-        let list = try await engine.groups()
-        #expect(!list.available && list.groups.isEmpty)
-        do {
-            _ = try await engine.groupHistory("00000000000000000000000000000000")
-            Issue.record("groups.history answered without the lab switch")
-        } catch let e as RavenError {
-            #expect([ErrorCode.notAvailableYet, ErrorCode.notInitialized].contains(e.code), "\(e.code)")
+        if ProcessInfo.processInfo.environment["RAVEN_LAB_GROUPS"] == "0" {
+            let list = try await engine.groups()
+            #expect(!list.available && list.groups.isEmpty)
+            do {
+                _ = try await engine.groupHistory("00000000000000000000000000000000")
+                Issue.record("groups.history answered with groups closed")
+            } catch let e as RavenError {
+                #expect([ErrorCode.notAvailableYet, ErrorCode.notInitialized].contains(e.code), "\(e.code)")
+            }
+        } else {
+            // The suite runs in order: aNewProfileFromWelcomeToReady made the identity before this.
+            guard try await engine.profileState().state == .ready else { return }
+            let list = try await engine.groups()
+            #expect(list.available && list.groups.isEmpty)
         }
     }
 
