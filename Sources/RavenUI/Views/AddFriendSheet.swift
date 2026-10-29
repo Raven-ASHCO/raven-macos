@@ -150,6 +150,14 @@ public struct AddFriendSheet: View {
                 .padding(10)
                 .background(RoundedRectangle(cornerRadius: Theme.shared.radius.control).fill(p.surfaceMuted))
                 .overlay(RoundedRectangle(cornerRadius: Theme.shared.radius.control).stroke(p.border, lineWidth: 0.5))
+                // The card named internet or p2p addresses, which the engine left out (card.parse's
+                // ignored_routes and note): say so in plain words.
+                if summary.leftOutAddresses {
+                    Text(tr(.addPasteIgnoredRoutes))
+                        .font(RFont.smallish)
+                        .foregroundColor(p.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
 
                 VStack(alignment: .leading, spacing: 6) {
                     Text(tr(.addNameTitle)).font(RFont.bodyBold)

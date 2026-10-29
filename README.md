@@ -452,6 +452,9 @@ uses and `StringsTests` checks that each one exists (there are no fallback texts
   until Wed 12:05"); a friend with unread messages shows `home.newFrom` ("1 new from Rena").
 - The paste field of Add a friend uses `add.step2` ("Paste theirs") as its placeholder, the name field
   `add.name.title`; copying a message reuses `add.share.copy`.
+- When `card.parse` left a card's internet or p2p addresses out (`ignored_routes`, `note`; a release
+  engine never reads them, nothing signs them), Add a friend shows `add.paste.ignoredRoutes` under the
+  summary instead of the engine's `note`, which is written for the terminal.
 - `Info.plist`'s `NSLocalNetworkUsageDescription` (the macOS Local Network prompt) uses
   `setup.receive.body`.
 - Engine error messages: `MockRaven` and `MissingEngine` use the `error.*` texts, the wording

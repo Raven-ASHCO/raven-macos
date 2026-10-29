@@ -328,6 +328,22 @@ import Testing
         #expect(parsed["result"]?["has_address"]?.bool == true)
     }
 
+    /// card.parse as a release engine answers it: internet and p2p addresses in a card are left out
+    /// (`ignored_routes`, `note`), and the add-friend step then says so.
+    @Test func cardAddressesNobodySignsAreLeftOut() async throws {
+        let mock = readyMock(demo: false)
+        let base = "raven-card/1 address=\(MockRaven.aliAddress) pub_hex=00 fingerprint=x"
+        let routed = try await mock.parseCard(base + " inet=203.0.113.7:7420 p2p=/ip4/198.51.100.2/udp/7423")
+        #expect(routed.ignoredRoutes == ["internet", "p2p"] && routed.note != nil)
+        #expect(routed.leftOutAddresses && !routed.hasAddress)
+        let lan = try await mock.parseCard(base + " lan=10.0.0.2:7420")
+        #expect(!lan.leftOutAddresses && lan.hasAddress && lan.note == nil)
+        // An older engine sends neither field.
+        let old = try JSONValue.parse(#"{"short_address":"rvn1…","has_address":false,"routes":[]}"#).decode(CardSummary.self)
+        #expect(!old.leftOutAddresses)
+        #expect(!tr(.addPasteIgnoredRoutes).isEmpty)
+    }
+
     // MARK: Contacts, settings, lock
 
     @Test func addContactAndNameClash() async throws {

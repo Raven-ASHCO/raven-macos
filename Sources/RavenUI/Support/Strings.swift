@@ -111,6 +111,7 @@ public enum Str: String, CaseIterable, Sendable {
     case addPasteBody = "add.paste.body"
     case addPasteSummary = "add.paste.summary"
     case addPasteSummaryNoAddress = "add.paste.summaryNoAddress"
+    case addPasteIgnoredRoutes = "add.paste.ignoredRoutes"
     case addPasteChange = "add.paste.change"
     case addNameTitle = "add.name.title"
     case addNameNote = "add.name.note"

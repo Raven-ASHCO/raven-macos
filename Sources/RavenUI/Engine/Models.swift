@@ -216,6 +216,23 @@ public struct CardSummary: Codable, Equatable, Sendable {
     public var shortAddress: String
     public var hasAddress: Bool
     public var routes: [CardRoute]
+    /// The route kinds (`internet`, `p2p`) the card named that the engine left out: nothing signs a
+    /// card's addresses, so a release engine never reads them (missing from an older engine).
+    public var ignoredRoutes: [String]?
+    /// The engine's one line about them (terminal wording; the app shows `add.paste.ignoredRoutes`).
+    public var note: String?
+
+    public init(shortAddress: String, hasAddress: Bool, routes: [CardRoute],
+                ignoredRoutes: [String]? = nil, note: String? = nil) {
+        self.shortAddress = shortAddress
+        self.hasAddress = hasAddress
+        self.routes = routes
+        self.ignoredRoutes = ignoredRoutes
+        self.note = note
+    }
+
+    /// Whether the app says that addresses in the card were left out.
+    public var leftOutAddresses: Bool { note != nil || !(ignoredRoutes ?? []).isEmpty }
 }
 
 public struct MessageDetails: Codable, Equatable, Sendable {

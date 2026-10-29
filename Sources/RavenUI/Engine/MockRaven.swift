@@ -279,8 +279,11 @@ public final class MockRaven: RavenEngine, @unchecked Sendable {
             var routes: [JSONValue] = []
             if parsed.lan != nil { routes.append(["kind": "lan", "label": .string(tr(.netLan)), "preview": false]) }
             routes.append(["kind": "internet", "label": .string(tr(.netInternet)), "preview": true])
+            // As a release engine: a card's internet and p2p addresses are left out (nothing signs them).
             return ["short_address": .string(MockRaven.short(parsed.address)), "has_address": .bool(parsed.lan != nil),
-                    "routes": .array(routes)]
+                    "routes": .array(routes), "ignored_routes": .array(parsed.ignored.map { .string($0) }),
+                    "note": parsed.ignored.isEmpty ? .null
+                        : .string("note: Raven ignored this card's addresses: no key signs a card's addresses")]
         case "contacts.list":
             return ["contacts": .array(try contacts.map { try JSONValue.encode(withUnread($0)) })]
         case "contacts.add":
@@ -1352,7 +1355,7 @@ public final class MockRaven: RavenEngine, @unchecked Sendable {
         return (card, invite, includeAddress ? lan : nil)
     }
 
-    struct ParsedCard { let address: String; let lan: String? }
+    struct ParsedCard { let address: String; let lan: String?; var ignored: [String] = [] }
 
     func parseCard(_ text: String) throws -> ParsedCard {
         let clean = Sanitizer.line(text, maxLength: 2000)
@@ -1364,7 +1367,8 @@ public final class MockRaven: RavenEngine, @unchecked Sendable {
                 if kv.count == 2 { fields[String(kv[0])] = String(kv[1]) }
             }
             guard let address = fields["address"], MockRaven.looksLikeAddress(address) else { throw invalid }
-            return ParsedCard(address: address, lan: fields["lan"] ?? fields["inet"])
+            let ignored = [("inet", "internet"), ("p2p", "p2p")].filter { fields[$0.0] != nil }.map(\.1)
+            return ParsedCard(address: address, lan: fields["lan"], ignored: ignored)
         }
         if clean.hasPrefix("raven:") {
             let parts = clean.dropFirst("raven:".count).split(separator: ":", maxSplits: 1)
