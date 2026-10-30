@@ -26,7 +26,7 @@ and demo builds and runs only when asked (`RAVEN_DEMO=1`).
 
 ## Install from the DMG
 
-Raven for macOS comes as a disk image, `Raven-0.1.0.dmg`. You need a Mac with Apple silicon (M1 or
+Raven for macOS comes as a disk image, `Raven-0.1.1.dmg`. You need a Mac with Apple silicon (M1 or
 newer) and macOS 13 or later. It does not run on Intel Macs.
 
 Raven is not notarised by Apple, so macOS stops it the first time. The steps below get past that
@@ -34,17 +34,17 @@ once. Please read "An honest note" at the end before you install.
 
 ### 1. Check the download (optional)
 
-Next to the disk image there is `Raven-0.1.0.dmg.sha256`. In Terminal, in the folder with both files:
+Next to the disk image there is `Raven-0.1.1.dmg.sha256`. In Terminal, in the folder with both files:
 
 ```sh
-shasum -a 256 -c Raven-0.1.0.dmg.sha256
+shasum -a 256 -c Raven-0.1.1.dmg.sha256
 ```
 
-It must say `Raven-0.1.0.dmg: OK`. If it does not, do not open the file.
+It must say `Raven-0.1.1.dmg: OK`. If it does not, do not open the file.
 
 ### 2. Install
 
-1. Double-click `Raven-0.1.0.dmg`. A window opens with Raven and an Applications folder.
+1. Double-click `Raven-0.1.1.dmg`. A window opens with Raven and an Applications folder.
 2. Drag **Raven** onto **Applications**.
 3. Eject the disk image (the eject button next to "Raven" in the Finder sidebar).
 
@@ -332,6 +332,10 @@ RAVEN_DEMO=1 scripts/make-app.sh [out-dir]     # the demo on MockRaven, universa
 scripts/make-dmg.sh [Raven.app] [out.dmg]      # DMG: Raven.app + Applications link, and out.dmg.sha256
 ```
 
+- **Version.** The app's version is in the file `VERSION` (now 0.1.1): `make-app.sh` writes it into
+  both Info.plists (`RAVEN_VERSION` overrides it) and `make-release.sh` names the DMG after it. The
+  engine keeps its own version, raven-core's (`core/node/Cargo.toml`, 0.1.0), which `app.info`
+  reports; About and Settings > Updates show the app's version (`AppIdentity.shownVersion`).
 - **Release.** `make-release.sh` runs `make-app.sh` into a temporary folder, then `make-dmg.sh` (without
   `--layout`, so no Finder window opens) into `out-dir/Raven-<version>.dmg` with its SHA-256 next to it,
   and removes the temporary app: no release `Raven.app` is left to be opened by accident (a release build
@@ -405,6 +409,7 @@ scripts/make-dmg.sh [Raven.app] [out.dmg]      # DMG: Raven.app + Applications l
 
 ```
 Package.swift
+VERSION                           the app's version (make-app.sh, make-release.sh)
 Sources/
   CRavenClient/module.modulemap   raven_client.h as a Swift module (used only with the engine)
   Raven/RavenApp.swift            App: Window, Settings, MenuBarExtra, commands, quit handling
@@ -420,7 +425,7 @@ Sources/
               Display.swift       text decisions (tick text, status line, heartbeat, way states, path chips), unit-tested
     Support/  Strings.swift       `Str`: every key the app uses (all in strings.en.json)
               TimeText.swift      `{when}`, `{left}`, `{time}`, `{secs}` from the `time.*` texts
-              AppIdentity.swift   the bundle id `io.github.raven-ashco.Raven`
+              AppIdentity.swift   the bundle id `io.github.raven-ashco.Raven`, the version shown
               BundledNode.swift   the app bundle's own raven-node (`Contents/Helpers`, `RAVEN_NODE_BIN`)
               Theme.swift         tokens.json -> palette (light/dark), sizes, durations
               Sanitizer.swift     strips control, bidi, zero-width and invisible characters

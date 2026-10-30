@@ -11,6 +11,20 @@ import Testing
         #expect(readme.contains("`\(AppIdentity.bundleID)`"))
     }
 
+    /// The app's own version (VERSION, written into Info.plist by make-app.sh) is the one shown; the
+    /// engine's is shown only where the app has none (`swift run`).
+    @Test func theAppShowsItsOwnVersion() throws {
+        #expect(AppIdentity.shownVersion(bundle: "0.1.1", engine: "0.1.0") == "0.1.1")
+        #expect(AppIdentity.shownVersion(bundle: nil, engine: "0.1.0") == "0.1.0")
+        #expect(AppIdentity.shownVersion(bundle: " ", engine: "0.1.0") == "0.1.0")
+        #expect(AppIdentity.shownVersion(bundle: nil, engine: nil) == nil)
+        let version = try String(contentsOf: packageRoot.appendingPathComponent("VERSION"), encoding: .utf8)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        #expect(version.range(of: #"^\d+\.\d+\.\d+$"#, options: .regularExpression) != nil, "VERSION: \(version)")
+        let script = try String(contentsOf: packageRoot.appendingPathComponent("scripts/make-app.sh"), encoding: .utf8)
+        #expect(script.contains("\"$HERE/VERSION\""))
+    }
+
     @Test func makeAppWritesTheBundleID() throws {
         let script = try String(contentsOf: packageRoot.appendingPathComponent("scripts/make-app.sh"), encoding: .utf8)
         #expect(script.contains("<key>CFBundleIdentifier</key><string>\(AppIdentity.bundleID)</string>"))

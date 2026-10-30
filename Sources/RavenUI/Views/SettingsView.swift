@@ -566,7 +566,8 @@ struct UpdatesSettingsSection: View {
 
     private func versionLine() -> String {
         let build = (model.network.status?.build ?? model.appInfo?.build) == "release" ? tr(.netBuildRelease) : tr(.netBuildDev)
-        guard let version = model.appInfo?.version else { return build }
+        guard let version = AppIdentity.shownVersion(bundle: AppIdentity.bundleVersion, engine: model.appInfo?.version)
+        else { return build }
         return tr(.netVersion, ["version": version]) + " · " + build
     }
 }
@@ -585,7 +586,8 @@ struct AboutSection: View {
                     RavenMark(size: 74, color: p.textPrimary).padding(.bottom, 8)
                     Text(tr(.appName)).font(.system(size: 20, weight: .bold))
                     Text(tr(.appTagline)).font(.system(size: 13)).foregroundColor(p.textSecondary)
-                    if let version = model.appInfo?.version {
+                    if let version = AppIdentity.shownVersion(bundle: AppIdentity.bundleVersion,
+                                                              engine: model.appInfo?.version) {
                         Text(tr(.netVersion, ["version": version])).font(.system(size: 13)).foregroundColor(p.textSecondary)
                     }
                     Text(AppIdentity.bundleID).font(.system(size: 12)).foregroundColor(p.textTertiary)

@@ -26,7 +26,8 @@
 #                       helpers (Swift build in .build/engine-dev). Only for smoke runs with the
 #                       file-backed test stores, which a release engine refuses; never ship it.
 #   RAVEN_VERSION=x.y.z CFBundleShortVersionString of the app and of RavenNearby.app (default: the
-#                       version of core/node/Cargo.toml's workspace, else 0.1.0)
+#                       app's version in the file VERSION at the top of this repository; the engine
+#                       keeps its own, core/node/Cargo.toml's workspace version, which app.info reports)
 #   CARGO_TARGET_DIR    where cargo builds the engine (default core/node/target)
 #   RAVEN_SIGN=0        skip the ad-hoc signatures (by default every piece of code is signed ad hoc
 #                       with `codesign --sign -`, inside out: the resource bundle, RavenNearby.app,
@@ -59,8 +60,11 @@ NODE_DIR="$HERE/core/node"
 OUT="${1:-$HERE/dist}"
 mkdir -p "$OUT"
 OUT="$(cd "$OUT" && pwd)"
-CORE_VERSION="$(sed -n '/^\[workspace\.package\]/,/^\[/s/^version *= *"\([^"]*\)".*/\1/p' "$NODE_DIR/Cargo.toml" 2>/dev/null | head -n 1)"
-VERSION="${RAVEN_VERSION:-${CORE_VERSION:-0.1.0}}"
+VERSION="${RAVEN_VERSION:-$(tr -d '[:space:]' < "$HERE/VERSION" 2>/dev/null || true)}"
+case "$VERSION" in
+    [0-9]*.[0-9]*.[0-9]*) ;;
+    *) echo "No app version: put x.y.z in VERSION (or set RAVEN_VERSION)." >&2; exit 1 ;;
+esac
 BUILD_NUMBER="$(date -u +%Y%m%d%H%M)"
 MIN_MACOS="13.0"
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/raven-app.XXXXXX")"
