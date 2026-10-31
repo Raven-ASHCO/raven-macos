@@ -55,8 +55,7 @@ public enum RavenEnvelope {
         return (op, value["args"]?.object ?? [:])
     }
 
-    /// Parses a response; throws the failure as `RavenError`. Unknown fields are ignored. A message
-    /// that sends you to a terminal is shown without that step (`AppText`; the whole one stays in Details).
+    /// Parses a response; throws the failure as `RavenError`. Unknown fields are ignored.
     public static func parseResponse(_ json: String) throws -> JSONValue {
         let value: JSONValue
         do { value = try JSONValue.parse(json) } catch {
@@ -66,7 +65,7 @@ public enum RavenEnvelope {
         let e = value["error"]
         throw RavenError(code: Sanitizer.line(e?["code"]?.string ?? ErrorCode.internalError, maxLength: 40),
                          message: Sanitizer.text(e?["message"]?.string ?? tr(.errorBadResponse), maxLength: 600),
-                         detail: Sanitizer.text(e?["detail"]?.string ?? "", maxLength: 4000)).withoutTerminalSteps()
+                         detail: Sanitizer.text(e?["detail"]?.string ?? "", maxLength: 4000))
     }
 }
 

@@ -41,8 +41,8 @@ struct SecurityPage: View {
                             if i > 0 { Rule() }
                             NoticeRow(notice: notice)
                         }
-                        if !s.notices.isEmpty, let resolve = Display.securityResolveLine {
-                            Text(resolve).font(RFont.small).foregroundColor(p.textSecondary)
+                        if !s.notices.isEmpty {
+                            Text(Display.securityResolveLine).font(RFont.small).foregroundColor(p.textSecondary)
                                 .fixedSize(horizontal: false, vertical: true)
                                 .padding(.bottom, 8)
                         }
@@ -208,7 +208,7 @@ struct UpdatesPage: View {
                 }
                 VStack(alignment: .leading, spacing: 3) {
                     Text(tr(.updatesInstall)).font(RFont.bodyBold).fixedSize(horizontal: false, vertical: true)
-                    // The terminal command: Technical details only (E1).
+                    // The engine's install text: Technical details only (E1).
                     if let text = Display.updatesInstallDetail(u.installText) { TechnicalDetails(lines: [text]) }
                 }
             } else if net.updatesError == nil {

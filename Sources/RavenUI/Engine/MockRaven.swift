@@ -402,7 +402,7 @@ public final class MockRaven: RavenEngine, @unchecked Sendable {
                 // A login service runs it: left running (API.md, Node).
                 var v = try JSONValue.encode(node)
                 v["stop"] = "managed"
-                v["note"] = "A login service runs Raven's background program; it was left running. Restart it with: raven node restart"
+                v["note"] = "Raven's background program runs as a login service, which would start it again; it was left running."
                 return v
             }
             let was = node.running
@@ -1046,7 +1046,7 @@ public final class MockRaven: RavenEngine, @unchecked Sendable {
     }
 
     private func updatesStatus() -> JSONValue {
-        let installText = "Install updates with `raven update install` in a terminal. The app shows what is ready; it doesn't install yet."
+        let installText = "The app shows what is ready; it doesn't install updates yet."
         guard network == .lab else {
             return ["available": false, "bundles": false, "from_friends": false, "lab": false,
                     "lines": ["Raven updates are not part of this version."], "install": "cli_only",

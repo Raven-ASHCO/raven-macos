@@ -80,8 +80,15 @@ enum EngineProfile {
         // profile.state.
         #expect(try await engine.privacyState() == PrivacyState(available: false, encrypted: false, locked: false))
         #expect(try EngineProfile.raw("privacy.unlock")["result"]?["state"]?.string == "new")
-        for op in ["privacy.lock", "privacy.encrypt"] {
-            #expect(try EngineProfile.raw(op)["error"]?["code"]?.string == ErrorCode.notAvailableYet, "\(op)")
+        // Their message names no command (no app installs `raven`), so the app shows it as it is;
+        // the CLI's command is in `detail` (Details).
+        for (op, command) in [("privacy.lock", "raven lock"), ("privacy.encrypt", "raven privacy seal-now")] {
+            let error = try EngineProfile.raw(op)["error"]
+            #expect(error?["code"]?.string == ErrorCode.notAvailableYet, "\(op)")
+            let message = error?["message"]?.string ?? ""
+            #expect(!message.isEmpty && !MacUXFixesTests.namesATerminalStep(message), "\(op): \(message)")
+            #expect(!message.lowercased().contains("terminal"), "\(op): \(message)")
+            #expect(error?["detail"]?.string?.contains(command) == true, "\(op)")
         }
 
         // Settings chosen during setup are kept in memory until the identity exists.
@@ -165,7 +172,15 @@ enum EngineProfile {
         #expect(check.summary.contains { $0.key == "identity" } && check.router == nil)
         _ = try await engine.securityStatus()
         _ = try await engine.lockState()
-        #expect(try await engine.updatesStatus().install == "cli_only")
+        let updates = try await engine.updatesStatus()
+        #expect(updates.install == "cli_only")
+        // Settings > Updates shows install_text as it is: it says the app doesn't install, no command.
+        let installText = try #require(Display.updatesInstallDetail(updates.installText))
+        #expect(!MacUXFixesTests.namesATerminalStep(installText) && !installText.lowercased().contains("terminal"), "\(installText)")
+        // The plain words of Check network name no command either (the doctor's own are under Technical details).
+        for line in CheckNetworkPage.plainLines(check.rows) {
+            #expect(!MacUXFixesTests.namesATerminalStep(line), "\(line)")
+        }
 
         // The app opens the ready profile on the engine: no friends yet.
         let ready = AppModel(engine: engine)

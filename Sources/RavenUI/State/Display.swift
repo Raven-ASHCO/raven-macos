@@ -380,38 +380,33 @@ extension Display {
         version.map { tr(.appName) + " · " + tr(.netVersion, ["version": $0]) }
     }
 
-    /// Lock while running's note (Settings > Lock and the Security page), with no terminal step.
+    /// Lock while running's note (Settings > Lock and the Security page).
     public static func lockNote(_ lock: LockState?) -> String {
-        guard let lock, lock.available else { return AppText.withoutTerminalSteps(tr(.lockNotAvailable)) }
-        guard lock.supported else { return AppText.withoutTerminalSteps(tr(.lockNotSupported)) }
+        guard let lock, lock.available else { return tr(.lockNotAvailable) }
+        guard lock.supported else { return tr(.lockNotSupported) }
         if lock.hasPassphrase == false { return tr(.lockNoPassphrase) }
         return tr(.lockReady)
     }
 
-    /// The Raven passphrase row: what it is, and that this app doesn't set it yet (not "raven
-    /// passphrase in a terminal").
+    /// The Raven passphrase row: what it is, and that this app doesn't set it yet.
     public static var passphraseLine: String { tr(.settingsPassphraseBody) + " " + tr(.lockPassphraseNotInApp) }
 
-    /// Whether Raven keeps security notices (`security.status` `kept`), with no terminal step.
+    /// Whether Raven keeps security notices (`security.status` `kept`).
     public static func securityKept(_ word: String) -> String {
         switch word {
         case "live": return tr(.securityKeptLive)
-        case "unsealed": return AppText.withoutTerminalSteps(tr(.securityKeptUnsealed))
+        case "unsealed": return tr(.securityKeptUnsealed)
         default: return tr(.securityKeptOff)
         }
     }
 
-    /// Under the notices: how to resolve one, when that needs no terminal (today it does: no line).
-    public static var securityResolveLine: String? {
-        let line = AppText.withoutTerminalSteps(tr(.securityResolve))
-        return line.isEmpty ? nil : line
-    }
+    /// Under the notices: that this app doesn't mark a notice as resolved yet.
+    public static var securityResolveLine: String { tr(.securityResolve) }
 
-    /// `updates.status` `install_text` for Technical details, without the terminal command.
+    /// `updates.status` `install_text` for Technical details (the engine's words name no command).
     public static func updatesInstallDetail(_ text: String?) -> String? {
-        guard let text else { return nil }
-        let shown = AppText.withoutTerminalSteps(text)
-        return shown.isEmpty ? nil : shown
+        guard let text = text?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty else { return nil }
+        return text
     }
 
     /// Remove from group's question: who, and whether you can add them back (only friends can be added).

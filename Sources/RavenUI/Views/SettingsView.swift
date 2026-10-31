@@ -547,8 +547,7 @@ struct UpdatesSettingsSection: View {
                                  tone: u.fromFriends == true ? .success : .warning)
                     }
                 }
-                // Installing isn't in this app yet; the row says so (no "In the terminal": the DMG
-                // installs no raven command).
+                // Installing isn't in this app yet; the row says so.
                 CalmItem(tr(.updatesTitle), tr(.updatesInstall))
             }
             if let error = model.network.updatesError { ErrorNote(error) }

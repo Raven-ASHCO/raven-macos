@@ -308,7 +308,7 @@ public final class AppModel: ObservableObject {
             case .locked: phase = .locked
             case .unreadable:
                 phase = .failed(RavenError(code: ErrorCode.profileUnreadable, message: profile.reason ?? tr(.errorInternal),
-                                           detail: profile.detail ?? "").withoutTerminalSteps())
+                                           detail: profile.detail ?? ""))
             }
         } catch {
             engineLog.notice("""

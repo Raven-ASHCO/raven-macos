@@ -127,59 +127,80 @@ import Testing
 
     // MARK: 6. No terminal
 
-    /// The DMG installs no `raven` command, so no text tells you to type one: the app leaves those
-    /// sentences out of its own texts and of the engine's.
-    @Test func noTextSendsYouToATerminal() throws {
-        let cases = [
-            ("Lock while running isn't in this version of Raven yet. In a terminal, raven lock stops Raven instead.",
-             "Lock while running isn't in this version of Raven yet."),
-            ("This isn't in the Raven app yet. Run `raven lock` in a terminal. Nothing was changed.",
-             "This isn't in the Raven app yet. Nothing was changed."),
-            ("Install updates with `raven update install` in a terminal. The app shows what is ready; it doesn't install yet.",
-             "The app shows what is ready; it doesn't install yet."),
-            ("Raven couldn't unlock. Run `raven unlock` in a terminal.", "Raven couldn't unlock."),
-            ("A friend could hold this for Ali, but friend mailboxes are off. To use them, run `raven custody use on`.",
-             "A friend could hold this for Ali, but friend mailboxes are off."),
-            ("To mark a notice as resolved, use raven security resolve in a terminal.", ""),
-            ("Something went wrong inside Raven. Try again; if it keeps happening, open Details.",
-             "Something went wrong inside Raven. Try again; if it keeps happening, open Details."),
-        ]
-        for (text, shown) in cases { #expect(AppText.withoutTerminalSteps(text) == shown) }
+    /// A sentence that sends you to a terminal: it says "in a terminal" (or "the terminal"), or asks
+    /// you to run or use a `raven`/`ash` command (in lower case: "with Raven" is not a command).
+    static func namesATerminalStep(_ text: String) -> Bool {
+        let patterns = [#"\b(?i:in|from|use) (?i:a|the) (?i:terminal)\b"#,
+                        #"\b(?i:run|use|with):?\s+`?(raven|ash) [a-z]"#,
+                        #"`(raven|ash) [a-z]"#]
+        return patterns.contains { text.range(of: $0, options: .regularExpression) != nil }
+    }
 
-        // An engine error (engine.rs, not_in_the_app): the step is left out, the original stays in Details.
-        let failure = RavenEnvelope.failure(RavenError(
-            code: ErrorCode.notAvailableYet,
-            message: "This isn't in the Raven app yet. Run `raven privacy seal-now` in a terminal. Nothing was changed.",
-            detail: "privacy.encrypt: not in the desktop app yet (raven privacy seal-now)"))
-        #expect(throws: RavenError.self) { try RavenEnvelope.parseResponse(failure) }
-        do { _ = try RavenEnvelope.parseResponse(failure) } catch let error as RavenError {
-            #expect(error.message == "This isn't in the Raven app yet. Nothing was changed.")
-            #expect(error.detail.contains("raven privacy seal-now"))
+    /// The DMG installs no `raven` command, so no text tells you to type one. raven-core took those
+    /// steps out of the shared texts and of the engine's messages (b409d94), so the app shows both as
+    /// they are: the app's own filter (AppText) is gone, and nothing it shows needs one.
+    @Test func noTextSendsYouToATerminal() async throws {
+        // The check still catches what the old texts said, and lets "the terminal app" be.
+        #expect(Self.namesATerminalStep("Lock while running isn't in this version of Raven yet. In a terminal, raven lock stops Raven instead."))
+        #expect(Self.namesATerminalStep("To mark a notice as resolved, use raven security resolve in a terminal."))
+        #expect(Self.namesATerminalStep("Install updates with `raven update install` in a terminal."))
+        #expect(Self.namesATerminalStep("Raven couldn't unlock. Run `raven unlock` in a terminal."))
+        #expect(!Self.namesATerminalStep("Every way Raven reaches your friends. The terminal app shows the same."))
+        #expect(!Self.namesATerminalStep("Something went wrong inside Raven. Try again; if it keeps happening, open Details."))
+
+        // Every text the app uses, shared (strings.en.json) and its own (strings.macos.json).
+        for key in Str.allCases {
+            #expect(!Self.namesATerminalStep(tr(key)), "\(key.rawValue): \(tr(key))")
         }
 
-        // Lock (screen 43), Security (37) and Updates (44).
+        // Lock (screen 43), Security (37) and Updates (44), as shown.
         let locks = [LockState(available: false, supported: false, locked: false),
                      LockState(available: true, supported: false, locked: false),
                      LockState(available: true, supported: true, locked: false, hasPassphrase: false),
                      LockState(available: true, supported: true, locked: false, hasPassphrase: true)]
         var shown = locks.map { Display.lockNote($0) } + [Display.lockNote(nil), Display.passphraseLine]
         shown += ["live", "unsealed", "off"].map { Display.securityKept($0) }
-        shown += [Display.securityResolveLine, Display.updatesInstallDetail(
-            "Install updates with `raven update install` in a terminal. The app shows what is ready; it doesn't install yet.")]
-            .compactMap { $0 }
+        shown.append(Display.securityResolveLine)
         for text in shown {
             #expect(!text.lowercased().contains("terminal"), "\(text)")
             #expect(text.range(of: #"\braven [a-z]"#, options: .regularExpression) == nil, "\(text)")
         }
         #expect(Display.lockNote(locks[0]) == "Lock while running isn't in this version of Raven yet.")
+        #expect(Display.lockNote(locks[1]) == "Raven's background program can't lock now: it isn't running, or it is an older version.")
+        #expect(Display.securityKept("unsealed") == "This profile isn't encrypted, so Raven keeps no security notices for it.")
         #expect(Display.passphraseLine.hasSuffix(tr(.lockPassphraseNotInApp)))
-        #expect(Display.securityResolveLine == nil)
-        // The Updates chip said "In the terminal": gone from both Updates screens.
+        #expect(Display.securityResolveLine == "Marking a notice as resolved isn't in this app yet.")
+        #expect(Display.updatesInstallDetail("The app shows what is ready; it doesn't install updates yet.")
+                == "The app shows what is ready; it doesn't install updates yet.")
+        #expect(Display.updatesInstallDetail(" ") == nil && Display.updatesInstallDetail(nil) == nil)
+
+        // An engine error is shown as the engine wrote it: the message names no command, and the
+        // CLI's command stays in Details (engine.rs, not_in_the_app).
+        let failure = RavenEnvelope.failure(RavenError(
+            code: ErrorCode.notAvailableYet,
+            message: "This isn't in the Raven app yet. Nothing was changed.",
+            detail: "privacy.encrypt: not in the desktop app yet (raven privacy seal-now)"))
+        do {
+            _ = try RavenEnvelope.parseResponse(failure)
+            Issue.record("expected NOT_AVAILABLE_YET")
+        } catch let error as RavenError {
+            #expect(error.message == "This isn't in the Raven app yet. Nothing was changed.")
+            #expect(error.detail == "privacy.encrypt: not in the desktop app yet (raven privacy seal-now)")
+        }
+
+        // MockRaven speaks as the engine does: no command in what the demo shows.
+        let mock = MockRaven(start: .ready, demo: false, clock: MockClock(fixed: testStart), identityDelay: 0)
+        let updates = try await mock.call(op: "updates.status", args: [:])
+        #expect(!Self.namesATerminalStep(updates["install_text"]?.string ?? "terminal"))
+
+        // The Updates chip said "In the terminal" and the passphrase row named a command: neither
+        // comes back.
         for file in try sources("Sources/RavenUI/Views") {
             #expect(!file.text.contains("settingsUpdatesTerminal"), "\(file.name)")
             #expect(!file.text.contains("tr(.lockPassphraseTerminal)"), "\(file.name)")
-            #expect(!file.text.contains("Text(tr(.securityResolve))"), "\(file.name)")
         }
+        #expect(!FileManager.default.fileExists(
+            atPath: packageRoot.appendingPathComponent("Sources/RavenUI/Support/AppText.swift").path))
     }
 
     // MARK: 7. Failure screen

@@ -14,7 +14,7 @@ submodule at `core/`.
 
 **In development.** There is no Developer ID signed or notarised build. `scripts/make-release.sh`
 makes a DMG signed ad hoc (see "Install from the DMG"); nothing is published for download yet. The
-app uses whatever the engine allows. A release engine of version 0.1.0 reaches friends on the local
+app uses whatever the engine allows. A release engine of version 0.1.1 reaches friends on the local
 network, over the internet (direct, by hole punching or through a friend's relay) and through the Tor
 network, which with the default settings is the way between two different networks; Bluetooth nearby
 is on for macOS (you turn it on), and so are friend custody and groups. Cards carry no internet
@@ -283,7 +283,7 @@ Environment variables for the demo (`RAVEN_DEMO=1 swift run Raven`, debug builds
 
 At start the app logs one line (Console.app, subsystem `io.github.raven-ashco.Raven`, category
 `engine`): the engine, its build and version, and the profile state it reported, e.g. `engine
-RavenClientEngine (release, 0.1.0): profile new`. Nothing about friends, messages or keys.
+RavenClientEngine (release, 0.1.1): profile new`. Nothing about friends, messages or keys.
 
 `RavenSnapshots` renders with SwiftUI's `ImageRenderer`: it opens no window, starts no `raven-node`
 and never calls the engine (MockRaven and `MissingEngine` only).
@@ -337,7 +337,7 @@ scripts/make-dmg.sh [Raven.app] [out.dmg]      # DMG: Raven.app + Applications l
 
 - **Version.** The app's version is in the file `VERSION` (now 0.1.1): `make-app.sh` writes it into
   both Info.plists (`RAVEN_VERSION` overrides it) and `make-release.sh` names the DMG after it. The
-  engine keeps its own version, raven-core's (`core/node/Cargo.toml`, 0.1.0), which `app.info`
+  engine keeps its own version, raven-core's (`core/node/Cargo.toml`, also 0.1.1), which `app.info`
   reports; About and Settings > Updates show the app's version (`AppIdentity.shownVersion`).
 - **Release.** `make-release.sh` runs `make-app.sh` into a temporary folder, then `make-dmg.sh` (without
   `--layout`, so no Finder window opens) into `out-dir/Raven-<version>.dmg` with its SHA-256 next to it,
@@ -432,7 +432,6 @@ Sources/
                                   security, updates
               Display.swift       text decisions (tick text, status line, heartbeat, way states, path chips), unit-tested
     Support/  Strings.swift       `Str`: every key the app uses (strings.en.json, plus strings.macos.json)
-              AppText.swift       leaves out the sentences that send you to a terminal (no `raven` in the DMG)
               TimeText.swift      `{when}`, `{left}`, `{time}`, `{secs}` from the `time.*` texts
               AppIdentity.swift   the bundle id `io.github.raven-ashco.Raven`, the version shown
               BundledNode.swift   the app bundle's own raven-node (`Contents/Helpers`, `RAVEN_NODE_BIN`)
@@ -466,10 +465,10 @@ needs that the shared file doesn't have yet (Try Again on the failure screen, Re
 why a card has no address, the plain Locked screen's line, "Quit Raven (keeps receiving)") are in
 `Resources/strings.macos.json`, under `mac.*` keys that only add to the shared table and never replace a
 shared text; each moves into raven-core's `strings.en.json` with the next core change
-(`MacUXFixesTests` fails while a key is in both). Texts written for the terminal app ("In a terminal,
-raven lock stops Raven instead.", the engine's "Run `raven …` in a terminal.") are shown without those
-sentences (`AppText`; an engine error keeps the whole message under Details): the DMG installs no `raven`
-command. Placed on purpose:
+(`MacUXFixesTests` fails while a key is in both). No text the app shows sends you to a terminal or
+names a `raven` command (the DMG installs none): raven-core's shared texts and the engine's messages
+name none since raven-core b409d94 (an engine error keeps the CLI's command in `detail`, under Details),
+and `MacUXFixesTests` checks every text the app uses. Placed on purpose:
 
 - Menu bar friend lines join existing texts with " · " ("Ali · In touch just now", "Mina · 1 waiting ·
   until Wed 12:05"); a friend with unread messages shows `home.newFrom` ("1 new from Rena").
@@ -570,8 +569,8 @@ engine's answer, never a guess.
   else the privacy pack's lock. A locked raven-node opens the app on the locked screen, which asks
   for the Raven passphrase when the profile has one (it goes only to raven-node; `PASSPHRASE_WRONG`,
   `PASSPHRASE_NEEDED` and `UNLOCK_WAIT` are shown as the engine says them).
-- **Updates** (`updates.status`, read-only): the status lines and what is ready; installing stays in
-  the terminal (`raven update install`).
+- **Updates** (`updates.status`, read-only): the status lines and what is ready; the app doesn't
+  install (`install_text` says so under Technical details; installing stays in the CLI).
 
 Motion: nothing new moves on its own. A spinner shows only while a check, the router question or a
 restart is running, and stands still with reduced motion; a switch moves only when the engine's answer
