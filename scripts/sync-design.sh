@@ -11,5 +11,11 @@ mkdir -p "$DEST"
 cp "$DESIGN/strings.en.json" "$DESIGN/tokens.json" "$DEST/"
 cp "$DESIGN/assets/raven-mark-1024.png" "$DESIGN/assets/raven-mark-64.png" "$DEST/"
 if [ -f "$WORDS" ]; then cp "$WORDS" "$DEST/"; fi
-chmod 644 "$DEST"/*
+# The one raven (raven-bird.svg and raven-bird.json, written by raven-ios): in Resources/Design, from
+# desktop/design once it carries them (RavenBirdTests checks RavenBird.swift against the json).
+mkdir -p "$DEST/Design"
+for f in raven-bird.svg raven-bird.json; do
+    if [ -f "$DESIGN/$f" ]; then cp "$DESIGN/$f" "$DEST/Design/"; fi
+done
+find "$DEST" -type f -exec chmod 644 {} +
 echo "Design files copied to $DEST"

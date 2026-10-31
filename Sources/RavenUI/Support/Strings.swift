@@ -381,6 +381,7 @@ public enum Str: String, CaseIterable, Sendable {
     case lockConfirmTitle = "lock.confirm.title"
     case lockConfirmDoes = "lock.confirm.does"
     case lockConfirmDoesNot = "lock.confirm.doesNot"
+    case lockConfirmDoesNotTitle = "lock.confirm.doesNotTitle"
     case lockConfirmLock = "lock.confirm.lock"
     case securityTitle = "security.title"
     case securityIntro = "security.intro"

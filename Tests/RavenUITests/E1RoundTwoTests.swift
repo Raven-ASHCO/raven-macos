@@ -117,8 +117,9 @@ import Testing
         model.requestLock()
         #expect(model.sheet == .confirmLock)
         #expect(model.phase == .ready)
+        // What it does is said; what it does not do is one click away (folded).
         let lines = ConfirmLockSheet.lines(model.lockV2)
-        #expect(lines.contains(tr(.lockConfirmDoes)) && lines.contains(tr(.lockConfirmDoesNot)))
+        #expect(lines.contains(tr(.lockConfirmDoes)) && ConfirmLockSheet.limits.contains(tr(.lockConfirmDoesNot)))
         model.sheet = nil
         await model.lock()
         #expect(model.phase == .locked)

@@ -261,24 +261,29 @@ public struct QuitDialog: View {
     }
 }
 
-/// Lock now's question (Calm): the lock tile, what Lock does and doesn't protect, then Lock: the
-/// shackle closes (`lockShackle`) and Raven locks (E1).
+/// Lock now's question (Calm): the lock scene by day (the raven on its branch, `LockScene`), what
+/// Lock does, what it does not do (folded), then Lock: Raven locks at once (E1) and the locked screen
+/// pulls the night down over the day while the raven falls asleep.
 public struct ConfirmLockSheet: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.palette) private var p
     @Environment(\.motionOff) private var motionOff
     @ViewState private var closing = false
+    @ViewState private var showLimits: Bool
+    private let sceneAt: Date?
 
-    public init() {}
+    /// Snapshots and films: `showLimits` unfolds what lock does not do; `sceneAt` draws the scene at
+    /// that moment (seconds).
+    public init(showLimits: Bool = false, sceneAt: TimeInterval? = nil) {
+        self._showLimits = ViewState(wrappedValue: showLimits)
+        self.sceneAt = sceneAt.map { Date(timeIntervalSinceReferenceDate: $0) }
+    }
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            LockIcon(closed: closing)
-                .foregroundColor(p.accent)
-                .frame(width: 48, height: 48)
-                .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(p.accentSoft))
-                .animation(motionOff ? nil : Theme.shared.curve("shackle", Theme.shared.motion.lockShackle), value: closing)
-                .padding(.bottom, 12)
+            LockScene(moment: .day, frozen: sceneAt)
+                .frame(height: 170)
+                .padding(.bottom, 16)
             Text(tr(.lockConfirmTitle)).font(.system(size: 17, weight: .semibold)).padding(.bottom, 8)
                 .accessibilityAddTraits(.isHeader)
             VStack(alignment: .leading, spacing: 10) {
@@ -286,6 +291,7 @@ public struct ConfirmLockSheet: View {
                     Text(line).font(.system(size: 13)).foregroundColor(p.textSecondary).lineSpacing(2)
                         .fixedSize(horizontal: false, vertical: true)
                 }
+                whatLockDoesNotDo
             }
             HStack(spacing: 8) {
                 Spacer(minLength: 0)
@@ -306,25 +312,47 @@ public struct ConfirmLockSheet: View {
         .background(p.surface)
     }
 
-    private func lock() {
-        closing = true
-        let wait = motionOff ? 0 : Theme.shared.motion.lockShackle + 0.07
-        DispatchQueue.main.asyncAfter(deadline: .now() + wait) {
-            model.sheet = nil
-            Task { await model.lock() }
+    /// What lock does not do, folded under its title (the chevron turns as it opens).
+    private var whatLockDoesNotDo: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Button {
+                withAnimation(motionOff ? nil : .easeOut(duration: Theme.shared.motion.sectionIn)) { showLimits.toggle() }
+            } label: {
+                HStack(spacing: 5) {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 10, weight: .semibold))
+                        .rotationEffect(.degrees(showLimits ? 90 : 0))
+                        .accessibilityHidden(true)
+                    Text(tr(.lockConfirmDoesNotTitle))
+                }
+            }
+            .buttonStyle(RButtonStyle(.plain))
+            if showLimits {
+                ForEach(ConfirmLockSheet.limits, id: \.self) { line in
+                    Text(line).font(.system(size: 13)).foregroundColor(p.textSecondary).lineSpacing(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.leading, 15)
+                }
+            }
         }
     }
 
-    /// What it does, what it doesn't protect, and who can unlock it.
+    private func lock() {
+        guard !closing else { return }
+        closing = true
+        model.sheet = nil
+        Task { await model.lock() }
+    }
+
+    /// What it does, and who can unlock it when the profile has no Raven passphrase.
     static func lines(_ lock: LockState?) -> [String] {
-        var lines = [tr(.lockConfirmDoes), tr(.lockConfirmDoesNot)]
-        if lock?.hasPassphrase == true {
-            lines.append(tr(.lockV2PassphraseNote))
-        } else if lock?.hasPassphrase == false {
-            lines.append(tr(.lockNoPassphrase))
-        }
+        var lines = [tr(.lockConfirmDoes)]
+        if lock?.hasPassphrase == false { lines.append(tr(.lockNoPassphrase)) }
         return lines
     }
+
+    /// What lock does not do (folded).
+    static let limits = [tr(.lockConfirmDoesNot)]
 }
 
 /// Rename a friend: the name only this computer shows (`contacts.rename`).
