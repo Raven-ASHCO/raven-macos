@@ -254,7 +254,10 @@ the SQLCipher C code is built for the SDK's macOS 27), and with the raven-node f
 when it is set, else `core/node/target`. A release build rewrites home-folder paths in the binaries
 (the dependencies' source paths in panic messages, `__FILE__` in the bundled C code) to start with `~`,
 so no user name ships (`RUSTFLAGS` `--remap-path-prefix`, `CFLAGS` `-ffile-prefix-map`;
-`RAVEN_REMAP_PATHS=0|1` overrides). It builds for this Mac's architecture only. The
+`RAVEN_REMAP_PATHS=0|1` overrides). Every C library is compiled in from its crate's sources, never
+taken from the build machine: `LZMA_API_STATIC=1` makes `liblzma-sys` (xz, which Arti uses in
+`raven-tor-helper`) build its own copy instead of linking Homebrew's `liblzma.5.dylib`, which a Mac
+without Homebrew lacks. It builds for this Mac's architecture only. The
 **dev** engine exists for tests and smoke runs: a release engine refuses the file-backed secret stores
 (`RAVEN_*_BACKEND=locked-file`), so on a test profile it can only report the profile as unreadable.
 
@@ -377,8 +380,13 @@ scripts/make-dmg.sh [Raven.app] [out.dmg]      # DMG: Raven.app + Applications l
   app, every piece of code with the hardened runtime (`RAVEN_HARDENED=0` leaves it off; none of them needs
   an entitlement), and checks the result with `codesign --verify --deep --strict`. Before signing it
   removes the rpath the Swift driver adds to the toolchain's folder (the app loads only system
-  libraries, by absolute path; a load through `@rpath` stops the build), and a release build stops if
-  any binary still names the home folder. This is not a
+  libraries, by absolute path; a load through `@rpath` stops the build). The Swift build rewrites its
+  source paths to start with `~` (`-debug-prefix-map`, `-file-prefix-map`) and links without the debug
+  map (`-Xlinker -S`). Then two checks stop the build: every Mach-O in the bundle may load only
+  `/usr/lib`, `/System` and code inside the bundle (`otool -L`; Homebrew's `/opt/homebrew`, `/usr/local`
+  or any other path fails), and a release build may not name the home folder in any file of the bundle
+  (a byte-level `grep -a`, which also sees the symbol table that `strings` skips; `make-dmg.sh` searches
+  the staged image and the `.dmg` the same way). This is not a
   Developer ID signature and not notarised: Gatekeeper rejects the app until the user allows it (see
   "Install from the DMG"), and macOS may ask again for Bluetooth, Local Network and the keychain after
   an update, because an ad-hoc signature changes with every build.

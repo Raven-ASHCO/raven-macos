@@ -50,7 +50,7 @@
 # per architecture (LSMinimumSystemVersionByArchitecture). If the x86_64 build fails, the app is
 # arm64 only and the script says so.
 #
-# Only system tools are used: swift, iconutil, lipo, plutil, PlistBuddy, codesign. The icon is drawn
+# Only system tools are used: swift, iconutil, lipo, plutil, PlistBuddy, codesign, otool, file. The icon is drawn
 # by scripts/make-icon.swift (CoreGraphics and ImageIO).
 set -euo pipefail
 
@@ -69,6 +69,50 @@ BUILD_NUMBER="$(date -u +%Y%m%d%H%M)"
 MIN_MACOS="13.0"
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/raven-app.XXXXXX")"
 trap 'rm -rf "$WORK"' EXIT
+
+# Every Mach-O file in a folder (the app, the helpers, RavenNearby.app), NUL-separated.
+macho_files() {
+    find "$1" -type f -print0 | while IFS= read -r -d '' f; do
+        case "$(file -b "$f")" in *Mach-O*) printf '%s\0' "$f" ;; esac
+    done
+}
+
+# The bundle runs on a Mac with nothing but macOS: each piece of code may load only system libraries
+# (/usr/lib, /System) and code inside the bundle (@executable_path, @loader_path, or @rpath when every
+# run path is inside the bundle too). Anything else, such as Homebrew's /opt/homebrew or /usr/local,
+# fails the build: that library would be missing on the user's Mac and the program would not start.
+check_bundle_links() {
+    local bad=0 f dep rpaths
+    while IFS= read -r -d '' f; do
+        rpaths="$(otool -l "$f" | awk '/cmd LC_RPATH/ { r = 1 } r && / path / { print $2; r = 0 }' | sort -u)"
+        while read -r dep; do
+            case "$dep" in
+                /usr/lib/*|/System/*|@executable_path/*|@loader_path/*) ;;
+                @rpath/*)
+                    if [ -z "$rpaths" ] || printf '%s\n' "$rpaths" | grep -qv '^@\(executable\|loader\)_path/'; then
+                        echo "${f#"$1"/} loads $dep through a run path outside the bundle: $(echo $rpaths)" >&2
+                        bad=1
+                    fi ;;
+                *) echo "${f#"$1"/} loads $dep, which a Mac without it does not have" >&2; bad=1 ;;
+            esac
+        done < <(otool -L "$f" | awk '/^\t/ { print $1 }' | sort -u)
+    done < <(macho_files "$1")
+    [ "$bad" = 0 ] || { echo "Libraries outside macOS and the bundle: see above" >&2; exit 1; }
+    echo "==> Every program in the bundle loads only macOS's own libraries"
+}
+
+# No home-folder path (and so no user name) anywhere in the bundle: a byte-level search of every file,
+# programs and resources alike (`strings` misses the symbol table, where the debug map named every
+# source folder of the build).
+check_no_home_paths() {
+    local bad=0 f n
+    while IFS= read -r -d '' f; do
+        n="$( (LC_ALL=C grep -a -o -F "$HOME/" "$f" || true) | wc -l | tr -d ' ')"
+        if [ "$n" != "0" ]; then echo "${f#"$1"/} names the home folder in $n places" >&2; bad=1; fi
+    done < <(find "$1" -type f -print0)
+    [ "$bad" = 0 ] || { echo "Home-folder paths in the bundle: rebuild (see build-engine.sh, RAVEN_REMAP_PATHS)" >&2; exit 1; }
+    echo "==> No home-folder paths in the bundle ($(find "$1" -type f | wc -l | tr -d ' ') files searched byte by byte)"
+}
 
 cd "$HERE"
 FLAGS=()
@@ -96,6 +140,14 @@ else
     export RAVEN_ENGINE_LIB="$ENGINE_OUT/libraven_client.a"
     UNIVERSAL=0
     echo "==> Building the release binary with the engine ($ENGINE_PROFILE, arm64 only)"
+fi
+# The app binary keeps no home-folder path either (see "No home-folder paths" below): Swift's source
+# paths (debug info, #file in fatalError messages) are rewritten to start with "~", and the linker
+# leaves the debug map out (-S: no STABS, which named every source folder and object file of the
+# build). Crash reports still have the symbols. RAVEN_REMAP_PATHS=0 keeps the paths, for debugging.
+REMAP="${RAVEN_REMAP_PATHS:-1}"
+if [ "$REMAP" = "1" ]; then
+    FLAGS+=(-Xswiftc -debug-prefix-map -Xswiftc "$HOME=~" -Xswiftc -file-prefix-map -Xswiftc "$HOME=~" -Xlinker -S)
 fi
 ARM=(--arch arm64 ${SCRATCH[@]+"${SCRATCH[@]}"})
 swift build -c release "${ARM[@]}" --product Raven ${FLAGS[@]+"${FLAGS[@]}"}
@@ -150,15 +202,6 @@ if [ -n "$ENGINE_OUT" ]; then
     for f in "$HELPERS/raven-node" "$HELPERS/raven-tor-helper" "$NEARBY/Contents/MacOS/raven-nearby-helper"; do
         echo "==> $(basename "$f"): $(lipo -archs "$f")"
     done
-fi
-# A release ships no home-folder path (build-engine.sh rewrites them in the engine's binaries).
-if [ -n "$ENGINE_OUT" ] && [ "$ENGINE_PROFILE" = release ] && [ "${RAVEN_REMAP_PATHS:-1}" = "1" ]; then
-    for f in "$APP/Contents/MacOS/Raven" "$HELPERS/raven-node" "$HELPERS/raven-tor-helper" \
-        "$NEARBY/Contents/MacOS/raven-nearby-helper"; do
-        n="$(strings -a "$f" | grep -cF "$HOME/" || true)"
-        [ "$n" = "0" ] || { echo "$f names the home folder in $n places: rebuild the engine" >&2; exit 1; }
-    done
-    echo "==> No home-folder paths in the binaries"
 fi
 # Strings, tokens, word list and logo (looked up in Contents/Resources by RavenResources).
 cp -R "$BIN_DIR/Raven_RavenUI.bundle" "$APP/Contents/Resources/"
@@ -262,6 +305,12 @@ if [ "${RAVEN_SIGN:-1}" = "1" ] && command -v codesign >/dev/null; then
     "${CODE[@]}" "$APP"
     codesign --verify --deep --strict "$APP"
     echo "==> Signed ad hoc$([ "${RAVEN_HARDENED:-1}" = "1" ] && echo ", hardened runtime") (not a Developer ID signature, not notarised)"
+fi
+
+check_bundle_links "$APP"
+# The dev engine keeps its paths (build-engine.sh), and RAVEN_REMAP_PATHS=0 asks for them.
+if [ "$REMAP" = "1" ] && [ "${ENGINE_PROFILE:-release}" = release ]; then
+    check_no_home_paths "$APP"
 fi
 
 echo "==> Done: $APP ($VERSION, build $BUILD_NUMBER)"

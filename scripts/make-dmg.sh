@@ -75,6 +75,19 @@ OSA
 fi
 
 hdiutil verify "$DMG" >/dev/null
+
+# No home-folder path (and so no user name) in what the image carries, nor in the image file itself:
+# a byte-level search of every staged file (the app as make-app.sh left it, the background) and of
+# the .dmg. RAVEN_REMAP_PATHS=0 (a debugging build that keeps its paths) skips it.
+if [ "${RAVEN_REMAP_PATHS:-1}" = "1" ]; then
+    FOUND=0
+    while IFS= read -r -d '' f; do
+        n="$( (LC_ALL=C grep -a -o -F "$HOME/" "$f" || true) | wc -l | tr -d ' ')"
+        if [ "$n" != "0" ]; then echo "${f#"$STAGE"/} names the home folder in $n places" >&2; FOUND=1; fi
+    done < <(find "$STAGE" -type f -print0; printf '%s\0' "$DMG")
+    if [ "$FOUND" != "0" ]; then rm -f "$DMG"; echo "Home-folder paths in the image: not shipped" >&2; exit 1; fi
+    echo "==> No home-folder paths in the image ($(find "$STAGE" -type f | wc -l | tr -d ' ') files and the .dmg searched byte by byte)"
+fi
 (cd "$(dirname "$DMG")" && shasum -a 256 "$(basename "$DMG")") > "$DMG.sha256"
 echo "==> Done: $DMG ($(du -h "$DMG" | cut -f1))"
 echo "==> SHA-256: $(cut -d' ' -f1 "$DMG.sha256") ($DMG.sha256)"

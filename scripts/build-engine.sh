@@ -62,6 +62,15 @@ if [ "$REMAP" = "1" ]; then
     export CFLAGS="${CFLAGS:+$CFLAGS }$C_REMAP"
 fi
 
+# Every C library inside is compiled in from the crate's own sources, never taken from the build
+# machine: liblzma-sys (xz, used by Arti in raven-tor-helper) otherwise links the first liblzma that
+# pkg-config finds, such as Homebrew's /opt/homebrew/opt/xz/lib/liblzma.5.dylib, which a Mac without
+# Homebrew does not have (raven-tor-helper would then not start). LZMA_API_STATIC is liblzma-sys's
+# switch for that (its build.rs: the `static` feature or this variable); set for both profiles, so a
+# dev build links the same way. make-app.sh refuses a bundle whose code loads anything outside the
+# system folders.
+export LZMA_API_STATIC=1
+
 echo "==> Building raven-client and raven-node ($PROFILE, $(uname -m), features: ${FEATURES:-none}, home paths $([ "$REMAP" = 1 ] && echo rewritten || echo kept))"
 (cd "$NODE" && MACOSX_DEPLOYMENT_TARGET=13.0 cargo build --locked -p raven-client -p raven-node ${CARGO_FLAGS[@]+"${CARGO_FLAGS[@]}"})
 
