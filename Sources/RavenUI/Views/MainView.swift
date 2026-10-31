@@ -10,19 +10,25 @@ public struct MainView: View {
 
     public var body: some View {
         if snapshot {
-            // ImageRenderer cannot draw NSSplitView; the same two columns side by side.
-            HStack(spacing: 0) {
-                SidebarView().frame(width: Theme.shared.layout.sidebarWidth)
-                VRule()
-                DetailArea()
+            // ImageRenderer cannot draw NSSplitView; the same two columns side by side, the sidebar
+            // giving way as the split view's does.
+            GeometryReader { geo in
+                HStack(spacing: 0) {
+                    SidebarView().frame(width: Display.sidebarWidth(window: geo.size.width))
+                    VRule()
+                    DetailArea()
+                }
             }
         } else {
+            // The chat keeps at least `detailMinWidth`: in a narrow window the sidebar gives way down to
+            // its minimum first (review: at the smallest window the chat truncated "Verified").
             NavigationSplitView(columnVisibility: $model.sidebarVisibility) {
                 SidebarView()
                     .navigationSplitViewColumnWidth(min: Theme.shared.layout.sidebarMinWidth,
                                                     ideal: Theme.shared.layout.sidebarWidth, max: 340)
             } detail: {
                 DetailArea()
+                    .navigationSplitViewColumnWidth(min: Display.detailMinWidth, ideal: 760)
             }
             .navigationTitle(model.windowTitle)
         }

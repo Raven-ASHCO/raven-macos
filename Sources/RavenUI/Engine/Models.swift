@@ -203,6 +203,9 @@ public struct ShareCard: Codable, Equatable, Sendable {
     public var card: String
     public var invite: String
     public var addressIncluded: String?
+    /// Asked for the address, none could be given: why (`not_receiving`, `this_computer_only`,
+    /// `no_network`; a newer engine may send another word).
+    public var addressMissing: String?
 }
 
 public struct CardRoute: Codable, Equatable, Sendable {

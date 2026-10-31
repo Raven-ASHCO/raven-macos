@@ -527,17 +527,44 @@ public enum Str: String, CaseIterable, Sendable {
     case lockPassphraseTerminal = "lock.passphraseTerminal"
     case homeNavWayOn = "home.nav.wayOn"
     case lockPassphraseNote = "lock.passphrase.note"
+    case lockPassphraseNotInApp = "lock.passphrase.notInApp"
+    // The Mac app's own texts (Resources/strings.macos.json), until raven-core's strings.en.json has them.
+    case macFailureTryAgain = "mac.failure.tryAgain"
+    case macGroupsRemoveTitle = "mac.groups.remove.title"
+    case macGroupsRemoveBody = "mac.groups.remove.body"
+    case macGroupsRemoveNotFriend = "mac.groups.remove.notFriend"
+    case macGroupsRemoveFriend = "mac.groups.remove.friend"
+    case macGroupsRemoveConfirm = "mac.groups.remove.confirm"
+    case macAddShareIncludeAddressNone = "mac.add.share.includeAddressNone"
+    case macAddNoAddressNotReceiving = "mac.add.noAddress.notReceiving"
+    case macAddNoAddressThisComputerOnly = "mac.add.noAddress.thisComputerOnly"
+    case macAddNoAddressNoNetwork = "mac.add.noAddress.noNetwork"
+    case macAddNoAddressOther = "mac.add.noAddress.other"
+    case macTrayQuitKeepReceiving = "mac.tray.quitKeepReceiving"
+    case macLockPlainBody = "mac.lock.plainBody"
 }
 
-/// The English text table, loaded at runtime from the bundled strings.en.json.
+/// The English text table, loaded at runtime from the bundled strings.en.json, plus the Mac app's own
+/// texts from strings.macos.json (keys `mac.*` that the shared file doesn't have yet; they only add,
+/// never replace a shared text).
 public final class Strings: @unchecked Sendable {
     public static let shared: Strings = {
         guard let data = RavenResources.data("strings.en", "json"), let table = try? Strings(json: data) else {
             assertionFailure("strings.en.json is missing from the resource bundle")
             return Strings(texts: [:], lists: [:])
         }
-        return table
+        guard let macData = RavenResources.data("strings.macos", "json"), let mac = try? Strings(json: macData) else {
+            assertionFailure("strings.macos.json is missing from the resource bundle")
+            return table
+        }
+        return table.adding(mac)
     }()
+
+    /// This table with `other`'s keys that it lacks (a key it has keeps its own text).
+    func adding(_ other: Strings) -> Strings {
+        Strings(texts: texts.merging(other.texts) { mine, _ in mine },
+                lists: lists.merging(other.lists) { mine, _ in mine })
+    }
 
     public let texts: [String: String]
     public let lists: [String: [String]]

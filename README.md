@@ -431,7 +431,8 @@ Sources/
               NetworkModel.swift  the Network screens: network.status/set, consent, restart, check, routes,
                                   security, updates
               Display.swift       text decisions (tick text, status line, heartbeat, way states, path chips), unit-tested
-    Support/  Strings.swift       `Str`: every key the app uses (all in strings.en.json)
+    Support/  Strings.swift       `Str`: every key the app uses (strings.en.json, plus strings.macos.json)
+              AppText.swift       leaves out the sentences that send you to a terminal (no `raven` in the DMG)
               TimeText.swift      `{when}`, `{left}`, `{time}`, `{secs}` from the `time.*` texts
               AppIdentity.swift   the bundle id `io.github.raven-ashco.Raven`, the version shown
               BundledNode.swift   the app bundle's own raven-node (`Contents/Helpers`, `RAVEN_NODE_BIN`)
@@ -444,7 +445,8 @@ Sources/
                                   SettingsView.swift: the seven Settings sections)
     Snapshot/SnapshotCatalog.swift  the snapshot scenes (debug only)
              DebugSnapshotHook.swift  RAVEN_DEBUG_SNAPSHOT_DIR for the running app (debug only)
-    Resources/                    copies of strings.en.json, tokens.json, the word list and the mark
+    Resources/                    copies of strings.en.json, tokens.json, the word list and the mark;
+                                  strings.macos.json (the Mac app's own texts, see "Texts")
 Tests/RavenUITests/               MockRaven, events and motion triggers, words, old code, privacy, strings,
                                   time texts, polling, threading, app id, bundled raven-node, sanitiser,
                                   engine extras, NetworkModelTests (the Network screens on MockRaven),
@@ -459,7 +461,15 @@ copies drift.
 ## Texts
 
 Every text comes from `core/desktop/design/strings.en.json` through `tr(.key)`; `Str` lists every key the app
-uses and `StringsTests` checks that each one exists (there are no fallback texts). Placed on purpose:
+uses and `StringsTests` checks that each one exists (there are no fallback texts). The few texts the Mac app
+needs that the shared file doesn't have yet (Try Again on the failure screen, Remove from group's question,
+why a card has no address, the plain Locked screen's line, "Quit Raven (keeps receiving)") are in
+`Resources/strings.macos.json`, under `mac.*` keys that only add to the shared table and never replace a
+shared text; each moves into raven-core's `strings.en.json` with the next core change
+(`MacUXFixesTests` fails while a key is in both). Texts written for the terminal app ("In a terminal,
+raven lock stops Raven instead.", the engine's "Run `raven …` in a terminal.") are shown without those
+sentences (`AppText`; an engine error keeps the whole message under Details): the DMG installs no `raven`
+command. Placed on purpose:
 
 - Menu bar friend lines join existing texts with " · " ("Ali · In touch just now", "Mina · 1 waiting ·
   until Wed 12:05"); a friend with unread messages shows `home.newFrom` ("1 new from Rena").

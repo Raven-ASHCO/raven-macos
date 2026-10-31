@@ -1,0 +1,16 @@
+{
+  "_note": "Texts the Mac app needs that core/desktop/design/strings.en.json doesn't have yet (the shared file is a copy of raven-core's and must stay identical to it). Every key starts with mac. and only adds a text: Strings.shared loads this file after strings.en.json and never lets it replace a shared key. Move each text into the shared file with raven-core, then delete it here (MacUXFixesTests fails while a key is in both).",
+  "mac.failure.tryAgain": "Try Again",
+  "mac.groups.remove.title": "Remove {name} from {group}?",
+  "mac.groups.remove.body": "{name} stops getting this group's messages and can't write to it. Messages so far stay on this computer.",
+  "mac.groups.remove.notFriend": "{name} isn't your friend, so you can't add them back: only your friends can be added to a group.",
+  "mac.groups.remove.friend": "You can add {name} back later.",
+  "mac.groups.remove.confirm": "Remove",
+  "mac.add.share.includeAddressNone": "Include my network address. Anyone you send this to can see it.",
+  "mac.add.noAddress.notReceiving": "Your card has no network address: Raven isn't receiving now. Your friend can still add you.",
+  "mac.add.noAddress.thisComputerOnly": "Your card has no network address: Raven receives on this computer only (127.0.0.1), so friends on your network can't reach you.",
+  "mac.add.noAddress.noNetwork": "Your card has no network address: this computer isn't on a network now.",
+  "mac.add.noAddress.other": "Your card has no network address: Raven has none to share now.",
+  "mac.tray.quitKeepReceiving": "Quit Raven (keeps receiving)",
+  "mac.lock.plainBody": "While Raven is locked it doesn't receive, read or send messages. Unlock to use it again."
+}

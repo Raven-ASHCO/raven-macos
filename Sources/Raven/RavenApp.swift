@@ -92,16 +92,21 @@ struct RavenCommands: Commands {
                 .keyboardShortcut("l", modifiers: [.command, .control])
                 .disabled(model.phase != .ready || !model.canLock)
         }
-        // The network pages, also in the sidebar.
+        // The network pages, also in the sidebar: only while the main screen shows (on the Welcome,
+        // Locked and failure screens they would open nothing).
         CommandMenu(tr(.networkTitle)) {
             Button(tr(.networkTitle)) { model.open(.network) }
                 .keyboardShortcut("1", modifiers: [.command, .option])
+                .disabled(!model.pagesAvailable)
             Button(tr(.networkCheckTitle)) { model.open(.checkNetwork) }
                 .keyboardShortcut("2", modifiers: [.command, .option])
+                .disabled(!model.pagesAvailable)
             Button(tr(.securityTitle)) { model.open(.security) }
                 .keyboardShortcut("3", modifiers: [.command, .option])
+                .disabled(!model.pagesAvailable)
             Button(tr(.updatesTitle)) { model.open(.updates) }
                 .keyboardShortcut("4", modifiers: [.command, .option])
+                .disabled(!model.pagesAvailable)
         }
     }
 }

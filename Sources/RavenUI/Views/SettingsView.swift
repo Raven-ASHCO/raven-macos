@@ -402,7 +402,7 @@ struct LockSettingsSection: View {
                         .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(p.successFill.opacity(0.14)))
                     VStack(alignment: .leading, spacing: 2) {
                         Text(lock?.locked == true ? tr(.lockIsLocked) : tr(.lockIsOpen)).font(.system(size: 14, weight: .semibold))
-                        Text(lockNote(lock)).font(.system(size: 12.5)).foregroundColor(p.textSecondary)
+                        Text(Display.lockNote(lock)).font(.system(size: 12.5)).foregroundColor(p.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     Spacer(minLength: 8)
@@ -416,7 +416,7 @@ struct LockSettingsSection: View {
                 CalmItem(tr(.settingsLockOnSleep), tr(.settingsLockOnSleepBody)) {
                     RSwitch(tr(.settingsLockOnSleep), isOn: settingBinding(model, \.lockOnSleep, "lock_on_sleep") { .bool($0) })
                 }
-                CalmItem(tr(.lockPassphrase), tr(.settingsPassphraseBody) + " " + tr(.lockPassphraseTerminal)) {
+                CalmItem(tr(.lockPassphrase), Display.passphraseLine) {
                     if let has = lock?.hasPassphrase {
                         StatChip(text: has ? tr(.settingsPassphraseSet) : tr(.settingsPassphraseNotSet),
                                  tone: has ? .success : .warning)
@@ -426,13 +426,6 @@ struct LockSettingsSection: View {
             if let error = model.lockError { ErrorNote(error) }
         }
         .task { await model.refreshLock() }
-    }
-
-    private func lockNote(_ lock: LockState?) -> String {
-        guard let lock, lock.available else { return tr(.lockNotAvailable) }
-        guard lock.supported else { return tr(.lockNotSupported) }
-        if lock.hasPassphrase == false { return tr(.lockNoPassphrase) }
-        return tr(.lockReady)
     }
 }
 
@@ -554,20 +547,19 @@ struct UpdatesSettingsSection: View {
                                  tone: u.fromFriends == true ? .success : .warning)
                     }
                 }
-                CalmItem(tr(.updatesTitle), tr(.updatesInstall)) {
-                    StatChip(text: tr(.settingsUpdatesTerminal), tone: .secondary)
-                }
+                // Installing isn't in this app yet; the row says so (no "In the terminal": the DMG
+                // installs no raven command).
+                CalmItem(tr(.updatesTitle), tr(.updatesInstall))
             }
             if let error = model.network.updatesError { ErrorNote(error) }
-            if let text = u?.installText, !text.isEmpty { TechnicalDetails(lines: [text]) }
+            if let text = Display.updatesInstallDetail(u?.installText) { TechnicalDetails(lines: [text]) }
         }
         .task { await model.network.loadUpdates() }
     }
 
     private func versionLine() -> String {
         let build = (model.network.status?.build ?? model.appInfo?.build) == "release" ? tr(.netBuildRelease) : tr(.netBuildDev)
-        guard let version = AppIdentity.shownVersion(bundle: AppIdentity.bundleVersion, engine: model.appInfo?.version)
-        else { return build }
+        guard let version = model.shownVersion else { return build }
         return tr(.netVersion, ["version": version]) + " · " + build
     }
 }
@@ -586,8 +578,7 @@ struct AboutSection: View {
                     RavenMark(size: 74, color: p.textPrimary).padding(.bottom, 8)
                     Text(tr(.appName)).font(.system(size: 20, weight: .bold))
                     Text(tr(.appTagline)).font(.system(size: 13)).foregroundColor(p.textSecondary)
-                    if let version = AppIdentity.shownVersion(bundle: AppIdentity.bundleVersion,
-                                                              engine: model.appInfo?.version) {
+                    if let version = model.shownVersion {
                         Text(tr(.netVersion, ["version": version])).font(.system(size: 13)).foregroundColor(p.textSecondary)
                     }
                     Text(AppIdentity.bundleID).font(.system(size: 12)).foregroundColor(p.textTertiary)
@@ -598,7 +589,8 @@ struct AboutSection: View {
             }
             .padding(.top, 14)
             CalmGroup {
-                CalmItem(tr(.settingsAboutFingerprint), you.fingerprint) {
+                // "Your fingerprint" over the code itself (not "Fingerprint …" again).
+                CalmItem(tr(.settingsAboutFingerprint), model.identity.map { Sanitizer.line($0.oldCode, maxLength: 32) } ?? you.fingerprint) {
                     Button(tr(.homeNavWords)) { model.presentYou() }.buttonStyle(RButtonStyle(.secondary))
                 }
             }

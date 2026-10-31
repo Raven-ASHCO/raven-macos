@@ -116,18 +116,19 @@ public struct AddFriendSheet: View {
                 state.copied = false
                 Task { await state.loadCard(model) }
             })) {
-                Text(tr(.addShareIncludeAddress, ["addr": shareAddress]))
+                Text(Display.includeAddressLabel(card: state.card, node: model.node))
                     .font(RFont.smallish)
                     .fixedSize(horizontal: false, vertical: true)
             }
             .toggleStyle(RSwitchStyle())
+            // Asked for the address, the card has none (`card.make` `address_missing`): say why.
+            if state.includeAddress, let why = Display.noAddressReason(state.card) {
+                Text(why).font(RFont.smallish).foregroundColor(p.warning)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             Text(tr(.addSharePublic)).font(RFont.smallish).foregroundColor(p.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
-    }
-
-    private var shareAddress: String {
-        state.card?.addressIncluded ?? "\(model.node?.address ?? "–"):\(model.node?.port ?? "7420")"
     }
 
     // MARK: Step 2

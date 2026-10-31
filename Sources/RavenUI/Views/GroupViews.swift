@@ -427,10 +427,13 @@ public struct GroupMembersSheet: View {
                             }
                             Spacer()
                             if group?.admin == true && !m.me && group?.active == true {
-                                Button(tr(.groupsRemove)) {
-                                    Task { error = await model.removeGroupMember(groupID, member: m.address) }
+                                // Asks first (below): a member who isn't your friend can't be added back.
+                                Button(tr(.groupsRemove) + "…") {
+                                    error = nil
+                                    model.askRemoveGroupMember(groupID, member: m.address)
                                 }
-                                .buttonStyle(RButtonStyle(.plain))
+                                .buttonStyle(RButtonStyle(.danger, compact: true))
+                                .disabled(model.groupRemoval != nil)
                             }
                         }
                         .padding(.horizontal, 12)
@@ -438,6 +441,9 @@ public struct GroupMembersSheet: View {
                     }
                 }
                 .calmCard(radius: Theme.shared.radius.group)
+                if let ask = model.groupRemoval, ask.groupID == groupID {
+                    removalConfirmation(ask, members: members, group: group)
+                }
                 if group?.admin != true, let admin = group?.adminName {
                     Text(tr(.groupsAdminOnly, ["name": admin])).font(.system(size: 12)).foregroundColor(p.textSecondary)
                 }
@@ -471,10 +477,43 @@ public struct GroupMembersSheet: View {
                         .disabled(members.count >= MockRavenLimits.groupMaxMembers)
                 }
             }
-            Button(tr(.commonDone)) { model.sheet = nil }
-                .buttonStyle(RButtonStyle(.primary))
-                .keyboardShortcut(.defaultAction)
+            Button(tr(.commonDone)) {
+                model.cancelGroupRemoval()
+                model.sheet = nil
+            }
+            .buttonStyle(RButtonStyle(.primary))
+            .keyboardShortcut(.defaultAction)
         }
+    }
+}
+
+extension GroupMembersSheet {
+    /// Remove from group's question, under the members: who leaves, whether you can add them back,
+    /// then Cancel or Remove (destructive).
+    func removalConfirmation(_ ask: AppModel.GroupRemoval, members: [GroupMember], group: RavenGroup?) -> some View {
+        let texts = Display.groupRemoval(ask, members: members, group: group)
+        return VStack(alignment: .leading, spacing: 8) {
+            Text(texts.title).font(.system(size: 13, weight: .semibold))
+                .accessibilityAddTraits(.isHeader)
+            Text(texts.body).font(.system(size: 12.5)).foregroundColor(p.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: 8) {
+                Spacer(minLength: 0)
+                Button(tr(.commonCancel), role: .cancel) { model.cancelGroupRemoval() }
+                    .buttonStyle(RButtonStyle(.secondary, compact: true))
+                    .keyboardShortcut(.cancelAction)
+                Button(tr(.macGroupsRemoveConfirm), role: .destructive) {
+                    Task { error = await model.confirmGroupRemoval() }
+                }
+                .buttonStyle(RButtonStyle(.danger, compact: true))
+            }
+            .padding(.top, 2)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: Theme.shared.radius.group, style: .continuous).fill(p.dangerFill.opacity(0.07)))
+        .overlay(RoundedRectangle(cornerRadius: Theme.shared.radius.group, style: .continuous).stroke(p.dangerFill.opacity(0.35), lineWidth: 1))
+        .accessibilityElement(children: .contain)
     }
 }
 

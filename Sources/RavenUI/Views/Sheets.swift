@@ -193,8 +193,8 @@ public struct NetworkContent: View {
             SectionLabel(tr(.netAbout)).padding(.top, 8)
             Text((node?.build ?? model.appInfo?.build) == "release" ? tr(.netBuildRelease) : tr(.netBuildDev))
                 .font(RFont.smallish)
-            if let version = model.appInfo?.version {
-                Text(tr(.appName) + " · " + tr(.netVersion, ["version": version]))
+            if let line = Display.versionLine(model.shownVersion) {
+                Text(line)
                     .font(RFont.smallish)
                     .foregroundColor(p.textSecondary)
             }

@@ -411,7 +411,7 @@ struct WayRow: View {
                 }
                 VStack(alignment: .leading, spacing: 4) {
                     Text(name).font(.system(size: 14, weight: .semibold)).fixedSize(horizontal: false, vertical: true)
-                    if let reason = way.reason, !reason.isEmpty {
+                    if let reason = card ? Display.wayReason(way.reason, state: way.state) : way.reason, !reason.isEmpty {
                         Text(reason).font(.system(size: 12.5)).foregroundColor(p.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -716,8 +716,8 @@ struct AboutLines: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text((model.network.status?.build ?? model.appInfo?.build) == "release" ? tr(.netBuildRelease) : tr(.netBuildDev))
-            if let version = model.appInfo?.version {
-                Text(tr(.appName) + " · " + tr(.netVersion, ["version": version])).foregroundColor(p.textSecondary)
+            if let line = Display.versionLine(model.shownVersion) {
+                Text(line).foregroundColor(p.textSecondary)
             }
         }
         .font(RFont.small)

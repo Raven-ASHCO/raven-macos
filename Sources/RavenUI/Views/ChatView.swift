@@ -43,7 +43,7 @@ struct ChatHeader: View {
     // At the narrowest window (560 px, the sidebar beside it) the status text truncates first, then
     // the path and the name; the Routes button always shows whole (E1: on Windows it was cut off).
     var body: some View {
-        let status = Display.statusLine(contact, now: clock.now)
+        let status = Display.headerStatus(contact, now: clock.now)   // "Not verified" is beside the name
         let kind = model.lastPathKind(contact.address)
         let path = Display.headerPath(contact, lastPath: model.lastPath[contact.address])
         HStack(spacing: 12) {

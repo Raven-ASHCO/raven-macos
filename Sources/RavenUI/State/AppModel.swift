@@ -127,6 +127,12 @@ public final class AppModel: ObservableObject {
     /// `privacy.state`; `.unavailable` until the engine says otherwise (and when it cannot say).
     @Published public var privacy = PrivacyState.unavailable
     @Published public var appInfo: AppInfo?
+    /// This app's own version (Info.plist, from the file VERSION); nil outside a bundle. Settable for tests.
+    public var bundleVersion: String? = AppIdentity.bundleVersion
+    /// The version every screen shows (About, Updates, the Network page and sheet): the app's own, else
+    /// the engine's (`app.info`, e.g. under `swift run`). The engine keeps its own version (0.1.0 in app
+    /// 0.1.1), which no screen shows as the app's.
+    public var shownVersion: String? { AppIdentity.shownVersion(bundle: bundleVersion, engine: appInfo?.version) }
     @Published public var toast: Toast?
     @Published public var lastStatusOk: Date?
     @Published public var heartbeatPulse = 0
@@ -140,6 +146,13 @@ public final class AppModel: ObservableObject {
     @Published public var groupsAvailable = false
     @Published public var groups: [RavenGroup] = []
     @Published public var groupMembers: [String: [GroupMember]] = [:]
+    /// Remove from group asks first (a member who isn't your friend can't be added back): the member
+    /// it asks about, until Remove or Cancel.
+    @Published public var groupRemoval: GroupRemoval?
+    public struct GroupRemoval: Equatable, Sendable {
+        public let groupID: String
+        public let member: String
+    }
     @Published public var groupMessages: [String: [GroupMessage]] = [:]
     @Published public var selectedGroupID: String?
     /// Group messages of yours whose arcs changed (a receipt came): the ring's arcs fade to their colour.
@@ -295,7 +308,7 @@ public final class AppModel: ObservableObject {
             case .locked: phase = .locked
             case .unreadable:
                 phase = .failed(RavenError(code: ErrorCode.profileUnreadable, message: profile.reason ?? tr(.errorInternal),
-                                           detail: profile.detail ?? ""))
+                                           detail: profile.detail ?? "").withoutTerminalSteps())
             }
         } catch {
             engineLog.notice("""
@@ -305,6 +318,17 @@ public final class AppModel: ObservableObject {
             phase = .failed(RavenError.from(error))
         }
     }
+
+    /// The failure screen's Try Again: runs the start again (a profile or engine that wasn't ready may
+    /// be now); a failure that stays shows the same screen with its new details.
+    public func retryStart() async {
+        phase = .loading
+        await bootstrap()
+    }
+
+    /// The pages of the main screen (the Network menu, Settings): only while it shows, never on the
+    /// Welcome, setup, Locked or failure screens.
+    public var pagesAvailable: Bool { phase == .ready }
 
     public func loadAll() async throws {
         identity = try await engine.me()
@@ -643,6 +667,21 @@ public final class AppModel: ObservableObject {
             groupMembers[id] = r.members
             return nil
         } catch { return RavenError.from(error) }
+    }
+
+    /// Remove from group: asks first (`groupRemoval`); nothing changes until `confirmGroupRemoval`.
+    public func askRemoveGroupMember(_ id: String, member: String) {
+        groupRemoval = GroupRemoval(groupID: id, member: member)
+    }
+
+    public func cancelGroupRemoval() { groupRemoval = nil }
+
+    /// The confirmation's Remove: removes the member asked about.
+    public func confirmGroupRemoval() async -> RavenError? {
+        guard let ask = groupRemoval else { return nil }
+        let error = await removeGroupMember(ask.groupID, member: ask.member)
+        if groupRemoval == ask { groupRemoval = nil }
+        return error
     }
 
     public func leaveGroup(_ id: String) async -> RavenError? {

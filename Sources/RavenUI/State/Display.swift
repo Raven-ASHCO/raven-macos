@@ -370,3 +370,108 @@ public enum Display {
         return tr(.networkRelaysManual)
     }
 }
+
+// MARK: - The macOS review's fixes (0.1.1)
+
+extension Display {
+    /// "Raven · Version 0.1.1": the Network page's and the Network sheet's About line, with the version
+    /// every screen shows (`AppModel.shownVersion`, the app's own).
+    public static func versionLine(_ version: String?) -> String? {
+        version.map { tr(.appName) + " · " + tr(.netVersion, ["version": $0]) }
+    }
+
+    /// Lock while running's note (Settings > Lock and the Security page), with no terminal step.
+    public static func lockNote(_ lock: LockState?) -> String {
+        guard let lock, lock.available else { return AppText.withoutTerminalSteps(tr(.lockNotAvailable)) }
+        guard lock.supported else { return AppText.withoutTerminalSteps(tr(.lockNotSupported)) }
+        if lock.hasPassphrase == false { return tr(.lockNoPassphrase) }
+        return tr(.lockReady)
+    }
+
+    /// The Raven passphrase row: what it is, and that this app doesn't set it yet (not "raven
+    /// passphrase in a terminal").
+    public static var passphraseLine: String { tr(.settingsPassphraseBody) + " " + tr(.lockPassphraseNotInApp) }
+
+    /// Whether Raven keeps security notices (`security.status` `kept`), with no terminal step.
+    public static func securityKept(_ word: String) -> String {
+        switch word {
+        case "live": return tr(.securityKeptLive)
+        case "unsealed": return AppText.withoutTerminalSteps(tr(.securityKeptUnsealed))
+        default: return tr(.securityKeptOff)
+        }
+    }
+
+    /// Under the notices: how to resolve one, when that needs no terminal (today it does: no line).
+    public static var securityResolveLine: String? {
+        let line = AppText.withoutTerminalSteps(tr(.securityResolve))
+        return line.isEmpty ? nil : line
+    }
+
+    /// `updates.status` `install_text` for Technical details, without the terminal command.
+    public static func updatesInstallDetail(_ text: String?) -> String? {
+        guard let text else { return nil }
+        let shown = AppText.withoutTerminalSteps(text)
+        return shown.isEmpty ? nil : shown
+    }
+
+    /// Remove from group's question: who, and whether you can add them back (only friends can be added).
+    public static func groupRemoval(_ ask: AppModel.GroupRemoval, members: [GroupMember],
+                                    group: RavenGroup?) -> (title: String, body: String) {
+        let member = members.first { $0.address == ask.member }
+        let name = member.map { Sanitizer.line($0.name, maxLength: 40) } ?? Fallback.short(ask.member)
+        let groupName = group.map { Sanitizer.line($0.name, maxLength: 60) } ?? tr(.groupsMembersTitle)
+        let title = tr(.macGroupsRemoveTitle, ["name": name, "group": groupName])
+        let back = member?.friend == true ? tr(.macGroupsRemoveFriend, ["name": name])
+                                          : tr(.macGroupsRemoveNotFriend, ["name": name])
+        return (title, tr(.macGroupsRemoveBody, ["name": name]) + " " + back)
+    }
+
+    /// Add a friend's switch: "Include my network address (ip:port)…" with the address the card holds
+    /// (or would hold); without one, the same words with no address (never "(–:7420)").
+    public static func includeAddressLabel(card: ShareCard?, node: NodeStatus?) -> String {
+        if let addr = card?.addressIncluded, !addr.isEmpty { return tr(.addShareIncludeAddress, ["addr": addr]) }
+        if card?.addressMissing == nil, let addr = node?.address, !addr.isEmpty {
+            return tr(.addShareIncludeAddress, ["addr": "\(addr):\(node?.port ?? "7420")"])
+        }
+        return tr(.macAddShareIncludeAddressNone)
+    }
+
+    /// Why a card asked to hold your address holds none (`card.make` `address_missing`), else nil.
+    public static func noAddressReason(_ card: ShareCard?) -> String? {
+        guard let why = card?.addressMissing, card?.addressIncluded == nil else { return nil }
+        switch why {
+        case "not_receiving": return tr(.macAddNoAddressNotReceiving)
+        case "this_computer_only": return tr(.macAddNoAddressThisComputerOnly)
+        case "no_network": return tr(.macAddNoAddressNoNetwork)
+        default: return tr(.macAddNoAddressOther)
+        }
+    }
+
+    /// The chat's narrowest width: what is left of the smallest window (tokens.json minWindow) beside
+    /// the sidebar at its minimum width.
+    public static var detailMinWidth: CGFloat {
+        Theme.shared.layout.minWidth - Theme.shared.layout.sidebarMinWidth
+    }
+
+    /// The sidebar's width in a window `window` points wide: its usual width, giving way down to its
+    /// minimum before the chat gets narrower than `detailMinWidth` (review, screen 41).
+    public static func sidebarWidth(window: CGFloat) -> CGFloat {
+        let layout = Theme.shared.layout
+        return min(layout.sidebarWidth, max(layout.sidebarMinWidth, window - detailMinWidth))
+    }
+
+    /// The chat header's line: the header already says "Not verified" beside the name.
+    public static func headerStatus(_ c: Contact, now: Date) -> (text: String, tone: AppModel.Tone) {
+        statusLine(c, now: now, verifiedShown: true)
+    }
+
+    /// A way's reason without the state its chip already says ("On. Works without the internet." beside
+    /// an "On" chip); nil when nothing else is left.
+    public static func wayReason(_ reason: String?, state: WayState) -> String? {
+        guard let reason = reason?.trimmingCharacters(in: .whitespaces), !reason.isEmpty else { return nil }
+        let chip = wayState(state).text
+        guard reason.hasPrefix(chip + ".") else { return reason }
+        let rest = reason.dropFirst(chip.count + 1).trimmingCharacters(in: .whitespaces)
+        return rest.isEmpty ? nil : rest
+    }
+}

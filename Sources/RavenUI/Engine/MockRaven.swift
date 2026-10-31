@@ -273,7 +273,8 @@ public final class MockRaven: RavenEngine, @unchecked Sendable {
                     "card": .string(card.card), "invite": .string(card.invite)]
         case "card.make":
             let card = makeCard(includeAddress: args["include_address"]?.bool ?? false)
-            return ["card": .string(card.card), "invite": .string(card.invite), "address_included": .opt(card.included)]
+            return ["card": .string(card.card), "invite": .string(card.invite), "address_included": .opt(card.included),
+                    "address_missing": .opt(card.missing)]
         case "card.parse":
             let parsed = try parseCard(args["text"]?.string ?? "")
             var routes: [JSONValue] = []
@@ -1346,13 +1347,17 @@ public final class MockRaven: RavenEngine, @unchecked Sendable {
 
     // MARK: Cards, contacts, words
 
-    private func makeCard(includeAddress: Bool) -> (card: String, invite: String, included: String?) {
+    /// As raven-client's card.make: the address only while raven-node runs and receives; asked for
+    /// it otherwise, `missing` says why.
+    private func makeCard(includeAddress: Bool) -> (card: String, invite: String, included: String?, missing: String?) {
         let me = identity ?? Identity(address: MockRaven.meAddress, words: MockRaven.myWords, oldCode: MockRaven.myOldCode)
         let lan = "\(node.address ?? MockRaven.thisComputer):7420"
+        let missing: String? = includeAddress && !(node.running && node.receive) ? "not_receiving" : nil
+        let include = includeAddress && missing == nil
         var card = "raven-card/1 address=\(me.address) pub_hex=\(MockRaven.myPubHex) fingerprint=\(me.oldCode)"
-        if includeAddress { card += " lan=\(lan)" }
-        let invite = "raven:\(me.address):\(MockRaven.myPubHex)" + (includeAddress ? "@\(lan)" : "")
-        return (card, invite, includeAddress ? lan : nil)
+        if include { card += " lan=\(lan)" }
+        let invite = "raven:\(me.address):\(MockRaven.myPubHex)" + (include ? "@\(lan)" : "")
+        return (card, invite, include ? lan : nil, missing)
     }
 
     struct ParsedCard { let address: String; let lan: String?; var ignored: [String] = [] }

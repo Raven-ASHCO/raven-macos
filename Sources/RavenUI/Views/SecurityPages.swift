@@ -23,7 +23,7 @@ struct SecurityPage: View {
                                 Text(tr(.securityCounted, ["n": String(counted)])).font(RFont.small).foregroundColor(p.textSecondary)
                             }
                         }
-                        Text(s.available ? kept(s.kept) : tr(.securityPreview)).font(RFont.smallish)
+                        Text(s.available ? Display.securityKept(s.kept) : tr(.securityPreview)).font(RFont.smallish)
                             .fixedSize(horizontal: false, vertical: true)
                         if let node = s.node {
                             Text(tr(.securityNodeTitle)).font(RFont.small.weight(.semibold)).padding(.top, 4)
@@ -41,8 +41,8 @@ struct SecurityPage: View {
                             if i > 0 { Rule() }
                             NoticeRow(notice: notice)
                         }
-                        if !s.notices.isEmpty {
-                            Text(tr(.securityResolve)).font(RFont.small).foregroundColor(p.textSecondary)
+                        if !s.notices.isEmpty, let resolve = Display.securityResolveLine {
+                            Text(resolve).font(RFont.small).foregroundColor(p.textSecondary)
                                 .fixedSize(horizontal: false, vertical: true)
                                 .padding(.bottom, 8)
                         }
@@ -59,14 +59,6 @@ struct SecurityPage: View {
     private func load() async {
         await net.loadSecurity()
         await model.refreshLock()
-    }
-
-    private func kept(_ word: String) -> String {
-        switch word {
-        case "live": return tr(.securityKeptLive)
-        case "unsealed": return tr(.securityKeptUnsealed)
-        default: return tr(.securityKeptOff)
-        }
     }
 
     /// The background program's counts. Its open alerts are the smaller notices, only counted, while no
@@ -152,10 +144,8 @@ struct LockSection: View {
                     }
                 }
                 Text(tr(.lockV2Body)).font(RFont.smallish).fixedSize(horizontal: false, vertical: true)
-                if lock?.available != true {
-                    Text(tr(.lockNotAvailable)).font(RFont.smallish).foregroundColor(p.textSecondary).fixedSize(horizontal: false, vertical: true)
-                } else if lock?.supported != true {
-                    Text(tr(.lockNotSupported)).font(RFont.smallish).foregroundColor(p.textSecondary).fixedSize(horizontal: false, vertical: true)
+                if lock?.available != true || lock?.supported != true {
+                    Text(Display.lockNote(lock)).font(RFont.smallish).foregroundColor(p.textSecondary).fixedSize(horizontal: false, vertical: true)
                 } else if lock?.hasPassphrase == true {
                     Text(tr(.lockV2PassphraseNote)).font(RFont.small).foregroundColor(p.textSecondary)
                 } else if lock?.hasPassphrase == false {
@@ -219,7 +209,7 @@ struct UpdatesPage: View {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(tr(.updatesInstall)).font(RFont.bodyBold).fixedSize(horizontal: false, vertical: true)
                     // The terminal command: Technical details only (E1).
-                    if let text = u.installText, !text.isEmpty { TechnicalDetails(lines: [text]) }
+                    if let text = Display.updatesInstallDetail(u.installText) { TechnicalDetails(lines: [text]) }
                 }
             } else if net.updatesError == nil {
                 Spinner()

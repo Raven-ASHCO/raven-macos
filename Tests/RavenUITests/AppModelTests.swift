@@ -210,9 +210,9 @@ import Testing
         #expect(state.canCheck)
         await state.check(model)
         #expect(state.result == .mismatch && state.mismatches == 1)
+        state.oldCode = " tq7m 29xa hke4 "                          // wrong case: still a mismatch
         state.oldCodeChanged()
         #expect(state.result == nil)
-        state.oldCode = " tq7m 29xa hke4 "                          // wrong case: still a mismatch
         await state.check(model)
         #expect(state.result == .mismatch)
         #expect(model.contact(MockRaven.renaAddress)?.verified == false)
@@ -227,10 +227,14 @@ import Testing
     @Test func threeMismatchesWithdrawCheck() async {
         let (model, _) = await readyModel()
         let state = CheckWordsState(address: MockRaven.renaAddress, typed: MockRaven.minaWords)
-        for n in 1...2 {
-            await state.check(model)
-            #expect(state.result == .mismatch && state.mismatches == n && !state.stopped)
-        }
+        await state.check(model)
+        #expect(state.result == .mismatch && state.mismatches == 1 && !state.stopped)
+        // Other words (an unchanged retry is not checked again: MacUXFixesTests).
+        state.typeAgain()
+        state.field = MockRaven.aliWords.joined(separator: " ") + " "
+        await state.fieldChanged(model)
+        await state.check(model)
+        #expect(state.result == .mismatch && state.mismatches == 2 && !state.stopped)
         state.switchMode(.oldCode)
         state.oldCode = "nope"
         await state.check(model)

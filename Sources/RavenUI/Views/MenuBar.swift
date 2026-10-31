@@ -77,7 +77,7 @@ public struct MenuBarContent: View {
             }
                 .disabled(model.phase != .ready || !model.canLock)
             separator
-            MenuRow(title: tr(.trayQuitWindow)) { Task { await model.quitFromMenu(stopNode: false) } }
+            MenuRow(title: tr(.macTrayQuitKeepReceiving)) { Task { await model.quitFromMenu(stopNode: false) } }
             MenuRow(title: tr(.trayQuitAll), secondary: true) { Task { await model.quitFromMenu(stopNode: true) } }
         }
         .padding(6)

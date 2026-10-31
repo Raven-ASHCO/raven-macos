@@ -8,7 +8,9 @@ import SwiftUI
 /// Only `verify.check_words` decides, once all 10 are in: match, typo (the check word caught a
 /// misheard or swapped word) or mismatch. The old code goes into one plain field, with no marks at
 /// all, and only `verify.check_old_code` decides: match or mismatch. After three mismatches (words
-/// and old code together) Check is withdrawn. The friend's words and code are never shown or requested.
+/// and old code together) Check is withdrawn. Words or a code that already got an answer are not checked
+/// again: Check stays off until they change, so an unchanged retry is never sent or counted (review,
+/// screen 17). The friend's words and code are never shown or requested.
 @MainActor
 public final class CheckWordsState: ObservableObject {
     public enum Mode: Equatable { case words, oldCode }
@@ -30,6 +32,8 @@ public final class CheckWordsState: ObservableObject {
     @Published public var mismatches = 0
     @Published public var error: RavenError?
     private var hintToken = ""
+    /// The answers already given (typo or mismatch), by what was checked (`inputKey`).
+    private var answered: [String: VerifyResult] = [:]
 
     public init(address: String, mode: Mode = .words, typed: [String] = [], field: String = "", hint: String? = nil,
                 oldCode: String = "", result: VerifyResult? = nil, mismatches: Int = 0) {
@@ -49,11 +53,29 @@ public final class CheckWordsState: ObservableObject {
     public var stopped: Bool { !matched && mismatches >= CheckWordsState.maxMismatches }
 
     public var canCheck: Bool {
-        guard !checking, !matched, !stopped else { return false }
+        guard !checking, !matched, !stopped, !alreadyAnswered else { return false }
         switch mode {
         case .words: return complete
         case .oldCode: return !oldCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
+    }
+
+    /// What Check would send, as the engine compares it: the 10 words, or the old code without spaces
+    /// and separators (letter case matters, API.md).
+    var inputKey: String {
+        switch mode {
+        case .words: return "w:" + typed.joined(separator: " ")
+        case .oldCode: return "c:" + String(oldCode.unicodeScalars.filter { CharacterSet.alphanumerics.contains($0) })
+        }
+    }
+
+    /// The current words or code already got an answer: checking them again says nothing new.
+    public var alreadyAnswered: Bool { answered[inputKey] != nil }
+
+    /// After an edit: the answer these words or this code already got, else none.
+    private func showAnswerForInput() {
+        guard !matched else { return }
+        result = answered[inputKey]
     }
 
     /// Switches between the 10 words and the old code; the previous result goes away.
@@ -62,6 +84,7 @@ public final class CheckWordsState: ObservableObject {
         self.mode = mode
         result = nil
         error = nil
+        showAnswerForInput()
     }
 
     /// Called on every edit. Finished tokens (followed by a separator, or pasted several at once)
@@ -80,6 +103,7 @@ public final class CheckWordsState: ObservableObject {
                     return
                 }
             }
+            showAnswerForInput()
         }
         await updateHint(rest, model)
     }
@@ -94,14 +118,17 @@ public final class CheckWordsState: ObservableObject {
         // On failure the field keeps the token and the note from `accept` says why.
         if await accept(token, model) {
             field = ""
+            showAnswerForInput()
             await updateHint(field, model)
         }
     }
 
-    /// Edits of the old-code field clear a mismatch shown for the previous text.
+    /// Edits of the old-code field clear a mismatch shown for the previous text (a code already
+    /// checked shows its answer again).
     func oldCodeChanged() {
         if result != nil && !matched { result = nil }
         error = nil
+        showAnswerForInput()
     }
 
     @discardableResult
@@ -142,6 +169,7 @@ public final class CheckWordsState: ObservableObject {
         guard typed.indices.contains(index), !matched, !stopped else { return }
         typed.remove(at: index)
         result = nil
+        showAnswerForInput()
     }
 
     /// "Type again" after a typo or a mismatch: clears the typed words.
@@ -152,10 +180,12 @@ public final class CheckWordsState: ObservableObject {
         hint = nil
         note = nil
         result = nil
+        showAnswerForInput()
     }
 
     func check(_ model: AppModel) async {
         guard canCheck else { return }
+        let key = inputKey
         checking = true
         error = nil
         defer { checking = false }
@@ -164,6 +194,7 @@ public final class CheckWordsState: ObservableObject {
             case .words: result = try await model.checkWords(address: address, words: typed)
             case .oldCode: result = try await model.checkOldCode(address: address, code: oldCode)
             }
+            if let result, result != .match { answered[key] = result }
             if result == .mismatch { mismatches += 1 }
         } catch {
             self.error = RavenError.from(error)

@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 /// The main window's content: picks the screen for the profile state and hosts the sheets.
 public struct RootView: View {
@@ -96,12 +97,12 @@ public struct LockedView: View {
         VStack(spacing: 8) {
             RavenMark(size: 76, color: p.textPrimary).padding(.bottom, 6)
             Text(tr(.lockTitle)).font(.system(size: 20, weight: .semibold)).accessibilityAddTraits(.isHeader)
-            if v2 {
-                Text(tr(.lockBody)).font(.system(size: 13)).foregroundColor(p.textSecondary)
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.bottom, 8)
-            }
+            // What locked means: Lock while running keeps the background program going without its keys;
+            // the plain lock (the privacy pack) stops Raven until Unlock.
+            Text(v2 ? tr(.lockBody) : tr(.macLockPlainBody)).font(.system(size: 13)).foregroundColor(p.textSecondary)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.bottom, 8)
             if askPassphrase {
                 RField(tr(.lockPassphrase), text: $passphrase, secure: true) { unlock() }
                     .multilineTextAlignment(.center)
@@ -162,14 +163,37 @@ struct ShakeEffect: GeometryEffect {
     }
 }
 
-/// The profile could not be opened, or the engine is missing: what happened, one next step, Details.
+/// The profile could not be opened, or the engine is missing: what happened, one next step, Details,
+/// then Try Again (runs the start again) and Quit.
 struct FailureView: View {
     let error: RavenError
+    @EnvironmentObject private var model: AppModel
+    @ViewState private var retrying = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             RavenMark(size: 56)
             ErrorNote(error)
+            HStack(spacing: 8) {
+                Button(tr(.quitQuit)) { NSApp.terminate(nil) }
+                    .buttonStyle(RButtonStyle(.secondary))
+                Button {
+                    retrying = true
+                    Task {
+                        await model.retryStart()
+                        retrying = false
+                    }
+                } label: {
+                    HStack(spacing: 6) {
+                        if retrying { Spinner(size: 12) }
+                        Text(tr(.macFailureTryAgain))
+                    }
+                }
+                .buttonStyle(RButtonStyle(.primary))
+                .keyboardShortcut(.defaultAction)
+                .disabled(retrying)
+            }
+            .padding(.top, 4)
         }
         .frame(maxWidth: 420)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
