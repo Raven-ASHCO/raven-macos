@@ -14,7 +14,7 @@ public struct MenuBarLabel: View {
         let listening = model.node?.listening != nil && model.node?.running == true
         let still = model.settings.reducedMotion || NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
         let steps: [Double] = [1.0, 0.8, 0.6, 0.8]
-        Image(nsImage: RavenResources.mark(size: 18, template: true))
+        Image(nsImage: RavenResources.menuBarMark())
             .opacity(listening && !still ? steps[clock.tick % steps.count] : 1)
             .accessibilityLabel(tr(.appName))
             .onAppear { model.start() }

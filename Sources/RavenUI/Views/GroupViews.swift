@@ -60,7 +60,7 @@ struct MemberStack: View {
         let spots: [CGPoint] = [CGPoint(x: 10.5, y: 11.5), CGPoint(x: 25.5, y: 11.5), CGPoint(x: 18, y: 25.5)]
         ZStack {
             ForEach(Array(shown.enumerated()), id: \.offset) { i, m in
-                InitialAvatar(initial: m.initial, colors: p.avatar(for: m.address), size: 21, ring: ring)
+                InitialAvatar(initial: m.initial, colors: p.avatar(for: m), size: 21, ring: ring)
                     .position(spots[i])
             }
         }
@@ -416,7 +416,7 @@ public struct GroupMembersSheet: View {
                     ForEach(Array(members.enumerated()), id: \.element.id) { i, m in
                         if i > 0 { Rule() }
                         HStack(spacing: 10) {
-                            InitialAvatar(initial: m.initial, colors: p.avatar(for: m.address), size: 26)
+                            InitialAvatar(initial: m.initial, colors: p.avatar(for: m), size: 26)
                             VStack(alignment: .leading, spacing: 1) {
                                 Text(m.me ? tr(.youTitle) : m.name).font(.system(size: 13, weight: .medium))
                                 let notes = [m.admin ? tr(.groupsAdmin) : nil, !m.friend && !m.me ? tr(.groupsNotFriend) : nil]

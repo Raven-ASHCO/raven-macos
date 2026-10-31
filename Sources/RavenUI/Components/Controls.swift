@@ -444,15 +444,15 @@ public struct Spinner: View {
     }
 }
 
-/// The Raven mark from desktop/design/assets, drawn in the secondary text colour so it stays visible
-/// in both light and dark mode (the source PNG is a semi-transparent grey mark).
+/// The Raven mark from desktop/design/assets, made solid (the source PNG is a 40% grey mark) and drawn
+/// in `color`, else the secondary text colour, so it stays visible in light and dark mode.
 public struct RavenMark: View {
     var size: CGFloat
     var color: Color?
     @Environment(\.palette) private var p
     public init(size: CGFloat, color: Color? = nil) { self.size = size; self.color = color }
     public var body: some View {
-        Image(nsImage: color == nil ? RavenResources.mark(size: size, template: true) : RavenResources.solidMark(size: size))
+        Image(nsImage: RavenResources.solidMark(size: size))
             .renderingMode(.template)
             .resizable()
             .interpolation(.high)

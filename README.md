@@ -449,6 +449,7 @@ Sources/
 Tests/RavenUITests/               MockRaven, events and motion triggers, words, old code, privacy, strings,
                                   time texts, polling, threading, app id, bundled raven-node, sanitiser,
                                   engine extras, NetworkModelTests (the Network screens on MockRaven),
+                                  MacUXFixesTests and ReleaseCheckTests (the 0.1.1 review and release check),
                                   EngineTests.swift (the real engine; only with RAVEN_ENGINE)
 scripts/  build-engine.sh, make-app.sh, make-icon.swift, make-dmg.sh, make-release.sh, sync-design.sh
 ```

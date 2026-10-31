@@ -256,6 +256,7 @@ public enum SnapshotCatalog {
                                CheckWordsSheet(address: MockRaven.renaAddress, state: stopState, highlight: 0)))
 
         let (net, _) = await readyModel(after: 2)
+        await net.network.refresh()     // what the sheet's .task reads: its ways
         shots.append(sheetShot("18-network", net, width: 440, NetworkSheet()))
 
         // Settings in the main window (Calm): one picture per section.

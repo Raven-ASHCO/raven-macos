@@ -415,6 +415,7 @@ struct LockSettingsSection: View {
             CalmGroup {
                 CalmItem(tr(.settingsLockOnSleep), tr(.settingsLockOnSleepBody)) {
                     RSwitch(tr(.settingsLockOnSleep), isOn: settingBinding(model, \.lockOnSleep, "lock_on_sleep") { .bool($0) })
+                        .disabled(!model.lockOnSleepAvailable)
                 }
                 CalmItem(tr(.lockPassphrase), Display.passphraseLine) {
                     if let has = lock?.hasPassphrase {

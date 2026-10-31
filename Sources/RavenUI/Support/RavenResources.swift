@@ -66,6 +66,11 @@ public enum RavenResources {
         return result
     }
 
+    /// The menu bar's mark: the solid mark as a template image. The design file's mark is a 40% grey
+    /// (its strongest pixel has alpha 113 of 255), and a template image keeps only the alpha, so the
+    /// menu bar drew Raven at less than half strength, like a disabled item.
+    public static func menuBarMark() -> NSImage { solidMark(size: 18) }
+
     private static let solidLock = NSLock()
     nonisolated(unsafe) private static var solidCache: [Int: NSImage] = [:]
 

@@ -234,7 +234,7 @@ public final class MockRaven: RavenEngine, @unchecked Sendable {
         let now = clock.now
         switch op {
         case "app.info":
-            return ["version": "0.1.0", "build": "dev", "platform": "macos"]
+            return ["version": "0.1.1", "build": "dev", "platform": "macos"]
         case "profile.state":
             return ["state": .string(profile.rawValue)]
         case "identity.create":
@@ -1023,7 +1023,7 @@ public final class MockRaven: RavenEngine, @unchecked Sendable {
         ]
         if node.running {
             v["node"] = ["strangers_refused_1h": 3, "failed_handshakes_1h": 0, "bans_active": 1,
-                         "link_tag_failures_24h": 0, "alerts_open": 0]
+                         "link_tag_failures_24h": 0, "alerts_open": 1]
         }
         return .object(v)
     }
@@ -1053,7 +1053,7 @@ public final class MockRaven: RavenEngine, @unchecked Sendable {
                     "install_text": .string(installText)]
         }
         return ["available": true, "bundles": true, "from_friends": false, "lab": true,
-                "lines": ["installed: 0.1.0 (dev)", "waiting: none", "last check: today 13:40"],
+                "lines": ["installed: 0.1.1 (dev)", "waiting: none", "last check: today 13:40"],
                 "summary": "No update is waiting.", "install": "cli_only", "install_text": .string(installText)]
     }
 

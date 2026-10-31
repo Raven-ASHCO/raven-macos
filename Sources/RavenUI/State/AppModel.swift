@@ -130,8 +130,8 @@ public final class AppModel: ObservableObject {
     /// This app's own version (Info.plist, from the file VERSION); nil outside a bundle. Settable for tests.
     public var bundleVersion: String? = AppIdentity.bundleVersion
     /// The version every screen shows (About, Updates, the Network page and sheet): the app's own, else
-    /// the engine's (`app.info`, e.g. under `swift run`). The engine keeps its own version (0.1.0 in app
-    /// 0.1.1), which no screen shows as the app's.
+    /// the engine's (`app.info`, e.g. under `swift run`). The engine keeps its own version (raven-core's,
+    /// 0.1.1 in app 0.1.1, but they can differ), which no screen shows as the app's.
     public var shownVersion: String? { AppIdentity.shownVersion(bundle: bundleVersion, engine: appInfo?.version) }
     @Published public var toast: Toast?
     @Published public var lastStatusOk: Date?
@@ -1038,6 +1038,11 @@ public final class AppModel: ObservableObject {
     /// Lock now: Lock v2 where the running raven-node serves it (it keeps running without its
     /// keys), else the privacy pack's lock (`privacy.lock`, when available).
     public var canLock: Bool { privacy.available || lockV2?.supported == true }
+
+    /// Whether this version of Raven can lock at all (Lock while running or the privacy pack), so
+    /// "Lock Raven when the computer sleeps" can be set: without either, sleep never locks and the
+    /// switch would promise what doesn't happen. It doesn't need raven-node running now (`canLock`).
+    public var lockOnSleepAvailable: Bool { privacy.available || lockV2?.available == true }
 
     /// The page shown when Raven was locked: Unlock comes back to it (E1).
     var pageBeforeLock: Page?

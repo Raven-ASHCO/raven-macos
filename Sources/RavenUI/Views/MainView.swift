@@ -144,8 +144,7 @@ struct YouRow: View {
         let you = Display.you(model.identity, name: model.settings.displayName)
         SidebarRowButton(selected: false, action: { model.presentYou() }) {
             HStack(spacing: 10) {
-                InitialAvatar(initial: String(tr(.youTitle).prefix(1)),
-                              colors: AvatarColors(background: p.accentSoft, foreground: p.accent))
+                InitialAvatar(initial: String(tr(.youTitle).prefix(1)), colors: p.youAvatar)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(you.title).font(RFont.label).lineLimit(1)
                     if let fingerprint = you.fingerprint {

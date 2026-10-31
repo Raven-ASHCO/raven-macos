@@ -581,7 +581,7 @@ struct AwayCard: View {
 }
 
 /// You ── (a friend holding a sealed copy) ┄┄ the friend, faded while away; a retry rings the friend.
-private struct AwayTrio: View {
+struct AwayTrio: View {
     let contact: Contact
     let held: Bool
     let retry: Int
@@ -589,7 +589,7 @@ private struct AwayTrio: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 0) {
-            node(InitialAvatar(initial: String(tr(.youTitle).prefix(1)), colors: AvatarColors(background: p.accentSoft, foreground: p.accent), size: 30), tr(.youTitle))
+            node(InitialAvatar(initial: String(tr(.youTitle).prefix(1)), colors: p.youAvatar, size: 30), tr(.youTitle))
             link(dashed: false)
             if held {
                 node(ZStack {
@@ -609,9 +609,21 @@ private struct AwayTrio: View {
     private func node<V: View>(_ v: V, _ label: String) -> some View {
         VStack(spacing: 4) {
             v
-            Text(label).font(.system(size: 11)).foregroundColor(p.textSecondary).lineLimit(1)
+            Text(label).font(.system(size: AwayTrio.labelSize)).foregroundColor(p.textSecondary).lineLimit(1)
         }
-        .frame(width: 64)
+        .frame(width: AwayTrio.nodeWidth(label))
+    }
+
+    static let labelSize: CGFloat = 11
+    static let minNodeWidth: CGFloat = 64
+    static let maxNodeWidth: CGFloat = 112
+
+    /// A node as wide as its label needs, at least 64 points: a fixed 64 cut the held node's "Held by
+    /// a friend" to "Held by a…". A friend's long name still ends in "…" at `maxNodeWidth`.
+    static func nodeWidth(_ label: String) -> CGFloat {
+        let font = NSFont.systemFont(ofSize: labelSize)
+        let needed = ceil((label as NSString).size(withAttributes: [.font: font]).width) + 4
+        return min(max(minNodeWidth, needed), maxNodeWidth)
     }
 
     private func link(dashed: Bool) -> some View {

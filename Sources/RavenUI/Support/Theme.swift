@@ -321,6 +321,14 @@ public struct Palette {
     public var presenceNone: Color { c("presenceNone") }
 
     public func avatar(for address: String) -> AvatarColors { avatars[Theme.avatarIndex(for: address)] }
+
+    /// Your own avatar: the accent, as in the sidebar's You row, everywhere you appear.
+    public var youAvatar: AvatarColors { AvatarColors(background: accentSoft, foreground: accent) }
+
+    /// A group member's avatar: yours in the accent, a friend's from their address.
+    public func avatar(for member: GroupMember) -> AvatarColors {
+        member.me ? youAvatar : avatar(for: member.address)
+    }
 }
 
 // MARK: - Environment

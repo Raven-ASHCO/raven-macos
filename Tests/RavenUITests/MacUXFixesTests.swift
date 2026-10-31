@@ -29,12 +29,12 @@ import Testing
     /// app's 0.1.1: every screen shows the app's own version now, through one property.
     @Test func everyScreenShowsTheAppsOwnVersion() async throws {
         let (model, _) = await readyModel()
-        #expect(model.appInfo?.version == "0.1.0")            // the engine's (MockRaven)
-        model.bundleVersion = "0.1.1"
-        #expect(model.shownVersion == "0.1.1")
-        #expect(Display.versionLine(model.shownVersion) == "Raven · Version 0.1.1")
+        #expect(model.appInfo?.version == "0.1.1")            // the engine's (MockRaven, as raven-core 0.1.1)
+        model.bundleVersion = "0.1.2"                         // an app-only release on the same core
+        #expect(model.shownVersion == "0.1.2")
+        #expect(Display.versionLine(model.shownVersion) == "Raven · Version 0.1.2")
         model.bundleVersion = nil                             // `swift run`: no bundle, the engine's
-        #expect(model.shownVersion == "0.1.0")
+        #expect(model.shownVersion == "0.1.1")
         #expect(Display.versionLine(nil) == nil)
         for file in try sources("Sources/RavenUI/Views") {
             #expect(!file.text.contains("appInfo?.version"), "\(file.name) reads the engine's version by itself")
