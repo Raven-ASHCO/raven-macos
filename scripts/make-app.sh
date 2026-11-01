@@ -16,8 +16,11 @@
 # The app points the engine at Contents/Helpers/raven-node at start (BundledNode.swift sets
 # RAVEN_NODE_BIN unless it is set already); raven-node finds raven-tor-helper and RavenNearby.app next to
 # itself. RavenNearby.app is its own app bundle (Info.plist from core/node/crates/raven-node/macos/, with
-# NSBluetoothAlwaysUsageDescription): raven-node starts it as its own responsible process, so macOS asks
-# for Bluetooth for "RavenNearby", not for Raven.
+# NSBluetoothAlwaysUsageDescription). raven-node starts it as its own responsible process, but macOS
+# still holds Raven.app, whose signature seals the helper, to account for its Bluetooth use: without the
+# same NSBluetoothAlwaysUsageDescription in Raven.app's Info.plist, macOS stops the helper (SIGABRT,
+# "no usage description") as soon as it opens Bluetooth. So the app's Info.plist carries the helper's
+# text, and macOS asks for Bluetooth for Raven.
 #
 # Environment:
 #   RAVEN_DEMO=1        the clickable demo instead: MockRaven compiled into the release build
@@ -34,10 +37,7 @@
 #                       raven-tor-helper, raven-node, then the app; this is not a Developer ID
 #                       signature and not notarised)
 #   RAVEN_HARDENED=0    sign without the hardened runtime (on by default for the app and the helpers;
-#                       RavenNearby.app then carries com.apple.security.device.bluetooth from
-#                       scripts/RavenNearby.entitlements: under the hardened runtime macOS stops a
-#                       helper without it as soon as it opens Bluetooth, SIGABRT with "no usage
-#                       description", whatever its Info.plist says; the others need no entitlement)
+#                       none of them needs an entitlement)
 #   RAVEN_UNIVERSAL=0   build for Apple silicon (arm64) only. The demo is universal by default: arm64
 #                       for macOS 13+ plus x86_64 for Intel Macs on macOS 14+, joined with lipo.
 #
@@ -270,6 +270,11 @@ PLIST
 plutil -insert CFBundleName -string "$APP_NAME" "$PLIST"
 plutil -insert CFBundleDisplayName -string "$APP_NAME" "$PLIST"
 plutil -insert NSLocalNetworkUsageDescription -string "$LOCAL_NETWORK" "$PLIST"
+if [ -n "$ENGINE_OUT" ]; then
+    # RavenNearby's Bluetooth use is held against Raven.app too (see the top of this file): the same text.
+    BLUETOOTH="$(/usr/libexec/PlistBuddy -c "Print :NSBluetoothAlwaysUsageDescription" "$NEARBY/Contents/Info.plist")"
+    plutil -insert NSBluetoothAlwaysUsageDescription -string "$BLUETOOTH" "$PLIST"
+fi
 if [ -n "$ICON_KEY" ]; then plutil -insert CFBundleIconFile -string "$ICON_KEY" "$PLIST"; fi
 if [ -n "$INTEL_BIN" ]; then
     # Finder then explains "needs macOS 14" on an Intel Mac with macOS 13 instead of failing to launch.
@@ -301,16 +306,7 @@ if [ "${RAVEN_SIGN:-1}" = "1" ] && command -v codesign >/dev/null; then
     done
     "${SIGN[@]}" "$RES_BUNDLE"
     if [ -n "$ENGINE_OUT" ]; then
-        NEARBY_CODE=("${CODE[@]}")
-        if [ "${RAVEN_HARDENED:-1}" = "1" ]; then
-            NEARBY_CODE+=(--entitlements "$HERE/scripts/RavenNearby.entitlements")
-        fi
-        "${NEARBY_CODE[@]}" --identifier org.raven.nearby "$NEARBY"
-        if [ "${RAVEN_HARDENED:-1}" = "1" ] \
-            && ! codesign -d --entitlements - "$NEARBY" 2>/dev/null | grep -q "com.apple.security.device.bluetooth"; then
-            echo "RavenNearby.app was signed without the Bluetooth entitlement" >&2
-            exit 1
-        fi
+        "${CODE[@]}" --identifier org.raven.nearby "$NEARBY"
         "${CODE[@]}" --identifier io.github.raven-ashco.Raven.tor-helper "$HELPERS/raven-tor-helper"
         "${CODE[@]}" --identifier io.github.raven-ashco.Raven.node "$HELPERS/raven-node"
     fi
