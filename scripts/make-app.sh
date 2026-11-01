@@ -34,7 +34,10 @@
 #                       raven-tor-helper, raven-node, then the app; this is not a Developer ID
 #                       signature and not notarised)
 #   RAVEN_HARDENED=0    sign without the hardened runtime (on by default for the app and the helpers;
-#                       none of them needs an entitlement)
+#                       RavenNearby.app then carries com.apple.security.device.bluetooth from
+#                       scripts/RavenNearby.entitlements: under the hardened runtime macOS stops a
+#                       helper without it as soon as it opens Bluetooth, SIGABRT with "no usage
+#                       description", whatever its Info.plist says; the others need no entitlement)
 #   RAVEN_UNIVERSAL=0   build for Apple silicon (arm64) only. The demo is universal by default: arm64
 #                       for macOS 13+ plus x86_64 for Intel Macs on macOS 14+, joined with lipo.
 #
@@ -298,7 +301,16 @@ if [ "${RAVEN_SIGN:-1}" = "1" ] && command -v codesign >/dev/null; then
     done
     "${SIGN[@]}" "$RES_BUNDLE"
     if [ -n "$ENGINE_OUT" ]; then
-        "${CODE[@]}" --identifier org.raven.nearby "$NEARBY"
+        NEARBY_CODE=("${CODE[@]}")
+        if [ "${RAVEN_HARDENED:-1}" = "1" ]; then
+            NEARBY_CODE+=(--entitlements "$HERE/scripts/RavenNearby.entitlements")
+        fi
+        "${NEARBY_CODE[@]}" --identifier org.raven.nearby "$NEARBY"
+        if [ "${RAVEN_HARDENED:-1}" = "1" ] \
+            && ! codesign -d --entitlements - "$NEARBY" 2>/dev/null | grep -q "com.apple.security.device.bluetooth"; then
+            echo "RavenNearby.app was signed without the Bluetooth entitlement" >&2
+            exit 1
+        fi
         "${CODE[@]}" --identifier io.github.raven-ashco.Raven.tor-helper "$HELPERS/raven-tor-helper"
         "${CODE[@]}" --identifier io.github.raven-ashco.Raven.node "$HELPERS/raven-node"
     fi
