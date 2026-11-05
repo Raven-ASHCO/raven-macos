@@ -1,10 +1,11 @@
 import SwiftUI
 
 /// The design tokens (desktop/design/tokens.json, version 2: the Calm design), loaded at runtime from
-/// the bundled copy.
+/// the bundled copy, with the colours tokens.macos.json raises for contrast.
 public final class Theme: @unchecked Sendable {
     public static let shared: Theme = {
-        guard let data = RavenResources.data("tokens", "json"), let theme = try? Theme(json: data) else {
+        guard let data = RavenResources.data("tokens", "json"),
+              let theme = try? Theme(json: data, macos: RavenResources.data("tokens.macos", "json")) else {
             fatalError("tokens.json is missing or unreadable in the RavenUI resource bundle")
         }
         return theme
@@ -66,7 +67,8 @@ public final class Theme: @unchecked Sendable {
     let light: Palette
     let dark: Palette
 
-    public init(json: Data) throws {
+    /// `json`: tokens.json; `macos`: tokens.macos.json, read over it (its `colorContrast`).
+    public init(json: Data, macos: Data? = nil) throws {
         guard let root = try JSONSerialization.jsonObject(with: json) as? [String: Any],
               let color = root["color"] as? [String: Any],
               let spacing = root["spacing"] as? [String: Double],
@@ -199,6 +201,18 @@ public final class Theme: @unchecked Sendable {
             let (l, d) = try pair(name)
             lightColors[name] = try Theme.color(hex: l)
             darkColors[name] = try Theme.color(hex: d)
+        }
+        // tokens.macos.json raises colours of tokens.json too faint to read (text contrast of at least
+        // 4.5 to 1, as the iPhone app does); only names tokens.json has.
+        if let macos {
+            guard let overlay = try JSONSerialization.jsonObject(with: macos) as? [String: Any] else {
+                throw RavenError.internalError("tokens.macos.json has an unexpected shape")
+            }
+            for (name, value) in (overlay["colorContrast"] as? [String: Any]) ?? [:] where lightColors[name] != nil {
+                guard let pair = value as? [String: String], let l = pair["light"], let d = pair["dark"] else { continue }
+                lightColors[name] = try Theme.color(hex: l)
+                darkColors[name] = try Theme.color(hex: d)
+            }
         }
         guard let avatars = color["avatar"] as? [[String: [String: String]]], avatars.count == 5 else {
             throw RavenError.internalError("tokens.json needs 5 avatar colours")

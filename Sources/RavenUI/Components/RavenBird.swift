@@ -6,7 +6,7 @@ import SwiftUI
 // file against them.
 //
 // Light: an ink raven (textPrimary), the wing textSecondary, a white eye (surface). Dark: a black
-// raven (#0B0B0B) with a thin light outline (textTertiary, 1 pt), the wing a step lighter (#3C3C3C), a
+// raven (#0B0B0B) with a thin light outline (#85847E, 1 pt), the wing a step lighter (#3C3C3C), a
 // light eye (textPrimary).
 
 /// The raven's geometry in its own units: a 120 by 100 box facing right, the feet at (66, 90).
@@ -318,9 +318,12 @@ enum RavenLook: String, CaseIterable {
     init(_ scheme: ColorScheme) { self = scheme == .dark ? .dark : .light }
     init(_ palette: Palette) { self = palette.isDark ? .dark : .light }
 
-    /// The black raven of dark mode (#0B0B0B) and its wing, a step lighter (#3C3C3C).
+    /// The black raven of dark mode (#0B0B0B), its wing a step lighter (#3C3C3C), and its outline
+    /// (#85847E): raven-bird.json's colour, the textTertiary of tokens.json, which the app raises
+    /// for text (tokens.macos.json) but the bird keeps, as on the iPhone.
     static let black = Color(.sRGB, white: 11 / 255)
     static let darkWing = Color(.sRGB, white: 60 / 255)
+    static let darkOutline = Color(.sRGB, red: 0x85 / 255, green: 0x84 / 255, blue: 0x7E / 255)
 
     func colors(seal: Color? = nil) -> RavenFigure.Colors {
         let p = Theme.shared.palette(self == .dark ? .dark : .light)
@@ -329,7 +332,7 @@ enum RavenLook: String, CaseIterable {
             return RavenFigure.Colors(ink: p.textPrimary, wing: p.textSecondary, eye: p.surface, outline: nil,
                                       paper: p.background, line: p.textSecondary, seal: seal ?? p.named("pathTor"))
         case .dark:
-            return RavenFigure.Colors(ink: Self.black, wing: Self.darkWing, eye: p.textPrimary, outline: p.textTertiary,
+            return RavenFigure.Colors(ink: Self.black, wing: Self.darkWing, eye: p.textPrimary, outline: Self.darkOutline,
                                       paper: p.background, line: p.textSecondary, seal: seal ?? p.named("pathTor"))
         }
     }

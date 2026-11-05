@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import SwiftUI
 import Testing
@@ -59,6 +60,57 @@ import Testing
                 let drawn = try drawnWidth(card.view, model, offered: width)
                 #expect(drawn <= width.rounded(.up), "\(card.name) is \(drawn) points wide in \(width)")
             }
+        }
+    }
+
+    // MARK: Colours, contrast and focus
+
+    /// The WCAG contrast of two opaque colours (1 to 21).
+    static func contrast(_ a: Color, _ b: Color) -> Double {
+        func luminance(_ c: Color) -> Double {
+            let n = NSColor(c).usingColorSpace(.sRGB) ?? .black
+            func f(_ v: CGFloat) -> Double { Double(v) <= 0.04045 ? Double(v) / 12.92 : pow((Double(v) + 0.055) / 1.055, 2.4) }
+            return 0.2126 * f(n.redComponent) + 0.7152 * f(n.greenComponent) + 0.0722 * f(n.blueComponent)
+        }
+        let (x, y) = (luminance(a), luminance(b))
+        return (max(x, y) + 0.05) / (min(x, y) + 0.05)
+    }
+
+    static func hex(_ c: Color) -> String {
+        let n = NSColor(c).usingColorSpace(.sRGB) ?? .black
+        return String(format: "#%02X%02X%02X", Int((n.redComponent * 255).rounded()),
+                      Int((n.greenComponent * 255).rounded()), Int((n.blueComponent * 255).rounded()))
+    }
+
+    /// Text reaches 4.5 to 1 where it sits, light and dark. The tertiary text (section labels, times,
+    /// the sidebar's last line) was 3.06 to 1 in light and 3.37 in dark; it has the iPhone app's colours.
+    @Test func textReachesFourAndAHalfToOne() {
+        for scheme in [ColorScheme.light, .dark] {
+            let p = Theme.shared.palette(scheme)
+            for (name, text) in [("textPrimary", p.textPrimary), ("textSecondary", p.textSecondary), ("textTertiary", p.textTertiary)] {
+                for (ground, colour) in [("background", p.background), ("surface", p.surface), ("sidebar", p.sidebar)] {
+                    #expect(Self.contrast(text, colour) >= 4.5, "\(name) on \(ground) in \(scheme)")
+                }
+            }
+        }
+        #expect(Self.hex(Theme.shared.palette(.light).textTertiary) == "#6E6D67")
+        #expect(Self.hex(Theme.shared.palette(.dark).textTertiary) == "#908F89")
+    }
+
+    /// tokens.macos.json only raises colours tokens.json names; it adds none.
+    @Test func theMacTokensOnlyRaiseSharedColours() throws {
+        let resources = packageRoot.appendingPathComponent("Sources/RavenUI/Resources")
+        func json(_ file: String) throws -> [String: Any] {
+            try #require(JSONSerialization.jsonObject(with: Data(contentsOf: resources.appendingPathComponent(file))) as? [String: Any])
+        }
+        let mac = try json("tokens.macos.json")
+        let colours = try #require(try json("tokens.json")["color"] as? [String: Any])
+        #expect(Set(mac.keys).isSubset(of: ["name", "note", "colorContrast"]))
+        let raised = try #require(mac["colorContrast"] as? [String: Any])
+        for (name, value) in raised where name != "note" {
+            #expect(colours[name] != nil && Palette.names.contains(name), "\(name) is not a colour of tokens.json")
+            let pair = try #require(value as? [String: String], "\(name)")
+            #expect(pair["light"] != nil && pair["dark"] != nil, "\(name)")
         }
     }
 
