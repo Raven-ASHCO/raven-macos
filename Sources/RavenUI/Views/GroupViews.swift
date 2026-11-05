@@ -123,7 +123,8 @@ struct GroupHeader: View {
             .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
                 Text(group.name).font(.system(size: Theme.shared.type.title, weight: .semibold)).lineLimit(1)
-                Text(Display.groupMembersLine(group, members: members, contacts: model.contacts) + " · " + tr(.groupsSealed))
+                // The route line under it says "a sealed copy for each member".
+                Text(Display.groupMembersLine(group, members: members, contacts: model.contacts))
                     .font(RFont.caption).foregroundColor(p.textSecondary).lineLimit(1)
             }
             .layoutPriority(1)
@@ -233,9 +234,10 @@ struct GroupMeta: View {
             HStack(spacing: 8) {
                 Text(TimeText.bubble(ms: message.atMs, now: clock.now)).foregroundColor(p.textSecondary)
                 GroupRing(states: receipts.map(\.state))
-                Text(status.text).font(.system(size: 11.5, weight: .semibold))
+                // One text: the note's separator sits a space from both sides, not the row's spacing.
+                (Text(status.text).font(.system(size: 11.5, weight: .semibold))
                     .foregroundColor(!receipts.isEmpty && receipts.allSatisfy { $0.state == "delivered" } ? p.success : p.textPrimary)
-                if let note = status.note { Text("· " + note).foregroundColor(p.textSecondary) }
+                 + Text(status.note.map { " · " + $0 } ?? "").foregroundColor(p.textSecondary))
                 if !receipts.isEmpty {
                     Button(open ? tr(.groupsHide) : tr(.messageDetails)) {
                         if open { model.groupDetailsOpen.remove(message.id) } else { model.groupDetailsOpen.insert(message.id) }
