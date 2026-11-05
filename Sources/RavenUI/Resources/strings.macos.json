@@ -1,7 +1,9 @@
 {
   "_note": "Texts the Mac app needs that core/desktop/design/strings.en.json doesn't have yet (the shared file is a copy of raven-core's and must stay identical to it). Every key starts with mac. and only adds a text: Strings.shared loads this file after strings.en.json and never lets it replace a shared key. Move each text into the shared file with raven-core, then delete it here (MacUXFixesTests fails while a key is in both).",
   "mac.settings.updates.install": "Install updates",
-  "mac.about.tagline": "Messages straight to your friends. No Raven server.",
+  "mac.app.tagline": "Messages straight to your friends. No Raven server.",
+  "mac.welcome.body1": "Raven sends messages straight from this computer to the computers of your friends. There is no Raven server, no account and no phone number.",
+  "mac.welcome.body2": "Your friend can be on the same WiFi or on any other network. Between different networks, Raven goes through the Tor network: slower, but it works from most places.",
   "mac.settings.network.lead": "The ways Raven reaches your friends, as the Network page shows them. The Network page says more about each one.",
   "mac.settings.reducedMotion.body": "Nothing moves: no springs, no packets, no spinners. Texts still change. Raven also follows Reduce motion in macOS.",
   "mac.settings.stored.plain": "Not encrypted: settings that name no one (such as which ways to reach friends are on) and the log of the background program.",

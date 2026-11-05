@@ -614,7 +614,7 @@ struct AboutSection: View {
                 VStack(spacing: 4) {
                     RavenMark(size: 74, color: p.textPrimary).padding(.bottom, 8)
                     Text(tr(.appName)).font(.system(size: 20, weight: .bold))
-                    Text(tr(.macAboutTagline)).font(.system(size: 13)).foregroundColor(p.textSecondary)
+                    Text(tr(.macAppTagline)).font(.system(size: 13)).foregroundColor(p.textSecondary)
                     if let version = model.shownVersion {
                         Text(tr(.netVersion, ["version": version])).font(.system(size: 13)).foregroundColor(p.textSecondary)
                     }

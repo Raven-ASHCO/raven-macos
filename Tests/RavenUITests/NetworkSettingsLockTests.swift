@@ -271,7 +271,7 @@ import Testing
                   // This computer's heartbeat line, as the Network page shows it.
                   Display.plainWords(Display.heartbeat(node: nil, lastOk: nil, now: testStart).text)]
         for text in shown { #expect(Self.plain(text), "\(text)") }
-        #expect(tr(.macAboutTagline).contains("No Raven server"))
+        #expect(tr(.macAppTagline).contains("No Raven server"))
     }
 
     // MARK: Lock (the Night curtain)

@@ -26,14 +26,15 @@ public struct WelcomeView: View {
                 .padding(.top, 8)
                 .opacity(still || revealed ? 1 : 0)
                 .accessibilityHidden(true)
-            Text(tr(.appTagline))
+            // The Mac words of the shared texts: "No Raven server" (as About says it), no apostrophe, no hyphen.
+            Text(tr(.macAppTagline))
                 .foregroundColor(p.textSecondary)
                 .padding(.top, 2)
                 .mask(Rectangle().scaleEffect(x: still ? 1 : tagline, y: 1, anchor: .leading))
             VStack(alignment: .leading, spacing: 8) {
                 Text(tr(.welcomeTitle)).font(RFont.title)
-                Text(tr(.welcomeBody1)).fixedSize(horizontal: false, vertical: true)
-                Text(tr(.welcomeBody2)).foregroundColor(p.textSecondary).fixedSize(horizontal: false, vertical: true)
+                Text(tr(.macWelcomeBody1)).fixedSize(horizontal: false, vertical: true)
+                Text(tr(.macWelcomeBody2)).foregroundColor(p.textSecondary).fixedSize(horizontal: false, vertical: true)
                 VStack(alignment: .leading, spacing: 6) {
                     step(1, tr(.welcomeStep1))
                     step(2, tr(.welcomeStep2))

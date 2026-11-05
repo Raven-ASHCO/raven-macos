@@ -531,7 +531,9 @@ public enum Str: String, CaseIterable, Sendable {
     case lockPassphraseNotInApp = "lock.passphrase.notInApp"
     // The Mac app's own texts (Resources/strings.macos.json), until raven-core's strings.en.json has them.
     case macSettingsUpdatesInstall = "mac.settings.updates.install"
-    case macAboutTagline = "mac.about.tagline"
+    case macAppTagline = "mac.app.tagline"
+    case macWelcomeBody1 = "mac.welcome.body1"
+    case macWelcomeBody2 = "mac.welcome.body2"
     case macSettingsNetworkLead = "mac.settings.network.lead"
     case macSettingsReducedMotionBody = "mac.settings.reducedMotion.body"
     case macSettingsStoredPlain = "mac.settings.stored.plain"
