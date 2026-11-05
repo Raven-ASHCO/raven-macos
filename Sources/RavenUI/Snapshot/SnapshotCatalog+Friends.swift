@@ -60,13 +60,14 @@ extension SnapshotCatalog {
                                                                          check: CheckWordsState(address: contact.address)))))
         }
 
-        // Check words, just opened, and after a word Raven does not know.
+        // Check words, just opened, and after a word Raven does not know: pasted with a word after
+        // it, which stays in the field ("bal" was no example: it completes to "ball").
         let (fresh, _) = await readyModel(after: 2)
         shots.append(sheetShot("77-check-words-start", fresh, width: 560,
                                CheckWordsSheet(address: MockRaven.renaAddress, highlight: 0)))
         let (unknown, _) = await readyModel(after: 2)
         let unknownState = CheckWordsState(address: MockRaven.renaAddress)
-        unknownState.field = "airport bal banana "
+        unknownState.field = "airport rocket banana "
         await unknownState.fieldChanged(unknown)
         shots.append(sheetShot("78-check-words-not-a-word", unknown, width: 560,
                                CheckWordsSheet(address: MockRaven.renaAddress, state: unknownState, highlight: 0)))
