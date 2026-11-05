@@ -16,7 +16,7 @@ struct ChatArea: View {
                 // One list per friend: another friend's chat opens at its newest message.
                 MessagesList(contact: contact).id(contact.address)
                 ComposerBar(placeholder: tr(.homeComposer, ["name": contact.name]),
-                            note: tr(.chatEncrypted, ["name": contact.name])) {
+                            note: tr(.macChatEncrypted, ["name": contact.name]), shortNote: tr(.macChatEncryptedShort)) {
                     await model.sendComposer()
                 }
             } else {
@@ -747,6 +747,8 @@ struct BubbleShape: InsettableShape {
 struct ComposerBar: View {
     let placeholder: String
     let note: String
+    /// The note where the whole one does not fit on its line.
+    var shortNote: String?
     var disabled: Bool = false
     let send: () async -> Void
     @EnvironmentObject private var model: AppModel
@@ -807,7 +809,11 @@ struct ComposerBar: View {
                 .strokeBorder(focused ? p.accentFill.opacity(0.45) : p.border, lineWidth: focused ? 2 : 1))
             HStack(spacing: 6) {
                 Image(systemName: "lock").font(.system(size: 9.5)).accessibilityHidden(true)
-                Text(note).lineLimit(1)
+                ViewThatFits(in: .horizontal) {
+                    Text(note).fixedSize()
+                    if let shortNote { Text(shortNote).fixedSize() }
+                    Text(note).lineLimit(1)
+                }
             }
             .font(.system(size: 11))
             .foregroundColor(p.textTertiary)

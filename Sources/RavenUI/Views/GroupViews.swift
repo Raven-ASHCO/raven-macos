@@ -90,7 +90,8 @@ struct GroupChatArea: View {
                           label: RouteLabel(text: tr(.groupsSealed), family: .other, tone: nil, dashed: false))
                 GroupMessagesList(group: group, members: members).id(group.id)
                 if group.active {
-                    ComposerBar(placeholder: tr(.homeComposer, ["name": group.name]), note: tr(.groupsEncrypted)) {
+                    ComposerBar(placeholder: tr(.homeComposer, ["name": group.name]), note: tr(.macGroupsEncrypted),
+                            shortNote: tr(.macChatEncryptedShort)) {
                         await model.sendGroupComposer()
                     }
                 } else {
