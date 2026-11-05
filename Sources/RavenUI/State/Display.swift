@@ -164,9 +164,9 @@ public enum Display {
         var lines: [String] = []
         if let away = routes.carriers?.away {
             if away.firstMessage == true {
-                lines.append(tr(.networkRoutesAwayFirstMessage, ["name": name]))
+                lines.append(tr(.macNetworkRoutesAwayFirstMessage, ["name": name]))
             } else if away.meetFirst == true {
-                lines.append(tr(.networkRoutesAwayMeetFirst, ["name": name]))
+                lines.append(tr(.macNetworkRoutesAwayMeetFirst, ["name": name]))
             } else if let until = away.untilMs, until > 0 {
                 lines.append(tr(.networkRoutesAway, ["name": name, "time": TimeText.deadline(ms: until, now: now)]))
             }

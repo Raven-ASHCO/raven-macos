@@ -212,6 +212,25 @@ import Testing
         #expect(CheckNetworkPage.summaryRows(check).map(\.key) == ["identity", "lan"])
     }
 
+    /// A friend's routes said "Raven can't hold new messages for them now" and "Raven hasn't connected
+    /// with" about a friend who is away (`Display.awayLines`, outside the files the test below reads).
+    @Test func theRoutesSheetSaysAwayPlainly() async throws {
+        let (model, _) = await readyModel()
+        var said = 0
+        for address in model.contacts.map(\.address) {
+            await model.network.loadRoutes(address)
+            let routes = try #require(model.network.routes[address])
+            for line in Display.awayLines(routes, name: "Neighbour", now: testStart) {
+                #expect(Self.plain(line), "\(line)")
+                said += 1
+            }
+        }
+        #expect(said > 0)
+        for key in [Str.macNetworkRoutesAwayMeetFirst, .macNetworkRoutesAwayFirstMessage] {
+            #expect(Self.plain(tr(key, ["name": "Neighbour"])))
+        }
+    }
+
     /// Every text the Network screens, Settings and the menu bar show, and the lock's, quit's and the
     /// locked window's, in plain words (and "No Raven server" in About).
     @Test func theseScreensSayItPlainly() throws {

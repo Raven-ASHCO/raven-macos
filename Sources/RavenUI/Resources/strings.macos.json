@@ -47,6 +47,8 @@
   "mac.network.routes.peerId": "Peer to peer ID: {id}",
   "mac.network.routes.next": "Next peer to peer ID: {id}",
   "mac.network.routes.relays": "Relays for the peer to peer route (one per line, or separated by commas)",
+  "mac.network.routes.awayMeetFirst": "To write to {name}, meet first: Raven cannot hold new messages for them now.",
+  "mac.network.routes.awayFirstMessage": "A first message needs you and {name} both online (Raven has not connected with {name} yet).",
   "mac.security.status": "Status",
   "mac.security.node.title": "Counted by the Raven background program",
   "mac.security.preview": "Security notices are not in this version of Raven yet.",

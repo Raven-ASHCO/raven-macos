@@ -35,7 +35,7 @@ import Testing
         // A week away has its date (E1 round 4: "until Sun 17:15" read on a Sunday looked like now).
         #expect(TimeText.deadline(ms: until, now: testStart) != TimeText.clock(ms: until))
         let meet = try routes(#"{"address":"a","verified":true,"routes":[],"carriers":{"away":{"meet_first":true}}}"#)
-        #expect(Display.awayLines(meet, name: "mac-a", now: testStart) == [tr(.networkRoutesAwayMeetFirst, ["name": "mac-a"])])
+        #expect(Display.awayLines(meet, name: "Neighbour", now: testStart) == [tr(.macNetworkRoutesAwayMeetFirst, ["name": "Neighbour"])])
         let shared = try routes("""
             {"address":"a","verified":true,"routes":[],"carriers":{"coverage":{"kind":"mutual_friend",
             "name":"a mail friend you share","until":"up to 7 days (letters) or a day (plain)"},"away":{"until_ms":\(until)}}}
@@ -52,12 +52,12 @@ import Testing
     /// sentence (`first_message`, next to `meet_first`), and "meet first" is only for an ended connection.
     @Test func routesTellAFirstMessageFromAnEndedConnection() async throws {
         let first = try routes(#"{"address":"a","verified":true,"routes":[],"carriers":{"away":{"meet_first":true,"first_message":true}}}"#)
-        let line = Display.awayLines(first, name: "win-c", now: testStart)
-        #expect(line == [tr(.networkRoutesAwayFirstMessage, ["name": "win-c"])])
-        #expect(line == ["A first message needs you and win-c both online (Raven hasn't connected with win-c yet)."])
+        let line = Display.awayLines(first, name: "Neighbour", now: testStart)
+        #expect(line == [tr(.macNetworkRoutesAwayFirstMessage, ["name": "Neighbour"])])
+        #expect(line == ["A first message needs you and Neighbour both online (Raven has not connected with Neighbour yet)."])
         let ended = try routes(#"{"address":"a","verified":true,"routes":[],"carriers":{"away":{"meet_first":true}}}"#)
-        #expect(Display.awayLines(ended, name: "win-c", now: testStart)
-                == ["To write to win-c, meet first: Raven can't hold new messages for them now."])
+        #expect(Display.awayLines(ended, name: "Neighbour", now: testStart)
+                == ["To write to Neighbour, meet first: Raven cannot hold new messages for them now."])
         // The demo's friend who isn't verified was never connected with: the first-message rule.
         let (model, _) = await readyModel()
         let rena = MockRaven.renaAddress
@@ -65,7 +65,7 @@ import Testing
         let routes = try #require(model.network.routes[rena])
         #expect(routes.carriers?.away == AwayWait(untilMs: nil, meetFirst: true, firstMessage: true))
         #expect(Display.awayLines(routes, name: "Rena", now: testStart).first
-                == tr(.networkRoutesAwayFirstMessage, ["name": "Rena"]))
+                == tr(.macNetworkRoutesAwayFirstMessage, ["name": "Rena"]))
     }
 
     /// 5. Routes names the address in use and says plainly when the saved one is old.

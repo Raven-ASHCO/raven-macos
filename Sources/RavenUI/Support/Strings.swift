@@ -577,6 +577,8 @@ public enum Str: String, CaseIterable, Sendable {
     case macNetworkRoutesPeerId = "mac.network.routes.peerId"
     case macNetworkRoutesNext = "mac.network.routes.next"
     case macNetworkRoutesRelays = "mac.network.routes.relays"
+    case macNetworkRoutesAwayMeetFirst = "mac.network.routes.awayMeetFirst"
+    case macNetworkRoutesAwayFirstMessage = "mac.network.routes.awayFirstMessage"
     case macSecurityStatus = "mac.security.status"
     case macSecurityNodeTitle = "mac.security.node.title"
     case macSecurityPreview = "mac.security.preview"
