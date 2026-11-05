@@ -1143,7 +1143,8 @@ public final class MockRaven: RavenEngine, @unchecked Sendable {
     /// Runs every scheduled step that is due and emits the heartbeat (`status_ok` every 2 s).
     private func advance() {
         let now = clock.now
-        while let next = timeline.min(by: { ($0.at, $0.order) < ($1.at, $1.order) }), next.at <= now {
+        // Not `next.at <= now`: `Date <=` is back deployed and crashes on some macOS builds.
+        while let next = timeline.min(by: { ($0.at, $0.order) < ($1.at, $1.order) }), !(next.at > now) {
             timeline.removeAll { $0.order == next.order }
             next.action(self, next.at)
         }

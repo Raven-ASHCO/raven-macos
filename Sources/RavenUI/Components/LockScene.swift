@@ -62,7 +62,8 @@ struct LockScene: View {
             }
             return sequence(first: start) { date in
                 if mode == .lowFrequency { return date.addingTimeInterval(1) }
-                if let slowFrom, date >= slowFrom { return date.addingTimeInterval(1.0 / 15) }
+                // Not `date >= slowFrom`: that operator is back deployed and crashes on some macOS builds.
+                if let slowFrom, !(slowFrom > date) { return date.addingTimeInterval(1.0 / 15) }
                 return date.addingTimeInterval(1.0 / 30)
             }
         }

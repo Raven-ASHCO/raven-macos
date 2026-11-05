@@ -368,8 +368,9 @@ public final class AppModel: ObservableObject {
     public func tick() {
         clock.set(nowProvider())
         let now = clock.now
-        if let t = toast, t.until <= now { toast = nil }
-        if freshUntil.values.contains(where: { $0 <= now }) { freshUntil = freshUntil.filter { $0.value > now } }
+        // `Date <= Date` is back deployed and missing from some macOS builds (a crash): `!(a > b)`.
+        if let t = toast, !(t.until > now) { toast = nil }
+        if freshUntil.values.contains(where: { !($0 > now) }) { freshUntil = freshUntil.filter { $0.value > now } }
     }
 
     /// Polls `events.poll` once and applies the events. A call while a poll is in flight does not
