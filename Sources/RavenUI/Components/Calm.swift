@@ -60,7 +60,9 @@ private struct DividedRows: _VariadicView_MultiViewRoot {
 }
 
 /// One row of a grouped card: title (and an optional description) on the left, the control on the
-/// right, as in the Calm Settings.
+/// right, as in the Calm Settings. In a row too narrow for both (a small window) the control goes
+/// under the words (`BesideOrUnder`), instead of squeezing them to a word a line or running past the
+/// card.
 struct CalmItem<Control: View>: View {
     let title: String
     let description: String?
@@ -76,7 +78,7 @@ struct CalmItem<Control: View>: View {
     }
 
     var body: some View {
-        HStack(alignment: .center, spacing: 18) {
+        BesideOrUnder(spacing: 18) {
             VStack(alignment: .leading, spacing: 3) {
                 Text(title).font(.system(size: 13.5, weight: .medium)).fixedSize(horizontal: false, vertical: true)
                 if let description, !description.isEmpty {
@@ -95,6 +97,102 @@ struct CalmItem<Control: View>: View {
     }
 }
 
+/// Words and a control: side by side as in an HStack (the words fill, the control keeps its own width
+/// at the trailing edge, all centred on one line) while the words keep at least `minWords` points;
+/// else the control goes under the words, lined up with their text and offered its width. The first
+/// `words` subviews make the words, in a row (an icon and its text: all but the last keep their own
+/// width, the last fills); the others are the control, in a row.
+struct BesideOrUnder: Layout {
+    /// The space between the parts of the words.
+    var spacing: CGFloat = 18
+    /// How many of the first subviews make the words.
+    var words = 1
+    /// The narrowest the words' text (their last part) gets beside a control.
+    var minWords: CGFloat = 150
+    /// The space between the words and a control beside them (nil: `spacing`).
+    var controlGap: CGFloat?
+    /// The gap between the words and a control under them.
+    var gap: CGFloat = 10
+    /// The space between the parts of the control.
+    static let controlSpacing: CGFloat = 8
+
+    /// Whether a control `control` points wide goes beside a text that has `width` points with it.
+    static func beside(width: CGFloat, control: CGFloat, spacing: CGFloat = 18, minWords: CGFloat = 150) -> Bool {
+        control <= 0 || width - spacing - control >= minWords
+    }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        arrange(width: proposal.width, subviews).size
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        for (subview, frame) in zip(subviews, arrange(width: bounds.width, subviews).frames) {
+            subview.place(at: CGPoint(x: bounds.minX + frame.minX, y: bounds.minY + frame.minY),
+                          anchor: .topLeading, proposal: ProposedViewSize(frame.size))
+        }
+    }
+
+    /// The size of the whole and each subview's frame in it, `width` points wide (nil: as wide as it
+    /// would like). The size says what it really takes: a part that cannot narrow enough makes it
+    /// wider than offered, as in a stack, so the card around it shows the overflow instead of hiding it.
+    private func arrange(width: CGFloat?, _ subviews: Subviews) -> (size: CGSize, frames: [CGRect]) {
+        let n = min(max(words, 1), subviews.count)
+        guard n > 0 else { return (.zero, []) }
+        let lead = subviews.prefix(n - 1).map { $0.sizeThatFits(.unspecified) }
+        let text = subviews[n - 1]
+        let controls = Array(subviews.dropFirst(n))
+        let ideal = controls.map { $0.sizeThatFits(.unspecified) }
+        let controlWidth = ideal.map(\.width).reduce(0, +) + Self.controlSpacing * CGFloat(max(0, controls.count - 1))
+        let indent = lead.reduce(0) { $0 + $1.width + spacing }
+        let gapBeside = controls.isEmpty ? 0 : (controlGap ?? spacing)
+
+        // The words in a row with the text offered `textWidth`, and the controls beside them, all
+        // centred on one line: the frames, where the row ends and its height.
+        func row(textWidth: CGFloat?, beside: [CGSize]) -> (frames: [CGRect], end: CGFloat, height: CGFloat) {
+            let t = text.sizeThatFits(ProposedViewSize(width: textWidth, height: nil))
+            let height = max(t.height, lead.map(\.height).max() ?? 0, beside.map(\.height).max() ?? 0)
+            var frames: [CGRect] = []
+            var x: CGFloat = 0
+            for size in lead {
+                frames.append(CGRect(x: x, y: (height - size.height) / 2, width: size.width, height: size.height))
+                x += size.width + spacing
+            }
+            let textFrame = max(textWidth ?? 0, t.width)
+            frames.append(CGRect(x: x, y: (height - t.height) / 2, width: textFrame, height: t.height))
+            x += textFrame
+            for (i, size) in beside.enumerated() {
+                x += i == 0 ? gapBeside : Self.controlSpacing
+                frames.append(CGRect(x: x, y: (height - size.height) / 2, width: size.width, height: size.height))
+                x += size.width
+            }
+            return (frames, x, height)
+        }
+
+        guard let width else {
+            let r = row(textWidth: nil, beside: ideal)
+            return (CGSize(width: r.end, height: r.height), r.frames)
+        }
+        if Self.beside(width: width - indent, control: controlWidth, spacing: gapBeside, minWords: minWords) {
+            let r = row(textWidth: max(0, width - indent - gapBeside - controlWidth), beside: ideal)
+            return (CGSize(width: max(width, r.end), height: r.height), r.frames)
+        }
+        // Under the words, lined up with the text: one control is offered the text's width (a field
+        // narrows, a segmented control turns into radio rows); several keep their own widths in a row.
+        let r = row(textWidth: max(0, width - indent), beside: [])
+        var frames = r.frames
+        var x = indent
+        var height: CGFloat = 0
+        for (i, (control, size)) in zip(controls, ideal).enumerated() {
+            let s = controls.count == 1 ? control.sizeThatFits(ProposedViewSize(width: width - indent, height: nil)) : size
+            if i > 0 { x += Self.controlSpacing }
+            frames.append(CGRect(x: x, y: r.height + gap, width: s.width, height: s.height))
+            x += s.width
+            height = max(height, s.height)
+        }
+        return (CGSize(width: max(width, r.end, x), height: r.height + gap + height), frames)
+    }
+}
+
 extension CalmItem where Control == EmptyView {
     init(_ title: String, _ description: String? = nil, disabled: Bool = false) {
         self.init(title, description, disabled: disabled) { EmptyView() }
@@ -104,7 +202,8 @@ extension CalmItem where Control == EmptyView {
 // MARK: - Segmented control
 
 /// A segmented control whose thumb slides and resizes to the chosen option (curve `thumb`).
-/// VoiceOver reads a radio group; each option is a button.
+/// VoiceOver reads a radio group; each option is a button. Where the options do not fit side by side
+/// (a Settings row in a small window), they are radio rows instead (`RRadioGroup`).
 public struct RSegmented<Value: Hashable>: View {
     let label: String
     let options: [(value: Value, label: String)]
@@ -120,6 +219,13 @@ public struct RSegmented<Value: Hashable>: View {
     }
 
     public var body: some View {
+        ViewThatFits(in: .horizontal) {
+            segments
+            RRadioGroup(label, options: options, selection: $selection)
+        }
+    }
+
+    private var segments: some View {
         HStack(spacing: 0) {
             ForEach(options.indices, id: \.self) { i in
                 let option = options[i]

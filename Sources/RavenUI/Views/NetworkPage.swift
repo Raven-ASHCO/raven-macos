@@ -44,7 +44,7 @@ struct DetailArea: View {
 }
 
 /// A page of the main window (Calm): the page title with its actions on the right, the intro, then
-/// the content, 900 pt wide at most and centred.
+/// the content, 900 pt wide at most and centred; narrower margins in a narrow window.
 struct PageFrame<Actions: View, Content: View>: View {
     let title: String
     let intro: String?
@@ -60,31 +60,40 @@ struct PageFrame<Actions: View, Content: View>: View {
     }
 
     var body: some View {
-        RScroll {
-            VStack(alignment: .leading, spacing: 0) {
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text(title).font(RFont.pageTitle).tracking(Theme.shared.type.pageTitle.tracking)
-                        .accessibilityAddTraits(.isHeader)
-                    Spacer(minLength: 8)
-                    actions
+        GeometryReader { geo in
+            RScroll {
+                VStack(alignment: .leading, spacing: 0) {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text(title).font(RFont.pageTitle).tracking(Theme.shared.type.pageTitle.tracking)
+                            .accessibilityAddTraits(.isHeader)
+                        Spacer(minLength: 8)
+                        actions
+                    }
+                    .padding(.bottom, 4)
+                    if let intro {
+                        Text(intro).font(.system(size: 14)).foregroundColor(p.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: 560, alignment: .leading)
+                            .padding(.bottom, 20)
+                    }
+                    VStack(alignment: .leading, spacing: 22) { content }
                 }
-                .padding(.bottom, 4)
-                if let intro {
-                    Text(intro).font(.system(size: 14)).foregroundColor(p.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: 560, alignment: .leading)
-                        .padding(.bottom, 20)
-                }
-                VStack(alignment: .leading, spacing: 22) { content }
+                .padding(.horizontal, PageLayout.margin(width: geo.size.width))
+                .padding(.top, 26)
+                .padding(.bottom, 40)
+                .frame(maxWidth: Theme.shared.layout.pageMaxWidth, alignment: .leading)
+                .frame(maxWidth: .infinity)
             }
-            .padding(.horizontal, 32)
-            .padding(.top, 26)
-            .padding(.bottom, 40)
-            .frame(maxWidth: Theme.shared.layout.pageMaxWidth, alignment: .leading)
-            .frame(maxWidth: .infinity)
         }
         .background(p.background)
     }
+}
+
+/// The measures of a main window page (`PageFrame`).
+enum PageLayout {
+    /// The side margins: 32 points, and 20 in a narrow window (the smallest leaves a page 340 points,
+    /// and the cards ran past both edges).
+    static func margin(width: CGFloat) -> CGFloat { width < 440 ? 20 : 32 }
 }
 
 /// A group of rows on a page (Calm): the section label, then a card.
@@ -279,7 +288,8 @@ struct ThisComputerSection: View {
     var body: some View {
         let chip = Display.listening(model.node)
         let hb = Display.heartbeat(node: model.node, lastOk: model.lastStatusOk, now: clock.now)
-        HStack(alignment: .center, spacing: 18) {
+        // Check network goes under the words where both do not fit (a small window cut it to "Check…").
+        BesideOrUnder(spacing: 18, words: 2, minWords: 160, controlGap: 44, gap: 12) {
             Radar(pulse: model.heartbeatPulse)
             VStack(alignment: .leading, spacing: 3) {
                 Text(tr(.netThisComputer)).font(.system(size: 15, weight: .semibold)).accessibilityAddTraits(.isHeader)
@@ -313,7 +323,6 @@ struct ThisComputerSection: View {
                 TechnicalDetails(lines: Display.thisComputerDetails(status: status, node: model.node))
                     .padding(.top, 2)
             }
-            Spacer(minLength: 8)
             Button(tr(.networkCheckTitle) + "…") { model.open(.checkNetwork) }
                 .buttonStyle(RButtonStyle(.secondary))
         }

@@ -15,28 +15,51 @@ public struct SettingsView: View {
     public init() {}
 
     public var body: some View {
-        HStack(spacing: 0) {
-            SettingsNav(select: select)
-                .frame(width: Theme.shared.layout.settingsNavWidth)
-            VRule()
-            RScroll {
-                SettingsSectionBody(section: model.settingsSection)
-                    .id(model.settingsSection)
-                    .transition(motionOff ? .identity : .asymmetric(
-                        insertion: .offset(y: 16 * direction).combined(with: .opacity)
-                            .animation(Theme.shared.curve("section", Theme.shared.motion.sectionIn)
-                                .delay(Theme.shared.motion.sectionOut)),
-                        removal: .offset(y: -10 * direction).combined(with: .opacity)
-                            .animation(.easeIn(duration: Theme.shared.motion.sectionOut))))
-                    .frame(maxWidth: Theme.shared.layout.settingsMaxWidth, alignment: .leading)
-                    .padding(.horizontal, 34)
-                    .padding(.top, 26)
-                    .padding(.bottom, 48)
-                    .frame(maxWidth: .infinity)
+        // In a narrow window the section list shows its coloured squares alone, so the section keeps
+        // room beside it (the smallest window left the section 111 points, and it drew nothing).
+        GeometryReader { geo in
+            let compact = SettingsView.compactNav(width: geo.size.width)
+            HStack(spacing: 0) {
+                SettingsNav(select: select, compact: compact)
+                    .frame(width: compact ? SettingsNav.compactWidth : Theme.shared.layout.settingsNavWidth)
+                VRule()
+                RScroll {
+                    SettingsSectionBody(section: model.settingsSection)
+                        .id(model.settingsSection)
+                        .transition(motionOff ? .identity : .asymmetric(
+                            insertion: .offset(y: 16 * direction).combined(with: .opacity)
+                                .animation(Theme.shared.curve("section", Theme.shared.motion.sectionIn)
+                                    .delay(Theme.shared.motion.sectionOut)),
+                            removal: .offset(y: -10 * direction).combined(with: .opacity)
+                                .animation(.easeIn(duration: Theme.shared.motion.sectionOut))))
+                        .frame(maxWidth: Theme.shared.layout.settingsMaxWidth, alignment: .leading)
+                        .padding(.horizontal, compact ? SettingsView.compactMargin : SettingsView.margin)
+                        .padding(.top, 26)
+                        .padding(.bottom, 48)
+                        .frame(maxWidth: .infinity)
+                }
             }
         }
         .background(p.background)
         .task { await model.refreshPrivacy() }
+    }
+
+    /// The section's side margins, and beside the squares alone.
+    static let margin: CGFloat = 34
+    static let compactMargin: CGFloat = 20
+    /// The narrowest a section gets (its margins included) beside the whole section list.
+    static let sectionMinWidth: CGFloat = 320
+
+    /// Whether Settings `width` points wide shows the section list as its squares alone.
+    static func compactNav(width: CGFloat) -> Bool {
+        width < Theme.shared.layout.settingsNavWidth + 1 + sectionMinWidth
+    }
+
+    /// How wide a section's content is in Settings `width` points wide.
+    static func sectionWidth(_ width: CGFloat) -> CGFloat {
+        let compact = compactNav(width: width)
+        let nav = compact ? SettingsNav.compactWidth : Theme.shared.layout.settingsNavWidth
+        return min(Theme.shared.layout.settingsMaxWidth, width - nav - 1 - 2 * (compact ? compactMargin : margin))
     }
 
     private func select(_ section: AppModel.SettingsSection) {
@@ -70,18 +93,25 @@ public struct SettingsView: View {
 }
 
 /// The section list: "Settings", then one button per section with its coloured square; the
-/// selection (a card) glides between them.
+/// selection (a card) glides between them. Compact (a narrow window): the squares alone, each
+/// naming its section as help and to VoiceOver.
 struct SettingsNav: View {
     let select: (AppModel.SettingsSection) -> Void
+    var compact = false
     @EnvironmentObject private var model: AppModel
     @Environment(\.palette) private var p
     @Namespace private var glider
 
+    /// The width of the compact list: a square in its card, with a margin each side.
+    static let compactWidth: CGFloat = 58
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(tr(.settingsTitle)).font(.system(size: 22, weight: .semibold)).tracking(-0.2)
-                .padding(.horizontal, 10).padding(.bottom, 14)
-                .accessibilityAddTraits(.isHeader)
+        VStack(alignment: compact ? .center : .leading, spacing: 2) {
+            if !compact {
+                Text(tr(.settingsTitle)).font(.system(size: 22, weight: .semibold)).tracking(-0.2)
+                    .padding(.horizontal, 10).padding(.bottom, 14)
+                    .accessibilityAddTraits(.isHeader)
+            }
             ForEach(AppModel.SettingsSection.allCases, id: \.self) { section in
                 let info = SettingsView.info(section)
                 let on = model.settingsSection == section
@@ -93,11 +123,13 @@ struct SettingsNav: View {
                             .frame(width: 26, height: 26)
                             .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(p.named(info.color)))
                             .accessibilityHidden(true)
-                        Text(info.title).font(.system(size: 13.5, weight: on ? .semibold : .regular))
-                            .foregroundColor(on ? p.textPrimary : p.textSecondary)
-                        Spacer(minLength: 0)
+                        if !compact {
+                            Text(info.title).font(.system(size: 13.5, weight: on ? .semibold : .regular))
+                                .foregroundColor(on ? p.textPrimary : p.textSecondary)
+                            Spacer(minLength: 0)
+                        }
                     }
-                    .padding(.horizontal, 10)
+                    .padding(.horizontal, compact ? 8 : 10)
                     .frame(height: 38)
                     .background {
                         if on {
@@ -112,11 +144,13 @@ struct SettingsNav: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .help(compact ? info.title : "")
+                .accessibilityLabel(info.title)
                 .accessibilityAddTraits(on ? [.isSelected, .isButton] : .isButton)
             }
             Spacer(minLength: 0)
         }
-        .padding(.horizontal, 12)
+        .padding(.horizontal, compact ? 8 : 12)
         .padding(.vertical, 22)
         .frame(maxHeight: .infinity, alignment: .top)
     }
@@ -189,7 +223,7 @@ struct GeneralSection: View {
                         get: { nameDraft ?? model.settings.displayName ?? "" },
                         set: { nameDraft = $0 }
                     )) { saveName() }
-                    .frame(width: 220)
+                    .frame(minWidth: 120, idealWidth: 220, maxWidth: 220)
                     .onDisappear { saveName() }
                     .accessibilityLabel(tr(.settingsName))
                 }
@@ -261,7 +295,8 @@ struct SendPreview: View {
     @ViewState private var pop = 0
 
     var body: some View {
-        HStack(spacing: 18) {
+        // Play a send goes under the message where the two do not fit side by side (a small window).
+        BesideOrUnder(spacing: 18, minWords: 190, gap: 14) {
             VStack(alignment: .leading, spacing: 0) {
                 Text(tr(.settingsPreviewText))
                     .font(RFont.bubble)
@@ -297,7 +332,6 @@ struct SendPreview: View {
                 .padding(.horizontal, 4)
             }
             .accessibilityElement(children: .combine)
-            Spacer(minLength: 8)
             Button(tr(.settingsPreviewPlay)) { play() }.buttonStyle(RButtonStyle(.secondary))
         }
         .padding(.horizontal, 20)
@@ -395,7 +429,8 @@ struct LockSettingsSection: View {
         VStack(alignment: .leading, spacing: 22) {
             Lead(tr(.macLockV2Body)).padding(.bottom, -22)
             CalmGroup {
-                HStack(spacing: 14) {
+                // Lock now goes under the words where both do not fit (a small window cut it to "Loc…").
+                BesideOrUnder(spacing: 14, words: 2, minWords: 120, controlGap: 36, gap: 12) {
                     LockIcon(closed: lock?.locked == true)
                         .foregroundColor(p.success)
                         .frame(width: 42, height: 42)
@@ -405,7 +440,6 @@ struct LockSettingsSection: View {
                         Text(Display.lockNote(lock)).font(.system(size: 12.5)).foregroundColor(p.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
-                    Spacer(minLength: 8)
                     Button(tr(.lockNowEllipsis)) { model.requestLock() }
                         .buttonStyle(RButtonStyle(.primary))
                         .disabled(!model.canLock || model.phase != .ready)
@@ -516,6 +550,7 @@ struct WaySettingRow: View {
                 Text(name).font(.system(size: 13.5, weight: .medium)).fixedSize(horizontal: false, vertical: true)
                 Text([state.text, Display.runningNote(state: way.state, running: way.running)].compactMap { $0 }.joined(separator: " · "))
                     .font(.system(size: 12.5)).foregroundColor(state.tone == .warning ? p.warning : p.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
                 if let setting, let rowError = net.rowError, rowError.setting == setting { ErrorNote(rowError.error) }
             }
             Spacer(minLength: 8)

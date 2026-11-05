@@ -1,0 +1,8 @@
+{
+  "name": "Raven macOS design additions",
+  "note": "Read over tokens.json (raven-core desktop/design, synced by scripts/sync-design.sh). This file may only change colours tokens.json names, never add one. The iPhone app's tokens.ios.json raises the same colours to the same values.",
+  "colorContrast": {
+    "note": "Colours of tokens.json raised to the WCAG AA contrast of 4.5 to 1 for body text on background and surface (textTertiary was 3.06 to 1 in light, 3.37 to 1 in dark). The app reads them over tokens.json; raven-core should take them in tokens.json.",
+    "textTertiary": { "light": "#6E6D67", "dark": "#908F89" }
+  }
+}

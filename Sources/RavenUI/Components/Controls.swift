@@ -34,6 +34,27 @@ public struct RButtonStyle: ButtonStyle {
     public func makeBody(configuration: Configuration) -> some View {
         RButtonBody(configuration: configuration, kind: kind, compact: compact)
     }
+
+    /// The label's colour: white on the accent fill, else a text colour of the tokens. A danger button
+    /// says its word in `danger`, not in the fill colour `dangerFill` (3.0 to 1 on a dark card).
+    static func textColor(_ kind: Kind, _ p: Palette) -> Color {
+        switch kind {
+        case .primary: return p.onAccent
+        case .secondary: return p.textPrimary
+        case .danger: return p.danger
+        case .plain: return p.accent
+        }
+    }
+
+    /// The fill: a primary button darkens a little under the pointer (it lightened to `accentFillTop`,
+    /// where white text fell to 3.6 to 1 in light and 3.0 to 1 in dark).
+    static func fill(_ kind: Kind, hover: Bool, _ p: Palette) -> Color {
+        switch kind {
+        case .primary: return hover ? p.accentFill.blended(.black, 0.12) : p.accentFill
+        case .secondary, .danger: return hover ? p.surface.opacity(0.9).blended(p.textPrimary, 0.05) : p.surface
+        case .plain: return .clear
+        }
+    }
 }
 
 private struct RButtonBody: View {
@@ -64,13 +85,7 @@ private struct RButtonBody: View {
             .onHover { hover = $0 }
     }
 
-    var fill: Color {
-        switch kind {
-        case .primary: return hover && enabled ? p.accentFillTop : p.accentFill
-        case .secondary, .danger: return hover && enabled ? p.surface.opacity(0.9).blended(p.textPrimary, 0.05) : p.surface
-        case .plain: return .clear
-        }
-    }
+    var fill: Color { RButtonStyle.fill(kind, hover: hover && enabled, p) }
 
     var stroke: Color {
         switch kind {
@@ -79,14 +94,7 @@ private struct RButtonBody: View {
         }
     }
 
-    var foreground: Color {
-        switch kind {
-        case .primary: return p.onAccent
-        case .secondary: return p.textPrimary
-        case .danger: return p.dangerFill
-        case .plain: return p.accent
-        }
-    }
+    var foreground: Color { RButtonStyle.textColor(kind, p) }
 }
 
 extension Color {
@@ -103,7 +111,8 @@ extension Color {
 // MARK: - Text field
 
 /// A text field with Raven's look. In snapshots it is drawn as text, since ImageRenderer cannot draw
-/// an NSTextField.
+/// an NSTextField. While it has the keyboard focus its frame turns the focus colour with a soft ring
+/// (the plain style draws no focus ring of its own, so a Tab gave no sign of where typing would go).
 public struct RField: View {
     let placeholder: String
     @Binding var text: String
@@ -119,6 +128,10 @@ public struct RField: View {
     var onSubmit: () -> Void
     @Environment(\.palette) private var p
     @Environment(\.ravenSnapshot) private var snapshot
+    @Environment(\.motionOff) private var motionOff
+    /// The focus when the caller passes none.
+    @FocusState private var ownFocus: Bool
+    private var isFocused: Bool { focused?.wrappedValue ?? ownFocus }
 
     public init(_ placeholder: String, text: Binding<String>, icon: String? = nil, mono: Bool = false,
                 secure: Bool = false, focused: FocusState<Bool>.Binding? = nil, multiline: Bool = false,
@@ -156,29 +169,43 @@ public struct RField: View {
         .background(RoundedRectangle(cornerRadius: Theme.shared.radius.control, style: .continuous)
             .fill(bare ? Color.clear : p.background))
         .overlay(RoundedRectangle(cornerRadius: Theme.shared.radius.control, style: .continuous)
-            .strokeBorder(bare ? Color.clear : p.borderStrong, lineWidth: 1))
+            .strokeBorder(RField.border(focused: isFocused, bare: bare, p), lineWidth: isFocused && !bare ? 1.5 : 1))
+        .overlay {
+            if isFocused && !bare {
+                RoundedRectangle(cornerRadius: Theme.shared.radius.control + 2, style: .continuous)
+                    .stroke(p.focus.opacity(0.28), lineWidth: 3)
+                    .padding(-2.5)
+                    .allowsHitTesting(false)
+            }
+        }
+        .animation(motionOff || bare ? nil : .easeOut(duration: Theme.shared.motion.hover), value: isFocused)
+    }
+
+    /// The frame's colour: the focus colour while the field has the keyboard focus.
+    static func border(focused: Bool, bare: Bool, _ p: Palette) -> Color {
+        bare ? .clear : (focused ? p.focus : p.borderStrong)
     }
 
     @ViewBuilder private var field: some View {
         if secure {
-            let sf = SecureField(placeholder, text: $text)
+            SecureField(placeholder, text: $text)
                 .textFieldStyle(.plain)
                 .foregroundColor(p.textPrimary)
                 .onSubmit(onSubmit)
-            if let focused { sf.focused(focused) } else { sf }
+                .focused(focused ?? $ownFocus)
         } else if multiline {
-            let tf = TextField(placeholder, text: $text, axis: .vertical)
+            TextField(placeholder, text: $text, axis: .vertical)
                 .lineLimit(1...5)
                 .textFieldStyle(.plain)
                 .foregroundColor(p.textPrimary)
                 .onSubmit(onSubmit)
-            if let focused { tf.focused(focused) } else { tf }
+                .focused(focused ?? $ownFocus)
         } else {
-            let tf = TextField(placeholder, text: $text)
+            TextField(placeholder, text: $text)
                 .textFieldStyle(.plain)
                 .foregroundColor(p.textPrimary)
                 .onSubmit(onSubmit)
-            if let focused { tf.focused(focused) } else { tf }
+                .focused(focused ?? $ownFocus)
         }
     }
 }
@@ -201,7 +228,9 @@ private struct RSwitchBody: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
+            // The title keeps all its lines: a stack short of room would cut it to fewer.
             configuration.label
+                .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
             // A button, so the switch takes keyboard focus (Full Keyboard Access) and Space toggles it.
             Button { configuration.isOn.toggle() } label: { EmptyView() }
@@ -334,7 +363,8 @@ public struct RMenu: View {
 
 // MARK: - Scroll view
 
-/// A vertical scroll view; a clipped stack in snapshots (ImageRenderer cannot draw NSScrollView).
+/// A vertical scroll view; in snapshots, what it shows at its top (or, bottom aligned, at its end),
+/// cut at its edge (ImageRenderer cannot draw NSScrollView).
 public struct RScroll<Content: View>: View {
     var bottomAligned: Bool
     let content: Content
@@ -347,16 +377,32 @@ public struct RScroll<Content: View>: View {
 
     public var body: some View {
         if snapshot {
-            VStack(spacing: 0) {
-                if bottomAligned { Spacer(minLength: 0) }
-                content
-                if !bottomAligned { Spacer(minLength: 0) }
-            }
-            .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity, alignment: bottomAligned ? .bottom : .top)
-            .clipped()
+            ScrollStill(bottomAligned: bottomAligned) { content }
+                .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
+                .clipped()
         } else {
             ScrollView(.vertical) { content }
         }
+    }
+}
+
+/// Lays its content out as a vertical scroll view does: offered the width and no height, so the
+/// content takes its own height and is cut by the clip, never squeezed into fewer lines to fit (a
+/// clipped stack offered the window's height made texts in a small window end in "…").
+struct ScrollStill: Layout {
+    var bottomAligned = false
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let content = subviews.first?.sizeThatFits(ProposedViewSize(width: proposal.width, height: nil)) ?? .zero
+        return CGSize(width: proposal.width ?? content.width, height: proposal.height ?? content.height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        guard let content = subviews.first else { return }
+        let offer = ProposedViewSize(width: bounds.width, height: nil)
+        let size = content.sizeThatFits(offer)
+        content.place(at: CGPoint(x: bounds.midX - size.width / 2, y: bottomAligned ? bounds.maxY - size.height : bounds.minY),
+                      anchor: .topLeading, proposal: offer)
     }
 }
 
@@ -374,14 +420,17 @@ public struct Pill: View {
 
     public var body: some View {
         let c = p.tone(tone)
+        // One line where it fits; in a narrow card it wraps (in the smallest window "Preview, not in
+        // this release" ran past the Network page's cards).
         Text(text)
             .font(.system(size: 12, weight: .medium))
             .foregroundColor(c)
-            .lineLimit(1)
+            .fixedSize(horizontal: false, vertical: true)
             .padding(.horizontal, 10)
+            .padding(.vertical, 4)
             .frame(minHeight: 24)
-            .background(Capsule().fill(c.opacity(tone == .secondary ? 0.09 : 0.11)))
-            .fixedSize()
+            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(c.opacity(tone == .secondary ? 0.09 : 0.11)))
+            .fixedSize(horizontal: false, vertical: true)
     }
 }
 
