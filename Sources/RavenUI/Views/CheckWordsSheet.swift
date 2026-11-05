@@ -244,6 +244,9 @@ struct CheckWordsBody: View {
                 Button { state.remove(at: i) } label: { Chip(word, removable: !state.matched && !state.stopped) }
                     .buttonStyle(.plain)
                     .disabled(state.matched || state.stopped)
+                    // Says what a click does: VoiceOver read only the word.
+                    .accessibilityLabel(state.matched || state.stopped ? word : tr(.macCheckRemoveWord, ["word": word]))
+                    .help(state.matched || state.stopped ? "" : tr(.macCheckRemoveWord, ["word": word]))
             }
         }
         .frame(minHeight: 26, alignment: .topLeading)

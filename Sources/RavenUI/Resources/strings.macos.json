@@ -14,6 +14,7 @@
   "mac.friends.searchNoMatch": "No friend matches your search.",
   "mac.friends.searchClear": "Clear search",
   "mac.check.field": "Word {n}",
+  "mac.check.removeWord": "Remove {word}",
   "mac.tray.quitKeepReceiving": "Quit Raven (keeps receiving)",
   "mac.lock.plainBody": "While Raven is locked it doesn't receive, read or send messages. Unlock to use it again."
 }

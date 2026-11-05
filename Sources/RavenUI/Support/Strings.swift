@@ -544,6 +544,7 @@ public enum Str: String, CaseIterable, Sendable {
     case macFriendsSearchNoMatch = "mac.friends.searchNoMatch"
     case macFriendsSearchClear = "mac.friends.searchClear"
     case macCheckField = "mac.check.field"
+    case macCheckRemoveWord = "mac.check.removeWord"
     case macTrayQuitKeepReceiving = "mac.tray.quitKeepReceiving"
     case macLockPlainBody = "mac.lock.plainBody"
 }
