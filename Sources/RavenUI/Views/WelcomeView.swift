@@ -61,9 +61,11 @@ public struct WelcomeView: View {
 
     private func step(_ n: Int, _ text: String) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
-            Text("\(n)").font(RFont.bodyBold).foregroundColor(p.accent)
+            // Digits of one width: the "1" was narrower, so its line started left of the others.
+            Text("\(n)").font(RFont.bodyBold).monospacedDigit().foregroundColor(p.accent)
             Text(text).fixedSize(horizontal: false, vertical: true)
         }
+        .accessibilityElement(children: .combine)
     }
 }
 
