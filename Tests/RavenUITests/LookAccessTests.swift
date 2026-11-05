@@ -81,6 +81,21 @@ import Testing
         }
     }
 
+    /// A switch's title keeps all its lines when the stack around it is short of room: on the Network
+    /// page in a narrow window, Helping other devices measured 12 points less when offered its own
+    /// height, which pushed the whole page 6 points down.
+    @Test func aSwitchTitleKeepsItsLines() throws {
+        let placed = PlacedHeight()
+        let toggle = Toggle(isOn: .constant(true)) {
+            HeightProbe(placed: placed) { Text("Hide this computer's IP address from your friends") }
+        }
+        .toggleStyle(RSwitchStyle())
+        let renderer = ImageRenderer(content: toggle.frame(width: 160, height: 10).environment(\.ravenSnapshot, true))
+        renderer.scale = 1
+        _ = try #require(renderer.cgImage)
+        #expect(placed.height > 30, "the title got \(placed.height) points")
+    }
+
     // MARK: Colours, contrast and focus
 
     /// The WCAG contrast of two opaque colours (1 to 21).

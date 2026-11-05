@@ -228,7 +228,9 @@ private struct RSwitchBody: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
+            // The title keeps all its lines: a stack short of room would cut it to fewer.
             configuration.label
+                .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
             // A button, so the switch takes keyboard focus (Full Keyboard Access) and Space toggles it.
             Button { configuration.isOn.toggle() } label: { EmptyView() }
