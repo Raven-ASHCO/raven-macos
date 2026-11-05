@@ -104,7 +104,12 @@ extension Display {
     /// visible texts). Technical details keep raven-node's words as they are.
     public static func plainWords(_ text: String) -> String {
         var s = text.replacingOccurrences(of: "\u{2019}", with: "'")
-        for (from, to) in plainPhrases { s = s.replacingOccurrences(of: from, with: to) }
+        // Whole words only: a friend's name in raven-node's line ("no answer from Summit's laptop")
+        // said "Summit is laptop".
+        for (from, to) in plainPhrases where s.contains(from) {
+            s = s.replacingOccurrences(of: #"(?<!\w)"# + NSRegularExpression.escapedPattern(for: from) + #"(?!\w)"#,
+                                       with: NSRegularExpression.escapedTemplate(for: to), options: .regularExpression)
+        }
         // isn't, doesn't, didn't, don't, hasn't, couldn't, aren't ...
         s = s.replacingOccurrences(of: #"\b(\w+)n't\b"#, with: "$1 not", options: .regularExpression)
         // A sentence that now starts with "the Raven background program".

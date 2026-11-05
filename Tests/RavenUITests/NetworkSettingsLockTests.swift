@@ -128,6 +128,15 @@ import Testing
         #expect(Display.plainWords("Ready: friends can reach you over Tor, and you them.") == "Ready: friends can reach you over Tor, and you them.")
     }
 
+    /// A phrase inside a word is a name, not raven-node's words: the Same network search row named a
+    /// friend called "Summit's laptop" as "Summit is laptop".
+    @Test func plainWordsLeaveANameAsItIs() {
+        let row = "no answer from Summit's laptop; if Summit's laptop is here, check that both laptops show the same time"
+        #expect(Display.plainWords(row) == row)
+        #expect(Display.plainWords("It's on, and it's here: what's next") == "It is on, and it is here: what is next")
+        #expect(Display.plainWords("Use Wi-Fi.") == "Use WiFi.")
+    }
+
     /// The way names (and every reason, effect and line raven-node gives these screens) in plain words.
     @Test func theNetworkScreensSayRavenNodesWordsPlainly() async throws {
         for mode in [MockRaven.NetworkMode.release, .lab] {
