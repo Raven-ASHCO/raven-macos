@@ -286,25 +286,34 @@ struct StepStrip: View {
     private func item(_ n: Int, _ title: String) -> some View {
         let current = n == step
         let done = n < step
-        return Button { if canGoTo(n) && n != step { go(n) } } label: {
-            HStack(spacing: 6) {
-                ZStack {
-                    Circle().fill(current ? p.accentFill : (done ? p.accentSoft : Color.clear))
-                    Circle().stroke(current || done ? Color.clear : p.borderStrong, lineWidth: 0.5)
-                    if done {
-                        Image(systemName: "checkmark").font(.system(size: 9, weight: .bold)).foregroundColor(p.accent)
-                    } else {
-                        Text("\(n)").font(.system(size: 11, weight: .semibold)).foregroundColor(current ? p.onAccent : p.textSecondary)
-                    }
+        let label = HStack(spacing: 6) {
+            ZStack {
+                Circle().fill(current ? p.accentFill : (done ? p.accentSoft : Color.clear))
+                Circle().stroke(current || done ? Color.clear : p.borderStrong, lineWidth: 0.5)
+                if done {
+                    Image(systemName: "checkmark").font(.system(size: 9, weight: .bold)).foregroundColor(p.accent)
+                } else {
+                    Text("\(n)").font(.system(size: 11, weight: .semibold)).foregroundColor(current ? p.onAccent : p.textSecondary)
                 }
-                .frame(width: 18, height: 18)
-                Text(title)
-                    .font(RFont.smallish)
-                    .fontWeight(current ? .semibold : .regular)
-                    .foregroundColor(current ? p.textPrimary : p.textSecondary)
+            }
+            .frame(width: 18, height: 18)
+            Text(title)
+                .font(RFont.smallish)
+                .fontWeight(current ? .semibold : .regular)
+                .foregroundColor(current ? p.textPrimary : p.textSecondary)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(title)
+        .accessibilityValue(done ? tr(.commonDone) : "")
+        .accessibilityAddTraits(current ? .isSelected : [])
+        // Only a step you can go to is a button: the others did nothing when clicked, and VoiceOver
+        // still called them buttons.
+        return Group {
+            if canGoTo(n) && !current {
+                Button { go(n) } label: { label }.buttonStyle(.plain)
+            } else {
+                label
             }
         }
-        .buttonStyle(.plain)
-        .accessibilityAddTraits(current ? .isSelected : [])
     }
 }
