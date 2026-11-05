@@ -646,21 +646,43 @@ struct NotVerifiedBanner: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.palette) private var p
 
+    // Side by side where the words get a readable width; in a narrow chat the button goes under the
+    // words, which were a column of two or three words a line, taller than the chat could show.
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "checkmark.shield").foregroundColor(p.warning).accessibilityHidden(true)
-            Text(tr(.homeBannerNotVerified, ["name": contact.name]))
-                .font(.system(size: 13))
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            Button(tr(.homeBannerNotVerifiedAction)) { model.presentCheckWords(contact.address) }
-                .buttonStyle(RButtonStyle(.primary))
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 12) {
+                shield
+                words.frame(minWidth: 0, idealWidth: 240, maxWidth: .infinity, alignment: .leading)
+                check
+            }
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                    shield
+                    words.frame(maxWidth: .infinity, alignment: .leading)
+                }
+                check
+            }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
         .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(p.warningSoft))
         .padding(.top, 12)
         .padding(.bottom, 4)
+    }
+
+    private var shield: some View {
+        Image(systemName: "checkmark.shield").foregroundColor(p.warning).accessibilityHidden(true)
+    }
+
+    private var words: some View {
+        Text(tr(.homeBannerNotVerified, ["name": contact.name]))
+            .font(.system(size: 13))
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private var check: some View {
+        Button(tr(.homeBannerNotVerifiedAction)) { model.presentCheckWords(contact.address) }
+            .buttonStyle(RButtonStyle(.primary))
     }
 }
 
