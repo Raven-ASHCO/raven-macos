@@ -293,6 +293,17 @@ import Testing
         #expect(ConfirmLockSheet.limits == [tr(.macLockConfirmDoesNot)])
     }
 
+    /// On the Night curtain a wrong passphrase said "That isn't your Raven passphrase. Try again."
+    @Test func theLockedWindowSaysAWrongPassphrasePlainly() {
+        for key in [Str.errorPassphraseWrong, .errorPassphraseNeeded, .errorProfileLocked] {
+            let shown = Display.lockError(RavenError(code: ErrorCode.passphraseWrong, message: tr(key), detail: "lock.unlock"))
+            #expect(Self.plain(shown.message), "\(shown.message)")
+            #expect(shown.code == ErrorCode.passphraseWrong && shown.detail == "lock.unlock")
+        }
+        #expect(Display.lockError(RavenError(code: "X", message: tr(.errorPassphraseWrong))).message
+                == "That is not your Raven passphrase. Try again.")
+    }
+
     /// Settings > Lock said "Your Raven keys on this computer open only with your Raven passphrase"
     /// beside the chip Not set up.
     @Test func thePassphraseRowSaysWhenThereIsNone() {

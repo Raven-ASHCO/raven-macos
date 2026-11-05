@@ -62,6 +62,12 @@ extension Display {
         lock?.hasPassphrase == false ? tr(.macLockPassphraseNotInApp) : passphraseLine
     }
 
+    /// The locked window's error in plain words: on the Night curtain a wrong passphrase said "That
+    /// isn't your Raven passphrase. Try again." (the engine's words, as sent).
+    public static func lockError(_ error: RavenError) -> RavenError {
+        RavenError(code: error.code, message: plainWords(error.message), detail: error.detail)
+    }
+
     // MARK: Raven-node's words, plain
 
     /// Raven-node's phrases with an apostrophe or a hyphen, and the app's plain words for them;

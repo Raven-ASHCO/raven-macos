@@ -64,6 +64,13 @@ extension SnapshotCatalog {
         engineCheck.open(.checkNetwork)
         shots.append(windowShot("35b-check-network-this-computer-only", engineCheck, height: 860))
 
+        // A wrong Raven passphrase on the Night curtain (Reduce Motion: the raven asleep, no shake).
+        let (wrong, _) = await readyModel(after: 2, network: .lab)
+        await wrong.lockNow()
+        wrong.settings.reducedMotion = true
+        wrong.lockError = RavenError(code: ErrorCode.passphraseWrong, message: tr(.errorPassphraseWrong))
+        shots.append(windowShot("39e-locked-wrong-passphrase", wrong))
+
         // Lock now without a Raven passphrase: waking asks for none.
         let (noPassphrase, _) = await readyModel(after: 2, network: .lab)
         await noPassphrase.refreshLock()

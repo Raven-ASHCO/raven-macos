@@ -150,7 +150,7 @@ public struct LockedView: View {
                 .buttonStyle(RButtonStyle(.primary))
                 .keyboardShortcut(.defaultAction)
                 .disabled(working)
-            if let error = v2 ? model.lockError : model.actionError { ErrorNote(error) }
+            if let error = v2 ? model.lockError : model.actionError { ErrorNote(Display.lockError(error)) }
             if askPassphrase {
                 Text(tr(.macLockPassphraseNote)).font(.system(size: 11.5)).foregroundColor(p.textSecondary)
                     .multilineTextAlignment(.center)
