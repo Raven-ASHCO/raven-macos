@@ -97,9 +97,11 @@ public final class CheckWordsState: ObservableObject {
         let rest = WordInput.endsWithSeparator(field) ? "" : (tokens.last ?? "")
         if !finished.isEmpty {
             field = rest
-            for token in finished {
+            for (i, token) in finished.enumerated() {
                 guard await accept(token, model) else {
-                    field = ([token] + (rest.isEmpty ? [] : [rest])).joined(separator: " ")
+                    // The word Raven does not know stays in the field with every word after it:
+                    // nothing pasted is lost.
+                    field = (Array(finished[i...]) + (rest.isEmpty ? [] : [rest])).joined(separator: " ")
                     return
                 }
             }

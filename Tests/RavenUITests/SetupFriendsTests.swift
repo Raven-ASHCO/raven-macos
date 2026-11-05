@@ -52,4 +52,18 @@ final class FailingOnce: RavenEngine, @unchecked Sendable {
         #expect(model.identity?.words.count == 10)
         #expect(model.node?.running == true)
     }
+
+    // MARK: Check words
+
+    /// Pasting the words with one that is not a Raven word kept that word but lost every word after
+    /// it: "anchor basket zzzz candle eagle" left only "zzzz eagle" in the field.
+    @Test func aPasteKeepsEveryWordAfterOneRavenDoesNotKnow() async {
+        let (model, _) = await readyModel()
+        let state = CheckWordsState(address: MockRaven.aliAddress)
+        state.field = "anchor basket zzzz candle eagle"
+        await state.fieldChanged(model)
+        #expect(state.typed == ["anchor", "basket"])
+        #expect(state.field == "zzzz candle eagle")
+        #expect(state.note == .notAWord)
+    }
 }
