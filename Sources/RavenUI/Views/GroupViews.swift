@@ -242,10 +242,13 @@ struct GroupMeta: View {
             HStack(spacing: 8) {
                 Text(TimeText.bubble(ms: message.atMs, now: clock.now)).foregroundColor(p.textSecondary)
                 GroupRing(states: receipts.map(\.state))
-                // One text: the note's separator sits a space from both sides, not the row's spacing.
-                (Text(status.text).font(.system(size: 11.5, weight: .semibold))
-                    .foregroundColor(!receipts.isEmpty && receipts.allSatisfy { $0.state == "delivered" } ? p.success : p.textPrimary)
-                 + Text(status.note.map { " · " + $0 } ?? "").foregroundColor(p.textSecondary))
+                // Never cut in the middle ("Delivered to 2 of…"): without the note where the whole line
+                // does not fit (Details lists each member's copy).
+                ViewThatFits(in: .horizontal) {
+                    statusLine(status, note: true, receipts).fixedSize()
+                    if status.note != nil { statusLine(status, note: false, receipts).fixedSize() }
+                    statusLine(status, note: true, receipts)
+                }
                 if !receipts.isEmpty {
                     Button(open ? tr(.groupsHide) : tr(.messageDetails)) {
                         if open { model.groupDetailsOpen.remove(message.id) } else { model.groupDetailsOpen.insert(message.id) }
@@ -264,6 +267,14 @@ struct GroupMeta: View {
             }
         }
         .animation(motionOff ? nil : .easeOut(duration: 0.25), value: open)
+    }
+
+    /// "Delivered to 2 of 3 · 1 waiting" as one text: the note's separator sits a space from both
+    /// sides, not the row's spacing.
+    private func statusLine(_ status: (text: String, note: String?), note: Bool, _ receipts: [GroupReceipt]) -> Text {
+        Text(status.text).font(.system(size: 11.5, weight: .semibold))
+            .foregroundColor(!receipts.isEmpty && receipts.allSatisfy { $0.state == "delivered" } ? p.success : p.textPrimary)
+            + Text(note ? status.note.map { " · " + $0 } ?? "" : "").foregroundColor(p.textSecondary)
     }
 }
 
