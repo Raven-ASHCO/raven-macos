@@ -127,6 +127,21 @@ import Testing
         }
     }
 
+    /// Check network named its rows "identity", "raven-node" and "contacts", and said "Next step: All
+    /// set: Raven can send ...".
+    @Test func checkNetworkNamesItsRowsAndSaysAllSetAsDone() async throws {
+        let (_, mock) = await readyModel()
+        let check = try await mock.checkNetwork()
+        #expect(check.summary.map(Display.checkLabel) == [tr(.macNetworkCheckLabelIdentity), tr(.macNetworkCheckLabelNode),
+                                                         tr(.macNetworkCheckLabelLan), tr(.macNetworkCheckLabelContacts)])
+        #expect(check.summary.map(Display.checkValue) == ["OK", "Running; you can send and receive", "On", "3"])
+        #expect(Display.checkLabel(CheckSummaryRow(key: "cannot_reach", label: "cannot reach", value: "1")) == "Cannot reach")
+        let allSet = Display.checkNextStep(check.nextStep)
+        #expect(allSet.done && allSet.text == check.nextStep && !allSet.text.contains("Next step"))
+        let step = Display.checkNextStep("Raven's background program isn't running. Start it on the Network page.")
+        #expect(!step.done && step.text == tr(.networkCheckNextStep, ["step": "The Raven background program is not running. Start it on the Network page."]))
+    }
+
     /// Every text the Network screens, Settings and the menu bar show, and the lock's, quit's and the
     /// locked window's, in plain words (and "No Raven server" in About).
     @Test func theseScreensSayItPlainly() throws {

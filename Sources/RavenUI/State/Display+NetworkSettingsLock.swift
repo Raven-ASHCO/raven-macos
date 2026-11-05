@@ -109,6 +109,37 @@ extension Display {
         return name.isEmpty ? way.id : plainWords(name)
     }
 
+    /// Check network's name for a row of the doctor's summary: the app's where it has one, else the
+    /// doctor's own label with a capital letter (it said "identity", "raven-node", "contacts").
+    public static func checkLabel(_ row: CheckSummaryRow) -> String {
+        switch row.key {
+        case "identity": return tr(.macNetworkCheckLabelIdentity)
+        case "raven_node": return tr(.macNetworkCheckLabelNode)
+        case "lan": return tr(.macNetworkCheckLabelLan)
+        case "contacts": return tr(.macNetworkCheckLabelContacts)
+        case "disk": return tr(.macNetworkCheckLabelDisk)
+        default: return capitalFirst(plainWords(Sanitizer.line(row.label, maxLength: 40)))
+        }
+    }
+
+    /// A summary row's value in plain words, starting with a capital letter ("on" said "On").
+    public static func checkValue(_ row: CheckSummaryRow) -> String {
+        capitalFirst(plainWords(row.value))
+    }
+
+    /// Check network's next step: "All set: ..." is no step to take, so it is said as done (it read
+    /// "Next step: All set: Raven can send ...").
+    public static func checkNextStep(_ step: String) -> (text: String, done: Bool) {
+        let plain = plainWords(step.trimmingCharacters(in: .whitespacesAndNewlines))
+        if plain.lowercased().hasPrefix("all set") { return (plain, true) }
+        return (tr(.networkCheckNextStep, ["step": plain]), false)
+    }
+
+    static func capitalFirst(_ text: String) -> String {
+        guard let first = text.first else { return text }
+        return first.uppercased() + text.dropFirst()
+    }
+
     // MARK: Menu bar
 
     /// The menu bar's friends: all of them in the sidebar's order while they fit in `limit` rows;

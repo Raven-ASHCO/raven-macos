@@ -23,16 +23,23 @@ struct CheckNetworkPage: View {
                         let summary = check.summary.filter { $0.key != "next_step" || check.nextStep.isEmpty }
                         ForEach(Array(summary.enumerated()), id: \.offset) { _, row in
                             HStack(alignment: .firstTextBaseline, spacing: 8) {
-                                Text(row.label).font(RFont.smallish).foregroundColor(p.textSecondary)
-                                    .frame(width: 120, alignment: .leading)
-                                Text(row.value).font(RFont.smallish).fixedSize(horizontal: false, vertical: true).selectable()
+                                Text(Display.checkLabel(row)).font(RFont.smallish).foregroundColor(p.textSecondary)
+                                    .frame(width: 140, alignment: .leading)
+                                Text(Display.checkValue(row)).font(RFont.smallish).fixedSize(horizontal: false, vertical: true)
+                                    .selectable()
                             }
                             .accessibilityElement(children: .combine)
                         }
                         if !check.nextStep.isEmpty {
-                            Text(tr(.networkCheckNextStep, ["step": check.nextStep])).font(RFont.bodyBold)
-                                .fixedSize(horizontal: false, vertical: true)
-                                .padding(.top, 4)
+                            // "All set" is no step to take: said as done, with a tick.
+                            let next = Display.checkNextStep(check.nextStep)
+                            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                                if next.done {
+                                    Image(systemName: "checkmark.circle.fill").foregroundColor(p.success).accessibilityHidden(true)
+                                }
+                                Text(next.text).font(RFont.bodyBold).fixedSize(horizontal: false, vertical: true)
+                            }
+                            .padding(.top, 4)
                         }
                     }
                     .padding(.vertical, 8)
