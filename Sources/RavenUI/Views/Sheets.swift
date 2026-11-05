@@ -128,10 +128,12 @@ public struct YouSheet: View {
                 if let card = model.identity?.card, !card.isEmpty {
                     Text(tr(.youCard)).font(RFont.smallish).foregroundColor(p.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
-                    Text(card).font(RFont.mono).lineLimit(4).selectable()
-                        .padding(8)
+                    // The same box as the card in Add a friend (padding and hairline border).
+                    Text(card).font(RFont.mono).lineLimit(4).fixedSize(horizontal: false, vertical: true).selectable()
+                        .padding(10)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(RoundedRectangle(cornerRadius: Theme.shared.radius.control).fill(p.surfaceMuted))
+                        .overlay(RoundedRectangle(cornerRadius: Theme.shared.radius.control).stroke(p.border, lineWidth: 0.5))
                 }
             }
         } footer: {
