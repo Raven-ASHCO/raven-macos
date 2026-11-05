@@ -47,7 +47,7 @@ public struct MenuBarContent: View {
                     Text(listening ? tr(NetworkKind.shared.isWiFi ? .macTrayListeningWifi : .trayListeningNetwork) : tr(.macTrayNotListening)).font(RFont.bodyBold)
                     HStack(spacing: 4) {
                         Text("♥").foregroundColor(heartbeat.ok ? p.success : p.danger).scaleEffect(beat)
-                        Text(heartbeat.ok ? tr(.trayBackground) : tr(.macTrayBackgroundDown))
+                        Text(Display.menuBackground(node, ok: heartbeat.ok))
                             .foregroundColor(p.textSecondary)
                     }
                     .font(RFont.small)
@@ -72,6 +72,8 @@ public struct MenuBarContent: View {
                         }
                         .help(line)
                     }
+                    // VoiceOver reads the whole line, deadline included, where the short one shows.
+                    .accessibilityLabel(line)
                 }
                 if friends.more > 0 {
                     MenuRow(action: openMain, secondary: true) {

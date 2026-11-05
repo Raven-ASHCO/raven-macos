@@ -590,6 +590,7 @@ public enum Str: String, CaseIterable, Sendable {
     case macTrayListeningWifi = "mac.tray.listening.wifi"
     case macTrayNotListening = "mac.tray.notListening"
     case macTrayBackgroundDown = "mac.tray.background.down"
+    case macTrayBackgroundStopped = "mac.tray.background.stopped"
     case macTrayWaiting = "mac.tray.waiting"
     case macTrayMoreFriend = "mac.tray.moreFriend"
     case macTrayMoreFriends = "mac.tray.moreFriends"

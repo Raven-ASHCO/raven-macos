@@ -210,6 +210,14 @@ extension Display {
         return menuLine(c, unread: unread, now: now)
     }
 
+    /// The menu's line under its status: the background program ok, not responding, or stopped (a
+    /// stopped program was said not to respond).
+    public static func menuBackground(_ node: NodeStatus?, ok: Bool) -> String {
+        if ok { return tr(.trayBackground) }
+        if let node, !node.running { return tr(.macTrayBackgroundStopped) }
+        return tr(.macTrayBackgroundDown)
+    }
+
     /// The row under the menu's friends when some are left out.
     public static func menuMore(_ n: Int) -> String {
         n == 1 ? tr(.macTrayMoreFriend) : tr(.macTrayMoreFriends, ["n": String(n)])

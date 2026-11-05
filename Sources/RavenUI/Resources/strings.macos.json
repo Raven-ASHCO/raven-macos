@@ -60,6 +60,7 @@
   "mac.tray.listening.wifi": "Raven is listening on WiFi",
   "mac.tray.notListening": "Raven is not receiving",
   "mac.tray.background.down": "background program not responding",
+  "mac.tray.background.stopped": "background program stopped",
   "mac.tray.waiting": "{n} waiting",
   "mac.tray.moreFriend": "1 more friend",
   "mac.tray.moreFriends": "{n} more friends",

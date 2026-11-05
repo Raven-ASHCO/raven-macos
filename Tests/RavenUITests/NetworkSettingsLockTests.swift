@@ -314,6 +314,18 @@ import Testing
         #expect(Display.menuMore(12) == "12 more friends" && Display.menuMore(1) == "1 more friend")
     }
 
+    /// With the background program stopped the menu said "background program not responding".
+    @Test func theMenuSaysAStoppedProgramIsStopped() async throws {
+        let (model, _) = await readyModel()
+        var node = try #require(model.node)
+        #expect(Display.menuBackground(node, ok: true) == tr(.trayBackground))
+        #expect(Display.menuBackground(node, ok: false) == tr(.macTrayBackgroundDown))
+        #expect(Display.menuBackground(nil, ok: false) == tr(.macTrayBackgroundDown))
+        node.running = false
+        #expect(Display.menuBackground(node, ok: false) == tr(.macTrayBackgroundStopped))
+        #expect(Self.plain(tr(.macTrayBackgroundStopped)))
+    }
+
     /// "Neighbour · 1 waiting · until Wed 12:05 (UTC…" was cut in the menu: where the whole line does
     /// not fit it says "Neighbour · 1 waiting" (the chat says until when).
     @Test func aLongMenuLineHasAShortForm() {
