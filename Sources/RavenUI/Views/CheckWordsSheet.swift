@@ -291,7 +291,8 @@ struct CheckWordsBody: View {
         SectionLabel(tr(.checkOldCodeTheirs, ["name": name]))
             .padding(.top, 6)
         if state.matched {
-            Text(state.oldCode).font(RFont.mono).foregroundColor(p.textSecondary)
+            // In groups of four like yours above, not as typed (dashes, no spaces).
+            Text(WordInput.oldCodeGroups(state.oldCode)).font(RFont.mono).foregroundColor(p.textSecondary)
         } else {
             RField(tr(.checkOldCodeField), text: $state.oldCode, mono: true, focused: $focused) {
                 Task { await state.check(model) }
