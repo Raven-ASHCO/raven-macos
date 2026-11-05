@@ -413,7 +413,9 @@ struct LockSettingsSection: View {
                 .padding(16)
             }
             CalmGroup {
-                CalmItem(tr(.settingsLockOnSleep), tr(.settingsLockOnSleepBody)) {
+                // Dimmed with its switch where this version cannot lock (the row above says so); only the
+                // switch was, and an off switch looks the same at a glance.
+                CalmItem(tr(.settingsLockOnSleep), tr(.settingsLockOnSleepBody), disabled: !model.lockOnSleepAvailable) {
                     RSwitch(tr(.settingsLockOnSleep), isOn: settingBinding(model, \.lockOnSleep, "lock_on_sleep") { .bool($0) })
                         .disabled(!model.lockOnSleepAvailable)
                 }
