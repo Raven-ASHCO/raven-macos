@@ -20,11 +20,18 @@ struct ChatArea: View {
                     await model.sendComposer()
                 }
             } else {
-                VStack(spacing: 10) {
-                    Text(tr(.homeNoFriends)).foregroundColor(p.textSecondary)
+                // No friends yet: what to do, and the one next step.
+                VStack(spacing: 6) {
+                    Text(tr(.homeNoFriends)).font(.system(size: 15, weight: .semibold)).foregroundColor(p.textPrimary)
+                    Text(tr(.macHomeNoFriendsBody)).font(.system(size: 13)).foregroundColor(p.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
                     Button(tr(.homeNoFriendsAction)) { model.presentAddFriend() }
                         .buttonStyle(RButtonStyle(.primary))
+                        .padding(.top, 12)
                 }
+                .frame(maxWidth: 360)
+                .padding(24)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }

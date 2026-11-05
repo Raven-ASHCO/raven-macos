@@ -17,5 +17,6 @@
   "mac.home.heartbeat.downShort": "not responding",
   "mac.home.heartbeat.okShort": "ok · {when}",
   "mac.home.waiting.short": "{n} waiting",
-  "mac.home.search.none": "Nothing found for “{query}”"
+  "mac.home.search.none": "Nothing found for “{query}”",
+  "mac.home.noFriends.body": "Add a friend with your card. Then you both check 10 words."
 }
