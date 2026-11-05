@@ -82,6 +82,9 @@ struct SidebarView: View {
                     }
                     GroupsSidebarSection()
                 }
+                // Full width and on the left: without it a short list (no friends yet, a search)
+                // sat in the middle of the sidebar.
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             SidebarAddButtons()
             BottomNav()
