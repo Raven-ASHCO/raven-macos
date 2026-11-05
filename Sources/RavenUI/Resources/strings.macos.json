@@ -1,5 +1,6 @@
 {
   "_note": "Texts the Mac app needs that core/desktop/design/strings.en.json doesn't have yet (the shared file is a copy of raven-core's and must stay identical to it). Every key starts with mac. and only adds a text: Strings.shared loads this file after strings.en.json and never lets it replace a shared key. Move each text into the shared file with raven-core, then delete it here (MacUXFixesTests fails while a key is in both).",
+  "mac.settings.updates.install": "Install updates",
   "mac.about.tagline": "Messages straight to your friends. No Raven server.",
   "mac.settings.network.lead": "The ways Raven reaches your friends, as the Network page shows them. The Network page says more about each one.",
   "mac.settings.reducedMotion.body": "Nothing moves: no springs, no packets, no spinners. Texts still change. Raven also follows Reduce motion in macOS.",
@@ -46,6 +47,7 @@
   "mac.network.routes.peerId": "Peer to peer ID: {id}",
   "mac.network.routes.next": "Next peer to peer ID: {id}",
   "mac.network.routes.relays": "Relays for the peer to peer route (one per line, or separated by commas)",
+  "mac.security.status": "Status",
   "mac.security.node.title": "Counted by the Raven background program",
   "mac.security.preview": "Security notices are not in this version of Raven yet.",
   "mac.security.kept.unsealed": "This profile is not encrypted, so Raven keeps no security notices for it.",

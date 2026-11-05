@@ -548,8 +548,8 @@ struct UpdatesSettingsSection: View {
                                  tone: u.fromFriends == true ? .success : .warning)
                     }
                 }
-                // Installing isn't in this app yet; the row says so.
-                CalmItem(tr(.updatesTitle), tr(.macUpdatesInstall))
+                // Installing is not in this app yet; the row says so (it was titled Updates, as the page).
+                CalmItem(tr(.macSettingsUpdatesInstall), tr(.macUpdatesInstall))
             }
             if let error = model.network.updatesError { ErrorNote(error) }
             if let text = Display.updatesInstallDetail(u?.installText) { TechnicalDetails(lines: [text]) }

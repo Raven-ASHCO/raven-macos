@@ -654,7 +654,7 @@ struct HelpSection: View {
                         Rule()
                     }
                     if help.automatic == true {
-                        Text(tr(.networkHelpAutomatic)).font(RFont.small).foregroundColor(p.textSecondary).padding(.bottom, 6)
+                        Text(tr(.networkHelpAutomatic)).font(RFont.small).foregroundColor(p.textSecondary).padding(.vertical, 8)
                         Rule()
                     }
                 }

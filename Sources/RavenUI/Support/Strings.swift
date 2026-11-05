@@ -530,6 +530,7 @@ public enum Str: String, CaseIterable, Sendable {
     case lockPassphraseNote = "lock.passphrase.note"
     case lockPassphraseNotInApp = "lock.passphrase.notInApp"
     // The Mac app's own texts (Resources/strings.macos.json), until raven-core's strings.en.json has them.
+    case macSettingsUpdatesInstall = "mac.settings.updates.install"
     case macAboutTagline = "mac.about.tagline"
     case macSettingsNetworkLead = "mac.settings.network.lead"
     case macSettingsReducedMotionBody = "mac.settings.reducedMotion.body"
@@ -576,6 +577,7 @@ public enum Str: String, CaseIterable, Sendable {
     case macNetworkRoutesPeerId = "mac.network.routes.peerId"
     case macNetworkRoutesNext = "mac.network.routes.next"
     case macNetworkRoutesRelays = "mac.network.routes.relays"
+    case macSecurityStatus = "mac.security.status"
     case macSecurityNodeTitle = "mac.security.node.title"
     case macSecurityPreview = "mac.security.preview"
     case macSecurityKeptUnsealed = "mac.security.kept.unsealed"

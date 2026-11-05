@@ -15,7 +15,7 @@ struct SecurityPage: View {
         } content: {
             if let error = net.securityError { ErrorNote(error) }
             if let s = net.security {
-                PageSection(tr(.securityTitle)) {
+                PageSection(tr(.macSecurityStatus)) {
                     VStack(alignment: .leading, spacing: 4) {
                         HStack(spacing: 8) {
                             StateChip(state: s.available ? (s.lab == true ? .lab : .on) : .preview)
@@ -193,6 +193,12 @@ struct UpdatesPage: View {
                             Text(tr(.macUpdatesNotAvailable)).font(RFont.smallish).foregroundColor(p.textSecondary)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
+                        // Installing: a line of the status (it stood under the card like a heading).
+                        Text(tr(.macUpdatesInstall)).font(RFont.smallish).foregroundColor(p.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.top, 4)
+                        // The engine's install text: Technical details only (E1).
+                        if let text = Display.updatesInstallDetail(u.installText) { TechnicalDetails(lines: [text]) }
                     }
                     .padding(.vertical, 8)
                 }
@@ -205,11 +211,6 @@ struct UpdatesPage: View {
                         }
                         .padding(.vertical, 8)
                     }
-                }
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(tr(.macUpdatesInstall)).font(RFont.bodyBold).fixedSize(horizontal: false, vertical: true)
-                    // The engine's install text: Technical details only (E1).
-                    if let text = Display.updatesInstallDetail(u.installText) { TechnicalDetails(lines: [text]) }
                 }
             } else if net.updatesError == nil {
                 Spinner()
