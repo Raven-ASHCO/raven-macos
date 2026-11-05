@@ -42,6 +42,8 @@ struct ChatHeader: View {
 
     // At the narrowest window (560 px, the sidebar beside it) the status text truncates first, then
     // the path and the name; the Routes button always shows whole (E1: on Windows it was cut off).
+    // The name keeps at least 120 points and Verified or Not verified always shows whole: the path
+    // pill and Routes took the whole header and left one letter of the name.
     var body: some View {
         let status = Display.headerStatus(contact, now: clock.now)   // "Not verified" is beside the name
         let kind = model.lastPathKind(contact.address)
@@ -60,9 +62,11 @@ struct ChatHeader: View {
                             Text(tr(.homeVerified))
                         }
                         .font(.system(size: 12, weight: .semibold)).foregroundColor(p.success).lineLimit(1)
+                        .fixedSize()
                     } else {
                         Text(tr(.homeNotVerified)).font(.system(size: 12, weight: .semibold)).foregroundColor(p.warning)
                             .lineLimit(1)
+                            .fixedSize()
                     }
                 }
                 Text(path != nil && contact.presence == .inTouch ? status.text + " · " + (path ?? "") : status.text)
@@ -71,8 +75,8 @@ struct ChatHeader: View {
                     .lineLimit(1)
                     .truncationMode(.tail)
             }
+            .frame(minWidth: 120, maxWidth: .infinity, alignment: .leading)
             .layoutPriority(1)
-            Spacer(minLength: 8)
             // The path pill only where there is room; Routes always shows whole (E1). Not while
             // messages to the friend wait: the last path isn't how they are reached now (E1).
             ViewThatFits(in: .horizontal) {
