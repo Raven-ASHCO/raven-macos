@@ -294,6 +294,7 @@ public enum SnapshotCatalog {
         let missing = AppModel(engine: MissingEngine())
         await missing.bootstrap()
         shots.append(windowShot("25-release-without-engine", missing))
+        shots += await lookAccessShots()
 
         shots += await networkShots()
         shots += await groupShots()
