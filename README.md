@@ -481,8 +481,12 @@ and `MacUXFixesTests` checks every text the app uses. Placed on purpose:
 - `Info.plist`'s `NSLocalNetworkUsageDescription` (the macOS Local Network prompt) uses
   `setup.receive.body`.
 - Engine error messages: `MockRaven` and `MissingEngine` use the `error.*` texts, the wording
-  `raven-client` uses. Texts the engine sends (error messages, a stop `note`) are shown as sent,
-  after sanitising.
+  `raven-client` uses. Texts the engine sends (error messages, a stop `note`) are shown after
+  sanitising; an error under a field, in a toast or on the locked window goes through
+  `Display.plainWords` ("isn't" reads "is not"), and Details keeps the engine's words as sent.
+- Welcome and New group say "No Raven server" (`mac.app.tagline`, `mac.welcome.*`,
+  `mac.groups.create.body`) where the shared texts still say "No server"; `TextRulesTests` checks
+  every `mac.*` text: no apostrophe, hyphen or dash.
 
 ## What is mocked
 
