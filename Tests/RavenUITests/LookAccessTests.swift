@@ -37,16 +37,41 @@ import Testing
         let width = SettingsView.sectionWidth(Display.detailMinWidth)
         for section in AppModel.SettingsSection.allCases {
             let model = await SnapshotCatalog.settingsModel(section)
-            let content = SettingsSectionBody(section: section)
-                .environmentObject(model)
-                .environmentObject(model.clock)
-                .ravenTheme(reducedMotion: true)
-                .environment(\.ravenSnapshot, true)
-            let renderer = ImageRenderer(content: content)
-            renderer.scale = 1
-            renderer.proposedSize = ProposedViewSize(width: width, height: nil)
-            let image = try #require(renderer.cgImage, "no picture of \(section)")
-            #expect(CGFloat(image.width) <= width.rounded(.up), "\(section) is \(image.width) points wide in \(width)")
+            let drawn = try drawnWidth(SettingsSectionBody(section: section), model, offered: width)
+            #expect(drawn <= width.rounded(.up), "\(section) is \(drawn) points wide in \(width)")
         }
+    }
+
+    /// The Network page's cards fit the page the smallest window leaves: they ran past both edges
+    /// ("Preview, not in this release" kept one line) and Check network was cut to "Check…".
+    @Test func theNetworkCardsFitTheSmallestWindow() async throws {
+        let page = Display.detailMinWidth
+        #expect(PageLayout.margin(width: page) == 20 && PageLayout.margin(width: 760) == 32)
+        let width = page - 2 * PageLayout.margin(width: page)
+        for mode in [MockRaven.NetworkMode.release, .lab] {
+            let model = await SnapshotCatalog.pageModel(.network, network: mode)
+            let status = try #require(model.network.status)
+            var cards: [(name: String, view: AnyView)] = [("This computer", AnyView(ThisComputerSection(status: status)))]
+            for way in status.carriers {
+                cards.append((way.id, AnyView(WayRow(way: way, status: status, net: model.network, card: true))))
+            }
+            for card in cards {
+                let drawn = try drawnWidth(card.view, model, offered: width)
+                #expect(drawn <= width.rounded(.up), "\(card.name) is \(drawn) points wide in \(width)")
+            }
+        }
+    }
+
+    /// How wide `view` draws itself when offered `width` points (wider when a part of it cannot
+    /// narrow that far).
+    func drawnWidth(_ view: some View, _ model: AppModel, offered width: CGFloat) throws -> CGFloat {
+        let renderer = ImageRenderer(content: view
+            .environmentObject(model)
+            .environmentObject(model.clock)
+            .ravenTheme(reducedMotion: true)
+            .environment(\.ravenSnapshot, true))
+        renderer.scale = 1
+        renderer.proposedSize = ProposedViewSize(width: width, height: nil)
+        return CGFloat(try #require(renderer.cgImage).width)
     }
 }

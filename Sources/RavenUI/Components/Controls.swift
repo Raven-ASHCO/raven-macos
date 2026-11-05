@@ -374,14 +374,17 @@ public struct Pill: View {
 
     public var body: some View {
         let c = p.tone(tone)
+        // One line where it fits; in a narrow card it wraps (in the smallest window "Preview, not in
+        // this release" ran past the Network page's cards).
         Text(text)
             .font(.system(size: 12, weight: .medium))
             .foregroundColor(c)
-            .lineLimit(1)
+            .fixedSize(horizontal: false, vertical: true)
             .padding(.horizontal, 10)
+            .padding(.vertical, 4)
             .frame(minHeight: 24)
-            .background(Capsule().fill(c.opacity(tone == .secondary ? 0.09 : 0.11)))
-            .fixedSize()
+            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(c.opacity(tone == .secondary ? 0.09 : 0.11)))
+            .fixedSize(horizontal: false, vertical: true)
     }
 }
 
