@@ -90,8 +90,10 @@ extension RavenEngine {
 
     public func me() async throws -> Identity { try await typed("identity.me", as: Identity.self) }
 
-    public func makeCard(includeAddress: Bool) async throws -> ShareCard {
-        try await typed("card.make", ["include_address": .bool(includeAddress)], as: ShareCard.self)
+    /// Your card, never with the network address of this computer: `include_address` is always
+    /// false, whatever an engine's default, because a card is shared in plain text.
+    public func makeCard() async throws -> ShareCard {
+        try await typed("card.make", ["include_address": .bool(false)], as: ShareCard.self)
     }
 
     public func parseCard(_ text: String) async throws -> CardSummary {

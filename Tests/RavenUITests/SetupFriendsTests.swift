@@ -40,16 +40,15 @@ final class ErasableMock: RavenEngine, @unchecked Sendable {
     }
 }
 
-/// An engine whose card with the network address comes slowly (as over a busy connection).
-final class SlowAddressCard: RavenEngine, @unchecked Sendable {
+/// An engine that notes what each `card.make` asked for (`include_address`, nil when not sent).
+final class CardAsks: RavenEngine, @unchecked Sendable {
     let inner: MockRaven
+    private(set) var includeAddress: [Bool?] = []
 
     init(_ inner: MockRaven) { self.inner = inner }
 
     func call(op: String, args: [String: JSONValue]) async throws -> JSONValue {
-        if op == "card.make", args["include_address"]?.bool == true {
-            try await Task.sleep(nanoseconds: 300_000_000)
-        }
+        if op == "card.make" { includeAddress.append(args["include_address"]?.bool) }
         return try await inner.call(op: op, args: args)
     }
 }
@@ -110,58 +109,27 @@ final class SlowAddressCard: RavenEngine, @unchecked Sendable {
 
     // MARK: Add a friend
 
-    /// The switch named this computer's address and port even while it was off, and one reason
-    /// named the loopback address: addresses and ports show only under Details.
-    @Test func addAFriendNamesNoAddress() async throws {
-        let (model, mock) = await readyModel()
-        let off = try await mock.makeCard(includeAddress: false)
-        let on = try await mock.makeCard(includeAddress: true)
-        let address = try #require(on.addressIncluded)
-        // A card made with the switch off has no reason to give: check every reason the engine sends.
-        var texts = [Display.includeAddressLabel]
-        for why in ["not_receiving", "this_computer_only", "no_network", "something_new"] {
-            var card = off
-            card.addressMissing = why
-            texts.append(try #require(Display.noAddressReason(card)))
-        }
-        for text in texts {
-            #expect(!text.contains(address))
-            #expect(!text.contains(model.node?.address ?? "?"))
-            #expect(text.range(of: #"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"#, options: .regularExpression) == nil, "\(text)")
-        }
-    }
-
-    /// The switch on and quickly off again: the slower answer for "on" came last and put a card
-    /// with this computer's address under a switch that says off.
-    @Test func aLateCardNeverBringsBackTheAddress() async throws {
+    /// Add a friend has no switch for the network address any more: the card it shows holds your
+    /// key and your Tor address only, also while Raven receives on the network and the engine would
+    /// put the address in if asked.
+    @Test func addAFriendShowsACardWithoutTheNetworkAddress() async throws {
         let clock = MockClock(fixed: testStart)
         let mock = MockRaven(start: .ready, demo: true, clock: clock, identityDelay: 0)
-        let model = AppModel(engine: SlowAddressCard(mock), now: { clock.now })
+        let asks = CardAsks(mock)
+        let model = AppModel(engine: asks, now: { clock.now })
         await model.bootstrap()
         await model.pollNow()
-        let state = AddFriendState()
-        state.includeAddress = true
-        let slow = Task { await state.loadCard(model) }
-        try await Task.sleep(nanoseconds: 30_000_000)
-        state.includeAddress = false
-        await state.loadCard(model)
-        await slow.value
-        #expect(state.card != nil)
-        #expect(state.card?.addressIncluded == nil, "the card under a switch that is off has no address")
-    }
+        let would = try await mock.call(op: "card.make", args: ["include_address": true])
+        #expect(would["address_included"]?.string != nil, "the engine has an address it could put in")
 
-    /// Off takes a card with the address off the screen before the new card comes: Copy has nothing
-    /// to copy in between.
-    @Test func switchingTheAddressOffHidesTheCardAtOnce() async throws {
-        let (model, _) = await readyModel()
-        let state = AddFriendState(includeAddress: true)
+        let state = AddFriendState()
         await state.loadCard(model)
-        #expect(state.card?.addressIncluded != nil)
-        state.copied = true
-        state.switchAddress(false)
-        #expect(state.card == nil && !state.copied && !state.includeAddress)
-        await state.loadCard(model)
-        #expect(state.card != nil && state.card?.addressIncluded == nil)
+        let card = try #require(state.card)
+        #expect(card.addressIncluded == nil && card.addressMissing == nil)
+        #expect(!card.card.contains("lan=") && !card.invite.contains("@"))
+        #expect(!card.card.contains(model.node?.address ?? "?"))
+        #expect(card.card.range(of: #"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"#, options: .regularExpression) == nil)
+        #expect(asks.includeAddress == [false], "card.make is asked with include_address false")
     }
 
     /// The Mac texts of this area are plain English: no apostrophes, hyphens or dashes, and never an

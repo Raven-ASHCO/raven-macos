@@ -311,16 +311,11 @@ public enum SnapshotCatalog {
                                    MessageDetailsSheet(id: "m3", preset: d, showDetail: true)))
         }
 
+        // Add a friend as it opens: your card, never with your network address.
         let (share, mock) = await readyModel(after: 2)
-        let card = try? await mock.makeCard(includeAddress: true)
+        let card = try? await mock.makeCard()
         shots.append(sheetShot("12-add-friend-share", share, width: 560,
-                               AddFriendSheet(state: AddFriendState(step: 1, includeAddress: true, card: card))))
-        // Asked for the address while Raven isn't receiving: the card has none, and the sheet says why.
-        let (notReceiving, quietMock) = await readyModel(after: 2)
-        await notReceiving.stopNode()
-        let quietCard = try? await quietMock.makeCard(includeAddress: true)
-        shots.append(sheetShot("53-add-friend-no-address", notReceiving, width: 560,
-                               AddFriendSheet(state: AddFriendState(step: 1, includeAddress: true, card: quietCard))))
+                               AddFriendSheet(state: AddFriendState(step: 1, card: card))))
 
         let (paste, pasteMock) = await readyModel(after: 2)
         let sample = "raven-card/1 address=rvn1qz8m4c7hj2kd9wl0a6vrsx5qtyn3pfe8gu7c2hla pub_hex=00 fingerprint=Ab3d-Ef56-Gh78 lan=192.168.1.42:7420"

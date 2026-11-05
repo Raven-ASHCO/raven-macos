@@ -470,22 +470,6 @@ extension Display {
         return (title, tr(.macGroupsRemoveBody, ["name": name]) + " " + back)
     }
 
-    /// Add a friend's switch. It never names the address: it showed this computer's address and port
-    /// even with the switch off (owner rule: addresses and ports only under Details). Once you
-    /// include it, the address is in the card you send, and only there.
-    public static var includeAddressLabel: String { tr(.macAddShareIncludeAddressNone) }
-
-    /// Why a card asked to hold your address holds none (`card.make` `address_missing`), else nil.
-    public static func noAddressReason(_ card: ShareCard?) -> String? {
-        guard let why = card?.addressMissing, card?.addressIncluded == nil else { return nil }
-        switch why {
-        case "not_receiving": return tr(.macAddNoAddressNotReceiving)
-        case "this_computer_only": return tr(.macAddNoAddressThisComputerOnly)
-        case "no_network": return tr(.macAddNoAddressNoNetwork)
-        default: return tr(.macAddNoAddressOther)
-        }
-    }
-
     /// The chat's narrowest width: what is left of the smallest window (tokens.json minWindow) beside
     /// the sidebar at its minimum width.
     public static var detailMinWidth: CGFloat {

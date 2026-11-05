@@ -315,7 +315,7 @@ raven-node (`receive` stays off). With `RAVEN_ENGINE=dev`: `profile.state` `new`
 screen, `app.info`, `privacy.state`, `privacy.unlock` (answers as `profile.state`) and the other
 privacy ops (`NOT_AVAILABLE_YET`), settings kept in memory
 before the identity, `identity.create` (10 words on Raven's list whose check word fits, the old code),
-`profile.state` `ready`, `identity.me`, `card.make` (with and without an address), the settings
+`profile.state` `ready`, `identity.me`, `card.make` (always without the network address), the settings
 round-trip (a UTF-8 name, `desktop_settings.json`, `BAD_REQUEST`), `node.status`, `events.poll` (and
 `reset` for a seq from before the engine), the app opening the ready profile; `verify.word_hint`; the
 C boundary (NULL request, unknown op, bad JSON); the network ops (`network.status` with every way,

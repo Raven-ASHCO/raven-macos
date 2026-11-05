@@ -33,12 +33,6 @@ extension SnapshotCatalog {
         let (rename, _) = await readyModel(after: 2)
         shots.append(sheetShot("72-rename-friend", rename, width: 420, RenameSheet(address: MockRaven.aliAddress)))
 
-        // Add a friend as it opens: the switch is off, so the card holds no network address.
-        let (share, shareMock) = await readyModel(after: 2)
-        let plainCard = try? await shareMock.makeCard(includeAddress: false)
-        shots.append(sheetShot("85-add-friend-share-default", share, width: 560,
-                               AddFriendSheet(state: AddFriendState(step: 1, includeAddress: false, card: plainCard))))
-
         // Add a friend, step 2 before anything is pasted, a paste that is no card, and a name in use.
         let (empty, _) = await readyModel(after: 2)
         shots.append(sheetShot("73-add-friend-paste-empty", empty, width: 560, AddFriendSheet(state: AddFriendState(step: 2))))

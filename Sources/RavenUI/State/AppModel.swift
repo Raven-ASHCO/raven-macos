@@ -1014,8 +1014,8 @@ public final class AppModel: ObservableObject {
 
     // MARK: Friends and words
 
-    public func makeCard(includeAddress: Bool) async throws -> ShareCard {
-        try await engine.makeCard(includeAddress: includeAddress)
+    public func makeCard() async throws -> ShareCard {
+        try await engine.makeCard()
     }
 
     public func parseCard(_ text: String) async throws -> CardSummary {

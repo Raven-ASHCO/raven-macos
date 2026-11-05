@@ -4,7 +4,6 @@ import SwiftUI
 @MainActor
 public final class AddFriendState: ObservableObject {
     @Published public var step = 1
-    @Published public var includeAddress = false
     @Published public var card: ShareCard?
     @Published public var pasteText = ""
     @Published public var summary: CardSummary?
@@ -16,10 +15,9 @@ public final class AddFriendState: ObservableObject {
     @Published public var busy = false
     public var check: CheckWordsState?
 
-    public init(step: Int = 1, includeAddress: Bool = false, card: ShareCard? = nil, summary: CardSummary? = nil,
+    public init(step: Int = 1, card: ShareCard? = nil, summary: CardSummary? = nil,
                 name: String = "", added: Contact? = nil, check: CheckWordsState? = nil) {
         self.step = step
-        self.includeAddress = includeAddress
         self.card = card
         self.summary = summary
         self.name = name
@@ -27,21 +25,11 @@ public final class AddFriendState: ObservableObject {
         self.check = check
     }
 
-    /// The card always matches the switch: an answer that comes after the switch moved again (on,
-    /// then quickly off) is dropped, or a card with your address would sit under a switch that is off.
+    /// Your card: your key and your Tor address. It never holds the network address of this
+    /// computer: a card is copied around in plain text, and friends you verified learn the address
+    /// inside your encrypted link.
     func loadCard(_ model: AppModel) async {
-        let include = includeAddress
-        let made = try? await model.makeCard(includeAddress: include)
-        guard include == includeAddress else { return }
-        card = made
-    }
-
-    /// The switch moved (then `loadCard`). Off takes the card with your address off the screen at
-    /// once, and Copy waits for the new card: the old one can not be copied while it comes.
-    func switchAddress(_ include: Bool) {
-        includeAddress = include
-        copied = false
-        if !include { card = nil }
+        card = try? await model.makeCard()
     }
 
     /// Parses whatever was pasted. On success the raw text leaves the screen and only a summary
@@ -124,20 +112,6 @@ public struct AddFriendSheet: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(RoundedRectangle(cornerRadius: Theme.shared.radius.control).fill(p.surfaceMuted))
                 .overlay(RoundedRectangle(cornerRadius: Theme.shared.radius.control).stroke(p.border, lineWidth: 0.5))
-            Toggle(isOn: Binding(get: { state.includeAddress }, set: { v in
-                state.switchAddress(v)
-                Task { await state.loadCard(model) }
-            })) {
-                Text(Display.includeAddressLabel)
-                    .font(RFont.smallish)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            .toggleStyle(RSwitchStyle())
-            // Asked for the address, the card has none (`card.make` `address_missing`): say why.
-            if state.includeAddress, let why = Display.noAddressReason(state.card) {
-                Text(why).font(RFont.smallish).foregroundColor(p.warning)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
             Text(tr(.addSharePublic)).font(RFont.smallish).foregroundColor(p.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
         }

@@ -231,28 +231,17 @@ import Testing
 
     // MARK: 8. Card, menu, smallest window
 
-    /// Add a friend showed the switch with "(–:7420)" while Raven wasn't receiving: the engine's
-    /// `address_missing` says why there is no address, and the sheet says it.
-    @Test func aCardWithoutAnAddressSaysWhy() async throws {
+    /// A card never holds the network address of this computer, whether Raven receives or not:
+    /// Add a friend has no switch for it, and the card is the same either way.
+    @Test func aCardNeverHoldsTheNetworkAddress() async throws {
         let (model, mock) = await readyModel()
+        let receiving = try await model.makeCard()
+        #expect(receiving.addressIncluded == nil && receiving.addressMissing == nil)
+        #expect(!receiving.card.contains("lan=") && !receiving.invite.contains("@"))
         _ = try await mock.call(op: "node.stop", args: [:])
-        let card = try await model.makeCard(includeAddress: true)
-        #expect(card.addressIncluded == nil && card.addressMissing == "not_receiving")
-        #expect(!card.card.contains("lan="))
-        let label = Display.includeAddressLabel
-        #expect(!label.contains("–") && !label.contains("7420"))
-        #expect(Display.noAddressReason(card) == tr(.macAddNoAddressNotReceiving))
-        for why in ["this_computer_only", "no_network", "something_new"] {
-            var other = card
-            other.addressMissing = why
-            #expect(Display.noAddressReason(other)?.isEmpty == false)
-        }
-        _ = try await mock.call(op: "node.start", args: [:])
-        let with = try await model.makeCard(includeAddress: true)
-        #expect(with.addressIncluded != nil && with.addressMissing == nil && Display.noAddressReason(with) == nil)
-        // The address is in the card only, never in the switch's label (addresses only under Details).
-        #expect(with.card.contains(with.addressIncluded ?? "?"))
-        #expect(!Display.includeAddressLabel.contains(with.addressIncluded ?? "?"))
+        let stopped = try await model.makeCard()
+        #expect(stopped.addressIncluded == nil && stopped.addressMissing == nil)
+        #expect(stopped.card == receiving.card && stopped.invite == receiving.invite)
     }
 
     /// ⌥⌘1–4 looked enabled on the Welcome and Locked screens and did nothing: they follow the screen.

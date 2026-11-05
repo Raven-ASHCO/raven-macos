@@ -112,12 +112,10 @@ enum EngineProfile {
         #expect(me.address == created.address && me.words == created.words && me.oldCode == created.oldCode)
         #expect(me.card?.isEmpty == false && me.invite?.isEmpty == false)
 
-        // card.make: without an address; asked for one while nothing listens, it says why not.
-        let card = try await engine.makeCard(includeAddress: false)
+        // card.make: the app asks for the card without the network address, and gets none.
+        let card = try await engine.makeCard()
         #expect(!card.card.isEmpty && !card.invite.isEmpty && card.addressIncluded == nil)
-        let withAddress = try EngineProfile.raw("card.make", ["include_address": true])["result"]
-        #expect(withAddress?["address_included"] == nil)
-        #expect(withAddress?["address_missing"]?.string == "not_receiving")
+        #expect(!card.card.contains("lan="))
         #expect(card.card == me.card && card.invite == me.invite)
 
         // Settings round-trip, written to the profile once the identity exists.
