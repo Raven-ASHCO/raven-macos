@@ -43,3 +43,20 @@ extension TextRulesTests {
         #expect(Self.plain(text), "\(text)")
     }
 }
+
+extension TextRulesTests {
+    /// Every text of the Mac app's own table, whichever area shows it. Removing a group member said
+    /// "this group's messages and can't write to it", and a lock text no screen showed any more said
+    /// "doesn't".
+    @Test func everyMacTextIsPlain() {
+        let keys = Str.allCases.filter { $0.rawValue.hasPrefix("mac.") }
+        #expect(keys.count > 100)
+        let args = ["name": "Mina", "group": "Book club", "n": "2", "query": "Sam", "when": "now", "secs": "0.4",
+                    "word": "turtle", "friend": "Ali"]
+        for key in keys {
+            for text in [tr(key, args)] + Strings.shared.options(key) {
+                #expect(Self.plain(text), "\(key.rawValue): \(text)")
+            }
+        }
+    }
+}
