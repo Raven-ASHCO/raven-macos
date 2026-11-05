@@ -67,9 +67,12 @@ struct ChatHeader: View {
                             Text(tr(.homeVerified))
                         }
                         .font(.system(size: 12, weight: .semibold)).foregroundColor(p.success).lineLimit(1)
+                        .fixedSize()
                     } else {
                         Text(tr(.homeNotVerified)).font(.system(size: 12, weight: .semibold)).foregroundColor(p.warning)
                             .lineLimit(1)
+                            // Whole beside a long name, which is cut first (it was squeezed to a sliver).
+                            .fixedSize()
                     }
                 }
                 // Never a status cut in the middle ("1 waiting · until We…"): without the path, then
