@@ -84,6 +84,22 @@ final class FailingOnce: RavenEngine, @unchecked Sendable {
         }
     }
 
+    // MARK: Friends list
+
+    /// A search hid the friends it did not find, but every group stayed: "zebra" still listed the
+    /// book club, under an empty Friends heading.
+    @Test func aSearchFindsGroupsByNameToo() async {
+        let (model, _) = await readyModel()
+        #expect(!model.groups.isEmpty)
+        model.searchText = "zebra"
+        #expect(model.filteredContacts.isEmpty)
+        #expect(model.filteredGroups.isEmpty)
+        model.searchText = " book "
+        #expect(model.filteredGroups.map(\.name) == ["Book club"])
+        model.searchText = ""
+        #expect(model.filteredGroups.count == model.groups.count)
+    }
+
     // MARK: Check words
 
     /// Pasting the words with one that is not a Raven word kept that word but lost every word after

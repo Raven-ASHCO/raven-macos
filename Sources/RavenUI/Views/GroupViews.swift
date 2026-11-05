@@ -9,9 +9,9 @@ struct GroupsSidebarSection: View {
     @EnvironmentObject private var model: AppModel
 
     var body: some View {
-        if model.groupsAvailable && !model.groups.isEmpty {
+        if model.groupsAvailable && !model.filteredGroups.isEmpty {
             SectionLabel(tr(.homeGroups)).padding(.horizontal, 8).padding(.top, 10).padding(.bottom, 2)
-            ForEach(model.groups) { group in
+            ForEach(model.filteredGroups) { group in
                 GroupRow(group: group)
             }
         }

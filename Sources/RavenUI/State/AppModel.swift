@@ -783,6 +783,14 @@ public final class AppModel: ObservableObject {
         return contacts.filter { $0.name.localizedCaseInsensitiveContains(q) || $0.shortAddress.localizedCaseInsensitiveContains(q) }
     }
 
+    /// The groups the sidebar shows: a search finds them by name, as it finds friends (every group
+    /// stayed in the list under any search).
+    public var filteredGroups: [RavenGroup] {
+        let q = searchText.trimmingCharacters(in: .whitespaces)
+        guard !q.isEmpty else { return groups }
+        return groups.filter { $0.name.localizedCaseInsensitiveContains(q) }
+    }
+
     // MARK: Setup
 
     public func beginSetup() {
