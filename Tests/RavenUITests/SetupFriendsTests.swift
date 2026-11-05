@@ -68,6 +68,22 @@ final class FailingOnce: RavenEngine, @unchecked Sendable {
         }
     }
 
+    /// The Mac texts of this area are plain English: no apostrophes, hyphens or dashes, and never an
+    /// address (the shared texts follow raven-core's file and are checked there).
+    @Test func addAFriendTextsFollowTheTextRules() {
+        let keys = Str.allCases.filter { $0.rawValue.hasPrefix("mac.add.") || $0.rawValue.hasPrefix("mac.check.")
+            || $0.rawValue.hasPrefix("mac.friends.") || $0.rawValue.hasPrefix("mac.setup.") }
+        #expect(!keys.isEmpty)
+        let ipv4 = #"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"#
+        for key in keys {
+            let text = tr(key, ["n": "1", "name": "Book shop"])
+            #expect(!text.contains("'") && !text.contains("\u{2019}"), "\(key.rawValue): \(text)")
+            #expect(text.rangeOfCharacter(from: CharacterSet(charactersIn: "-\u{2010}\u{2011}\u{2012}\u{2013}\u{2014}")) == nil,
+                    "\(key.rawValue): \(text)")
+            #expect(text.range(of: ipv4, options: .regularExpression) == nil, "\(key.rawValue): \(text)")
+        }
+    }
+
     // MARK: Check words
 
     /// Pasting the words with one that is not a Raven word kept that word but lost every word after
