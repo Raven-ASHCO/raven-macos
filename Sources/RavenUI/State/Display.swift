@@ -155,6 +155,12 @@ public enum Display {
         return path.isEmpty ? tr(.tickerIncomingNoPath, ["name": name]) : tr(.tickerIncoming, ["name": name, "path": path])
     }
 
+    /// A name at an end of the route line: at most 24 characters, so the line between the ends stays
+    /// a line (a long name took half of it).
+    public static func routeEnd(_ name: String) -> String {
+        name.count > 24 ? String(name.prefix(23)).trimmingCharacters(in: .whitespaces) + "…" : name
+    }
+
     /// One state per row (E1: "Off" beside "In use now"): the state chip says it; a way that is on
     /// but not in use now says so under it. Nothing else.
     public static func runningNote(state: WayState, running: Bool?) -> String? {

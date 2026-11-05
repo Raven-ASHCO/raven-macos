@@ -289,7 +289,7 @@ public enum SnapshotCatalog {
         shots.append(windowShot("06-main-mina-waiting", waiting))
 
         let (sending, _) = await readyModel(after: 5)
-        sending.snapshotRoute = AppModel.PinnedRoute(kind: .out, progress: 0.45)
+        sending.snapshotRoute = AppModel.PinnedRoute(kind: .out, progress: 0.3)   // before it passes behind the label
         shots.append(windowShot("07-main-packet-out", sending))
 
         let (receipt, _) = await readyModel(after: 6)

@@ -141,5 +141,8 @@ import Testing
         #expect(ok.ok && ok.text == "your node: ok · 4 s" && ok.short == "ok · 4 s")
         let down = Display.sidebarHeartbeat(node: nil, lastOk: now, now: now)
         #expect(!down.ok && down.text == "your node: not responding" && down.short == "not responding")
+
+        #expect(Display.routeEnd("Mina") == "Mina")
+        #expect(Display.routeEnd("The neighbour from the third floor") == "The neighbour from the…")
     }
 }

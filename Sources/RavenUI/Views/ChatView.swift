@@ -168,6 +168,11 @@ struct RouteLine: View {
                     }
                     .stroke(p.borderStrong, style: StrokeStyle(lineWidth: 2, lineCap: .round,
                                                                dash: label?.dashed == true ? [6, 5] : []))
+                    if let kind = shownKind {
+                        Packet(kind: kind)
+                            .position(x: 7 + shownProgress * max(0, w - 14), y: mid)
+                    }
+                    // Over the packet: it passes behind the label, which it covered on its way.
                     if let label, !label.text.isEmpty {
                         HStack(spacing: 5) {
                             if label.family != .other { PathIcon(family: label.family, size: 12) }
@@ -176,16 +181,13 @@ struct RouteLine: View {
                         .font(.system(size: 11.5, weight: .medium))
                         .foregroundColor(label.tone.map { p.tone($0) } ?? label.family.color(p))
                         .padding(.horizontal, 10)
-                        .background(p.background)
-                    }
-                    if let kind = shownKind {
-                        Packet(kind: kind)
-                            .position(x: 7 + shownProgress * max(0, w - 14), y: mid)
+                        // Taller than the label (not its layout): the packet's halo hides behind it too.
+                        .background(p.background.padding(.vertical, -5))
                     }
                 }
             }
             .frame(height: 16)
-            Text(ends.1).lineLimit(1)
+            Text(Display.routeEnd(ends.1)).lineLimit(1)
         }
         .font(.system(size: 11.5))
         .foregroundColor(p.textSecondary)
