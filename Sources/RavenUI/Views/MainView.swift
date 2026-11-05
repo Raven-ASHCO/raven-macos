@@ -183,6 +183,16 @@ struct SearchField: View {
                 TextField(tr(.homeSearch), text: $model.searchText)
                     .textFieldStyle(.plain)
                     .accessibilityLabel(tr(.homeSearch))
+                    .onExitCommand { model.searchText = "" }   // Escape empties the search
+            }
+            // A way back to the whole list: the only one was to delete the search letter by letter.
+            if !model.searchText.isEmpty {
+                Button { model.searchText = "" } label: {
+                    Image(systemName: "xmark.circle.fill").font(.system(size: 12)).foregroundColor(p.textTertiary)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(tr(.macFriendsSearchClear))
+                .help(tr(.macFriendsSearchClear))
             }
         }
         .font(.system(size: 13))
