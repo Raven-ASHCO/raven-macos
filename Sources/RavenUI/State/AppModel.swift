@@ -1009,7 +1009,7 @@ public final class AppModel: ObservableObject {
     func fail(_ error: Error) {
         let e = RavenError.from(error)
         actionError = e
-        showToast(e.message, .danger)
+        showToast(Display.plainWords(e.message), .danger)
     }
 
     // MARK: Friends and words

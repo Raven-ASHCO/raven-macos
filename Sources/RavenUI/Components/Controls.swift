@@ -521,7 +521,9 @@ public struct ErrorNote: View {
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(error.message).foregroundColor(p.danger).fixedSize(horizontal: false, vertical: true)
+            // In plain words, as the locked window says its error ("That isn't a Raven invite" read
+            // "That is not"); Details keeps the engine's words.
+            Text(Display.plainWords(error.message)).foregroundColor(p.danger).fixedSize(horizontal: false, vertical: true)
             if !error.detail.isEmpty {
                 Button(tr(.messageDetails)) { showDetail.toggle() }.buttonStyle(RButtonStyle(.plain))
                 if showDetail {

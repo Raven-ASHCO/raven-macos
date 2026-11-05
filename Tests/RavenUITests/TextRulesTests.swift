@@ -60,3 +60,26 @@ extension TextRulesTests {
         }
     }
 }
+
+extension TextRulesTests {
+    /// The locked window said a wrong passphrase in plain words (Display.lockError); every other
+    /// error, under a field or in a toast, said the engine's words as sent: "That isn't a Raven
+    /// invite or card." (screen 74).
+    @Test func errorsAreSaidWithoutContractions() throws {
+        let keys = Str.allCases.filter { $0.rawValue.hasPrefix("error.") }
+        #expect(keys.count > 10)
+        for key in keys {
+            let shown = Display.plainWords(tr(key, ["name": "Mina"]))
+            #expect(shown.range(of: #"\w(n't|'re|'ll|'ve|'m)\b"#, options: .regularExpression) == nil,
+                    "\(key.rawValue): \(shown)")
+        }
+        #expect(Display.plainWords(tr(.errorCardInvalid)) == "That is not a Raven invite or card. Ask your friend to send it again.")
+        let controls = try String(contentsOf: packageRoot.appendingPathComponent("Sources/RavenUI/Components/Controls.swift"),
+                                  encoding: .utf8)
+        #expect(controls.contains("Text(Display.plainWords(error.message))"))
+        let mock = readyMock(demo: true)
+        let model = AppModel(engine: mock, now: { mock.clock.now })
+        model.fail(RavenError(code: ErrorCode.cardInvalid, message: tr(.errorCardInvalid), detail: "parse"))
+        #expect(model.toast?.text == "That is not a Raven invite or card. Ask your friend to send it again.")
+    }
+}
