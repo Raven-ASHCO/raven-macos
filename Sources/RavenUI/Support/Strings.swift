@@ -637,7 +637,6 @@ public enum Str: String, CaseIterable, Sendable {
     case macCheckField = "mac.check.field"
     case macCheckRemoveWord = "mac.check.removeWord"
     case macTrayQuitKeepReceiving = "mac.tray.quitKeepReceiving"
-    case macLockPlainBody = "mac.lock.plainBody"
     case macChatEncrypted = "mac.chat.encrypted"
     case macChatEncryptedShort = "mac.chat.encrypted.short"
     case macGroupsEncrypted = "mac.groups.encrypted"

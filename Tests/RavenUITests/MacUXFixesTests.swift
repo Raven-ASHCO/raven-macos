@@ -310,7 +310,7 @@ import Testing
         #expect(Display.wayReason("Not in this version of Raven yet.", state: .preview) == "Not in this version of Raven yet.")
         #expect(Display.wayReason("On.", state: .on) == nil)
         #expect(tr(.macTrayQuitKeepReceiving) == "Quit Raven (keeps receiving)")
-        #expect(!tr(.macLockPlainBody).isEmpty)
+        #expect(!tr(.macLockLockedPlainBody).isEmpty)
     }
 }
 

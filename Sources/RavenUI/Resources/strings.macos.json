@@ -107,7 +107,6 @@
   "mac.check.field": "Word {n}",
   "mac.check.removeWord": "Remove {word}",
   "mac.tray.quitKeepReceiving": "Quit Raven (keeps receiving)",
-  "mac.lock.plainBody": "While Raven is locked it doesn't receive, read or send messages. Unlock to use it again.",
   "mac.chat.encrypted": "End to end encrypted. Only {name} can read it. No Raven server.",
   "mac.chat.encrypted.short": "End to end encrypted. No Raven server.",
   "mac.groups.encrypted": "End to end encrypted. Only the members can read it. No Raven server.",
