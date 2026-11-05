@@ -53,6 +53,15 @@ extension Display {
         return lines
     }
 
+    // MARK: Lock
+
+    /// Settings > Lock's Raven passphrase row: what the passphrase does; for a profile without one only
+    /// that this app does not set it (its chip says Not set up, and the lock row above says what that
+    /// means). It said "Your Raven keys open only with your Raven passphrase" beside Not set up.
+    public static func passphraseLine(_ lock: LockState?) -> String {
+        lock?.hasPassphrase == false ? tr(.macLockPassphraseNotInApp) : passphraseLine
+    }
+
     // MARK: Raven-node's words, plain
 
     /// Raven-node's phrases with an apostrophe or a hyphen, and the app's plain words for them;

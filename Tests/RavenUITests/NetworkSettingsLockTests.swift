@@ -193,6 +193,20 @@ import Testing
         #expect(ConfirmLockSheet.limits == [tr(.macLockConfirmDoesNot)])
     }
 
+    /// Settings > Lock said "Your Raven keys on this computer open only with your Raven passphrase"
+    /// beside the chip Not set up.
+    @Test func thePassphraseRowSaysWhenThereIsNone() {
+        let none = LockState(available: true, supported: true, locked: false, hasPassphrase: false)
+        let set = LockState(available: true, supported: true, locked: false, hasPassphrase: true)
+        #expect(Display.passphraseLine(none) == tr(.macLockPassphraseNotInApp))
+        // The lock row above says what having none means.
+        #expect(Display.lockNote(none) == tr(.lockNoPassphrase))
+        for lock in [set, LockState(available: false, supported: false, locked: false), nil] {
+            #expect(Display.passphraseLine(lock) == Display.passphraseLine)
+        }
+        #expect(Self.plain(Display.passphraseLine(none)))
+    }
+
     // MARK: Menu bar
 
     /// The menu listed every friend: with many, it grew taller than the screen and Quit was out of

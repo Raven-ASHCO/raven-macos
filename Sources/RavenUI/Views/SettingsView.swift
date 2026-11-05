@@ -417,7 +417,7 @@ struct LockSettingsSection: View {
                     RSwitch(tr(.settingsLockOnSleep), isOn: settingBinding(model, \.lockOnSleep, "lock_on_sleep") { .bool($0) })
                         .disabled(!model.lockOnSleepAvailable)
                 }
-                CalmItem(tr(.lockPassphrase), Display.passphraseLine) {
+                CalmItem(tr(.lockPassphrase), Display.passphraseLine(lock)) {
                     if let has = lock?.hasPassphrase {
                         StatChip(text: has ? tr(.settingsPassphraseSet) : tr(.settingsPassphraseNotSet),
                                  tone: has ? .success : .warning)
