@@ -297,6 +297,7 @@ public enum SnapshotCatalog {
 
         shots += await networkShots()
         shots += await groupShots()
+        shots += await friendsShots()
 
         var dmg = sheetShot("dmg-background", main, width: 600, DmgBackground())
         dmg.dark = false
