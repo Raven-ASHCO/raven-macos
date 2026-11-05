@@ -95,8 +95,11 @@ struct GroupChatArea: View {
                         await model.sendGroupComposer()
                     }
                 } else {
+                    // With the composer's side margins: in a narrow window the line ran from edge to edge.
                     Text(group.status == "removed" ? tr(.groupsStatusRemoved) : tr(.groupsStatusLeft))
                         .font(.system(size: 13)).foregroundColor(p.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 22)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 20)
                         .overlay(alignment: .top) { Rule() }
