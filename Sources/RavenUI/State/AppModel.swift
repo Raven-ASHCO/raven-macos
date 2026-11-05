@@ -469,8 +469,7 @@ public final class AppModel: ObservableObject {
                 if wasWaiting {
                     showToast(tr(.tickerBack, ["name": name]), .success)
                 } else {
-                    showToast(tr(.tickerDelivered, ["name": name, "path": e.path ?? Fallback.path,
-                                                    "secs": TimeText.secs(ms: e.ms ?? 0)]), .success)
+                    showToast(Display.deliveredTicker(name: name, path: e.path, ms: e.ms ?? 0), .success)
                 }
                 refreshContacts = true
             case .incoming:
@@ -1277,7 +1276,6 @@ public final class AppModel: ObservableObject {
 
 /// Fallbacks used only when the engine leaves a field out.
 enum Fallback {
-    static let path = "–"
     static func short(_ address: String) -> String {
         guard address.count > 16 else { return address }
         return String(address.prefix(8)) + "…" + String(address.suffix(5))

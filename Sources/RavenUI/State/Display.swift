@@ -161,6 +161,15 @@ public enum Display {
         name.count > 24 ? String(name.prefix(23)).trimmingCharacters(in: .whitespaces) + "…" : name
     }
 
+    /// The receipt's toast: "Delivered to Ali via LAN direct in 0.6 s · receipt signed by Ali"; without
+    /// a path no "via –" (a dash stood in for it).
+    public static func deliveredTicker(name: String, path: String?, ms: Int) -> String {
+        let path = path.map { Sanitizer.line($0, maxLength: 40) } ?? ""
+        let secs = TimeText.secs(ms: ms)
+        return path.isEmpty ? tr(.macTickerDeliveredNoPath, ["name": name, "secs": secs])
+            : tr(.tickerDelivered, ["name": name, "path": path, "secs": secs])
+    }
+
     /// One state per row (E1: "Off" beside "In use now"): the state chip says it; a way that is on
     /// but not in use now says so under it. Nothing else.
     public static func runningNote(state: WayState, running: Bool?) -> String? {

@@ -549,6 +549,7 @@ public enum Str: String, CaseIterable, Sendable {
     case macHomeWaitingShort = "mac.home.waiting.short"
     case macHomeSearchNone = "mac.home.search.none"
     case macHomeNoFriendsBody = "mac.home.noFriends.body"
+    case macTickerDeliveredNoPath = "mac.ticker.delivered.noPath"
 }
 
 /// The English text table, loaded at runtime from the bundled strings.en.json, plus the Mac app's own

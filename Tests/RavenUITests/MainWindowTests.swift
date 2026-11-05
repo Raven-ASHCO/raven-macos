@@ -145,4 +145,12 @@ import Testing
         #expect(Display.routeEnd("Mina") == "Mina")
         #expect(Display.routeEnd("The neighbour from the third floor") == "The neighbour from the…")
     }
+
+    /// The receipt's toast said "via –" when the receipt named no path.
+    @Test func aReceiptWithoutAPathSaysNoDash() {
+        #expect(Display.deliveredTicker(name: "Ali", path: "LAN direct", ms: 600)
+                == "Delivered to Ali via LAN direct in 0.6 s · receipt signed by Ali")
+        #expect(Display.deliveredTicker(name: "Ali", path: nil, ms: 600) == "Delivered to Ali in 0.6 s · receipt signed by Ali")
+        #expect(Display.deliveredTicker(name: "Ali", path: " ", ms: 600) == "Delivered to Ali in 0.6 s · receipt signed by Ali")
+    }
 }
