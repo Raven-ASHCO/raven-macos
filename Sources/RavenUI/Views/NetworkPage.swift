@@ -174,7 +174,7 @@ struct LabBanner: View {
                     label.fixedSize(horizontal: false, vertical: true)
                 }
                 if !compact {
-                    Text(tr(.networkLabBody)).font(RFont.small).foregroundColor(p.textSecondary)
+                    Text(tr(.macNetworkLabBody)).font(RFont.small).foregroundColor(p.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -255,7 +255,7 @@ struct ChangesNote: View {
                     .font(RFont.small)
             }
             ForEach(Array(net.changes.enumerated()), id: \.offset) { _, change in
-                Text(change.effect).font(RFont.smallish).fixedSize(horizontal: false, vertical: true)
+                Text(Display.plainWords(change.effect)).font(RFont.smallish).fixedSize(horizontal: false, vertical: true)
                 if change.applies == "restart" {
                     Text(tr(.networkChangedRestart)).font(RFont.small).foregroundColor(p.warning)
                 }
@@ -297,7 +297,7 @@ struct ThisComputerSection: View {
                         .buttonStyle(RButtonStyle(.secondary, compact: true))
                 }
                 if status.policyUnreadable == true {
-                    Text(tr(.networkThisComputerPolicyUnreadable)).font(.system(size: 12)).foregroundColor(p.warning)
+                    Text(tr(.macNetworkThisComputerPolicyUnreadable)).font(.system(size: 12)).foregroundColor(p.warning)
                 }
                 HStack(spacing: 6) {
                     Circle().fill(hb.ok ? p.successFill : p.dangerFill).frame(width: 7, height: 7).accessibilityHidden(true)
@@ -386,7 +386,7 @@ struct WayRow: View {
     var body: some View {
         let setting = NetworkModel.setting(forWay: way.id)
         let toggle = NetworkModel.toggle(for: way)
-        let name = way.id == "tor" ? tr(.networkTorName) : (way.name.map { Sanitizer.line($0, maxLength: 80) } ?? way.id)
+        let name = Display.wayName(way)
         let family = PathFamily.of(way: way.id)
         let dim = card && [.off, .preview, .notOnThisOs].contains(way.state)
         VStack(alignment: .leading, spacing: 6) {
@@ -400,7 +400,8 @@ struct WayRow: View {
                 }
                 VStack(alignment: .leading, spacing: 4) {
                     Text(name).font(.system(size: 14, weight: .semibold)).fixedSize(horizontal: false, vertical: true)
-                    if let reason = card ? Display.wayReason(way.reason, state: way.state) : way.reason, !reason.isEmpty {
+                    if let reason = (card ? Display.wayReason(way.reason, state: way.state) : way.reason).map(Display.plainWords),
+                       !reason.isEmpty {
                         Text(reason).font(.system(size: 12.5)).foregroundColor(p.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -501,7 +502,7 @@ struct WayExtras: View {
         // peer addresses: Technical details only (owner rule: addresses and ports only under Details).
         case "port_mapping":
             if let state = status.portMapping?.natPmpPcp {
-                small(tr(.networkPortMappingNatPmpPcp, ["state": Display.wayState(state).text]))
+                small(tr(.macNetworkPortMappingNatPmpPcp, ["state": Display.wayState(state).text]))
             }
         case "p2p":
             relays
@@ -518,7 +519,7 @@ struct WayExtras: View {
             }
         case "friend_relay":
             // No consent sheet (the engine asks none): what lending a relay costs, beside its switch.
-            small(tr(.networkRelayForFriendsEffect))
+            small(tr(.macNetworkRelayForFriendsEffect))
         case "proxy":
             if way.state != .preview, let proxy = status.proxy { proxyControls(proxy) }
         default:
@@ -548,7 +549,7 @@ struct WayExtras: View {
     @ViewBuilder private func proxyControls(_ proxy: ProxyState) -> some View {
         let current = proxy.setting ?? "auto"
         let options: [(value: String, label: String)] = {
-            var o: [(value: String, label: String)] = [("auto", tr(.networkProxyAuto)), ("off", tr(.networkProxyOff))]
+            var o: [(value: String, label: String)] = [("auto", tr(.macNetworkProxyAuto)), ("off", tr(.networkProxyOff))]
             if current != "auto" && current != "off" { o.append((current, current)) }
             return o
         }()
@@ -586,8 +587,8 @@ struct CarrySection: View {
                 if let mine = carry?.friendsCarryMine {
                     switch mine.setting {
                     case "on": line(tr(.networkMailMineOn, ["n": String(mine.mailFriends ?? 0)]))
-                    case "off": line(tr(.networkMailMineOff))
-                    default: line(tr(.networkMailMineNotDecided))
+                    case "off": line(tr(.macNetworkMailMineOff))
+                    default: line(tr(.macNetworkMailMineNotDecided))
                     }
                     if let offering = mine.offering, offering > 0 {
                         line(tr(.networkCarryOffering, ["n": String(offering), "internet": String(mine.offeringOverInternet ?? 0),
@@ -639,17 +640,17 @@ struct HelpSection: View {
         PageSection(tr(.networkHelpTitle)) {
             VStack(alignment: .leading, spacing: 0) {
                 if let help = status.help {
-                    flag("bridge", tr(.networkHelpBridge), help.bridge, tr(.networkHelpBridgePlain),
+                    flag("bridge", tr(.networkHelpBridge), help.bridge, tr(.macNetworkHelpBridgePlain),
                          technical: help.effects?.bridge)
                     Rule()
                     // Store and Relay change nothing in this version of raven-node: their switches
                     // show only while one is on (so it can be turned off), E1.
                     if help.store {
-                        flag("store", tr(.networkHelpStore), help.store, help.effects?.store)
+                        flag("store", tr(.networkHelpStore), help.store, help.effects.map { Display.plainWords($0.store) })
                         Rule()
                     }
                     if help.relay {
-                        flag("relay", tr(.networkHelpRelay), help.relay, help.effects?.relay)
+                        flag("relay", tr(.macNetworkHelpRelay), help.relay, help.effects.map { Display.plainWords($0.relay) })
                         Rule()
                     }
                     if help.automatic == true {
@@ -657,7 +658,7 @@ struct HelpSection: View {
                         Rule()
                     }
                 }
-                flag("hide_ip", tr(.networkHideIp), status.hideIp == true, tr(.networkHideIpBody))
+                flag("hide_ip", tr(.macNetworkHideIp), status.hideIp == true, tr(.networkHideIpBody))
             }
         }
     }

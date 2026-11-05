@@ -176,7 +176,7 @@ import Testing
 
     /// 8. Subtitles in plain words: no command, no "terminal".
     @Test func subtitlesNameNoCommand() {
-        for text in [tr(.securityIntro), tr(.networkCheckIntro)] {
+        for text in [tr(.securityIntro), tr(.macNetworkCheckIntro)] {
             #expect(!text.contains("raven "))
             #expect(!text.contains("terminal"))
         }

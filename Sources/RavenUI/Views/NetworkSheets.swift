@@ -28,12 +28,12 @@ struct ConsentBody: View {
                     part(tr(.networkConsentDoes), texts.does)
                     part(tr(.networkConsentCosts), texts.costs)
                     part(tr(.networkConsentSees), texts.sees)
-                    part(tr(.networkConsentHidden), texts.hidden)
+                    part(tr(.macNetworkConsentHidden), texts.hidden)
                 }
                 if let full = Display.engineConsentText(setting, net.status?.texts), !full.isEmpty {
                     VStack(alignment: .leading, spacing: 4) {
-                        SectionLabel(tr(.networkConsentEngine))
-                        Text(full)
+                        SectionLabel(tr(.macNetworkConsentEngine))
+                        Text(Display.plainWords(full))
                             .font(RFont.smallish)
                             .foregroundColor(p.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
@@ -94,9 +94,9 @@ struct RestartBody: View {
             VStack(alignment: .leading, spacing: 10) {
                 switch state {
                 case .asking:
-                    Text(tr(.networkRestartBody)).fixedSize(horizontal: false, vertical: true)
+                    Text(tr(.macNetworkRestartBody)).fixedSize(horizontal: false, vertical: true)
                     if model.node?.startedByApp != true {
-                        Text(tr(.networkRestartNotOurs)).font(RFont.smallish).foregroundColor(p.textSecondary)
+                        Text(tr(.macNetworkRestartNotOurs)).font(RFont.smallish).foregroundColor(p.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 case .working:
@@ -107,10 +107,10 @@ struct RestartBody: View {
                 case .restarted:
                     Text(tr(.networkRestartDone)).foregroundColor(p.success)
                 case .managed(let note):
-                    Text(tr(.networkRestartManaged)).fixedSize(horizontal: false, vertical: true)
+                    Text(tr(.macNetworkRestartManaged)).fixedSize(horizontal: false, vertical: true)
                     if !note.isEmpty { noteText(note) }
                 case .notStopped(let note):
-                    Text(tr(.networkRestartNotStopped)).fixedSize(horizontal: false, vertical: true)
+                    Text(tr(.macNetworkRestartNotStopped)).fixedSize(horizontal: false, vertical: true)
                     if !note.isEmpty { noteText(note) }
                 case .failed(let error):
                     ErrorNote(error)

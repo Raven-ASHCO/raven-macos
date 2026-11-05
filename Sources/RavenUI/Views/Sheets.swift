@@ -212,7 +212,7 @@ public struct NetworkContent: View {
     private func wayRow(_ way: NetworkWay) -> some View {
         let state = Display.wayState(way.state)
         return HStack {
-            Text(way.name.map { Sanitizer.line($0, maxLength: 80) } ?? way.id).font(RFont.smallish)
+            Text(Display.wayName(way)).font(RFont.smallish)
             Spacer(minLength: 8)
             Text(state.text).font(RFont.smallish).foregroundColor(p.tone(state.tone))
         }

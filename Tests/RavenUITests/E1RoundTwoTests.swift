@@ -60,7 +60,7 @@ import Testing
     @Test func privacySaysWhatIsEncrypted() throws {
         let sealed = try JSONValue.decoder.decode(PrivacyState.self, from: Data(#"{"available":false,"encrypted":true,"locked":false}"#.utf8))
         let lines = SettingsView.storedLines(sealed)
-        #expect(lines == [tr(.settingsStoredEncrypted), tr(.settingsStoredPlain)])
+        #expect(lines == [tr(.settingsStoredEncrypted), tr(.macSettingsStoredPlain)])
         let plain = try JSONValue.decoder.decode(PrivacyState.self, from: Data(#"{"available":false,"encrypted":false,"locked":false}"#.utf8))
         #expect(SettingsView.storedLines(plain) == [tr(.settingsStoredNotEncrypted)])
     }

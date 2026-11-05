@@ -308,7 +308,7 @@ public enum Display {
         case "not_built": return (tr(.networkTorPhaseNotBuilt), .secondary)
         case "off": return (tr(.networkTorPhaseOff), .secondary)
         default:
-            let words = Sanitizer.line(tor.words ?? "", maxLength: 60)
+            let words = Display.plainWords(Sanitizer.line(tor.words ?? "", maxLength: 60))
             return (words.isEmpty ? tr(.networkTorPhaseOff) : words, .secondary)
         }
     }
@@ -316,10 +316,10 @@ public enum Display {
     /// The lines under the Tor way: why (with when it retries) and the outage history.
     public static func torLines(_ tor: TorState) -> [String] {
         var lines: [String] = []
-        let why = [tor.why, tor.retry].compactMap { $0 }.map { Sanitizer.line($0, maxLength: 160) }
+        let why = [tor.why, tor.retry].compactMap { $0 }.map { Display.plainWords(Sanitizer.line($0, maxLength: 160)) }
             .filter { !$0.isEmpty }.joined(separator: "; ")
         if !why.isEmpty { lines.append(tr(.networkTorWhy, ["text": why])) }
-        if let outages = tor.outages.map({ Sanitizer.line($0, maxLength: 200) }), !outages.isEmpty {
+        if let outages = tor.outages.map({ Display.plainWords(Sanitizer.line($0, maxLength: 200)) }), !outages.isEmpty {
             lines.append(tr(.networkTorOutages, ["text": outages]))
         }
         return lines
@@ -337,15 +337,15 @@ public enum Display {
     public static func consent(_ setting: String) -> (title: String, does: String, costs: String, sees: String, hidden: String)? {
         switch setting {
         case "carry_for_friends":
-            return (tr(.networkConsentCarryForFriendsTitle), tr(.networkConsentCarryForFriendsDoes),
-                    tr(.networkConsentCarryForFriendsCosts), tr(.networkConsentCarryForFriendsSees),
+            return (tr(.networkConsentCarryForFriendsTitle), tr(.macNetworkConsentCarryForFriendsDoes),
+                    tr(.macNetworkConsentCarryForFriendsCosts), tr(.networkConsentCarryForFriendsSees),
                     tr(.networkConsentCarryForFriendsHidden))
         case "friends_carry_mine":
-            return (tr(.networkConsentFriendsCarryMineTitle), tr(.networkConsentFriendsCarryMineDoes),
-                    tr(.networkConsentFriendsCarryMineCosts), tr(.networkConsentFriendsCarryMineSees),
+            return (tr(.networkConsentFriendsCarryMineTitle), tr(.macNetworkConsentFriendsCarryMineDoes),
+                    tr(.networkConsentFriendsCarryMineCosts), tr(.macNetworkConsentFriendsCarryMineSees),
                     tr(.networkConsentFriendsCarryMineHidden))
         case "handoff":
-            return (tr(.networkConsentHandoffTitle), tr(.networkConsentHandoffDoes), tr(.networkConsentHandoffCosts),
+            return (tr(.networkConsentHandoffTitle), tr(.networkConsentHandoffDoes), tr(.macNetworkConsentHandoffCosts),
                     tr(.networkConsentHandoffSees), tr(.networkConsentHandoffHidden))
         default:
             return nil
@@ -397,13 +397,13 @@ extension Display {
     public static func securityKept(_ word: String) -> String {
         switch word {
         case "live": return tr(.securityKeptLive)
-        case "unsealed": return tr(.securityKeptUnsealed)
+        case "unsealed": return tr(.macSecurityKeptUnsealed)
         default: return tr(.securityKeptOff)
         }
     }
 
     /// Under the notices: that this app doesn't mark a notice as resolved yet.
-    public static var securityResolveLine: String { tr(.securityResolve) }
+    public static var securityResolveLine: String { tr(.macSecurityResolve) }
 
     /// `updates.status` `install_text` for Technical details (the engine's words name no command).
     public static func updatesInstallDetail(_ text: String?) -> String? {

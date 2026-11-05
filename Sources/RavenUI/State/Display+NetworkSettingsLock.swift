@@ -53,6 +53,62 @@ extension Display {
         return lines
     }
 
+    // MARK: Raven-node's words, plain
+
+    /// Raven-node's phrases with an apostrophe or a hyphen, and the app's plain words for them;
+    /// longest first. Every other "n't" becomes " not" in `plainWords`.
+    static let plainPhrases: [(String, String)] = [
+        ("a developer build's lab switch", "a lab switch in a developer build"),
+        ("Raven's background program", "the Raven background program"),
+        ("Raven's own links", "Raven links"),
+        ("this computer's HTTPS proxy setting", "the HTTPS proxy setting of this computer"),
+        ("this computer's IP address", "the IP address of this computer"),
+        ("this computer's router", "the router of this computer"),
+        ("this computer's network", "the network of this computer"),
+        ("the profile's port", "the port of this profile"),
+        ("a friend's address", "the address of a friend"),
+        ("Wi-Fi", "WiFi"),
+        ("Peer-to-peer", "Peer to peer"), ("peer-to-peer", "peer to peer"),
+        ("NAT-PMP", "NAT\u{00A0}PMP"),   // kept on one line
+        ("self-check", "self check"),
+        ("carrier-grade", "carrier grade"),
+        ("End-to-end", "End to end"), ("end-to-end", "end to end"),
+        ("read-only", "read only"),
+        ("built-in", "built in"),
+        ("can't", "cannot"), ("Can't", "Cannot"),
+        ("won't", "will not"), ("Won't", "Will not"),
+        ("it's", "it is"), ("It's", "It is"),
+        ("that's", "that is"), ("That's", "That is"),
+        ("there's", "there is"), ("There's", "There is"),
+        ("what's", "what is"), ("What's", "What is"),
+        ("you're", "you are"), ("You're", "You are"),
+        ("you'll", "you will"), ("You'll", "You will"),
+        ("you've", "you have"), ("You've", "You have"),
+        ("they're", "they are"), ("we're", "we are"), ("I'm", "I am"),
+    ]
+
+    /// Raven-node's own sentences (a way's name and reason, what a change does, the check's lines, a
+    /// security notice) in the app's plain words: no apostrophes, hyphens or dashes (owner rule for
+    /// visible texts). Technical details keep raven-node's words as they are.
+    public static func plainWords(_ text: String) -> String {
+        var s = text.replacingOccurrences(of: "\u{2019}", with: "'")
+        for (from, to) in plainPhrases { s = s.replacingOccurrences(of: from, with: to) }
+        // isn't, doesn't, didn't, don't, hasn't, couldn't, aren't ...
+        s = s.replacingOccurrences(of: #"\b(\w+)n't\b"#, with: "$1 not", options: .regularExpression)
+        // A sentence that now starts with "the Raven background program".
+        s = s.replacingOccurrences(of: #"(^|[.!?]\s+)the Raven"#, with: "$1The Raven", options: .regularExpression)
+        s = s.replacingOccurrences(of: " \u{2014} ", with: ": ").replacingOccurrences(of: " \u{2013} ", with: ": ")
+        return s
+    }
+
+    /// A way's name: raven-node's, in plain words ("Same network (WiFi, cable or hotspot)", "Peer to
+    /// peer and relays", "Router port opening (UPnP, NAT PMP, PCP)").
+    public static func wayName(_ way: NetworkWay) -> String {
+        if way.id == "tor" { return tr(.networkTorName) }
+        let name = way.name.map { Sanitizer.line($0, maxLength: 80) } ?? ""
+        return name.isEmpty ? way.id : plainWords(name)
+    }
+
     // MARK: Menu bar
 
     /// The menu bar's friends: all of them in the sidebar's order while they fit in `limit` rows;

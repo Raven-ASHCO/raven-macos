@@ -8,7 +8,7 @@ struct CheckNetworkPage: View {
     @Environment(\.palette) private var p
 
     var body: some View {
-        PageFrame(tr(.networkCheckTitle), intro: tr(.networkCheckIntro)) {
+        PageFrame(tr(.networkCheckTitle), intro: tr(.macNetworkCheckIntro)) {
             if net.checking { Spinner(size: 12) }
             Button(net.checking ? tr(.networkCheckRunning) : tr(.networkCheckAgain)) { Task { await net.runCheck() } }
                 .buttonStyle(RButtonStyle(.secondary, compact: true))
@@ -53,8 +53,8 @@ struct CheckNetworkPage: View {
             }
             PageSection(tr(.networkCheckRouterTitle)) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(tr(.networkCheckRouterBody)).font(RFont.smallish).fixedSize(horizontal: false, vertical: true)
-                    Text(tr(.networkCheckRouterMacos)).font(RFont.smallish).foregroundColor(p.textSecondary)
+                    Text(tr(.macNetworkCheckRouterBody)).font(RFont.smallish).fixedSize(horizontal: false, vertical: true)
+                    Text(tr(.macNetworkCheckRouterMacos)).font(RFont.smallish).foregroundColor(p.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                     HStack(spacing: 8) {
                         Button(net.askingRouter ? tr(.networkCheckRouterAsking) : tr(.networkCheckRouter)) {
@@ -80,7 +80,7 @@ struct CheckNetworkPage: View {
     /// The rows Raven has a sentence for, each sentence once.
     static func plainLines(_ rows: [CheckRow]) -> [String] {
         var seen = Set<String>()
-        return rows.compactMap { $0.plain }.filter { !$0.isEmpty && seen.insert($0).inserted }
+        return rows.compactMap { $0.plain.map(Display.plainWords) }.filter { !$0.isEmpty && seen.insert($0).inserted }
     }
 
     /// A doctor line as it printed it ("key: value").

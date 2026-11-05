@@ -23,10 +23,10 @@ struct SecurityPage: View {
                                 Text(tr(.securityCounted, ["n": String(counted)])).font(RFont.small).foregroundColor(p.textSecondary)
                             }
                         }
-                        Text(s.available ? Display.securityKept(s.kept) : tr(.securityPreview)).font(RFont.smallish)
+                        Text(s.available ? Display.securityKept(s.kept) : tr(.macSecurityPreview)).font(RFont.smallish)
                             .fixedSize(horizontal: false, vertical: true)
                         if let node = s.node {
-                            Text(tr(.securityNodeTitle)).font(RFont.small.weight(.semibold)).padding(.top, 4)
+                            Text(tr(.macSecurityNodeTitle)).font(RFont.small.weight(.semibold)).padding(.top, 4)
                             counts(node, noticesNeedYou: !s.notices.isEmpty)
                         }
                     }
@@ -86,17 +86,17 @@ struct NoticeRow: View {
         VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: 8) {
                 Pill(text: alert ? tr(.securityAlert) : tr(.securityWarning), tone: alert ? .danger : .warning)
-                Text(notice.headline).font(RFont.bodyBold).fixedSize(horizontal: false, vertical: true)
+                Text(Display.plainWords(notice.headline)).font(RFont.bodyBold).fixedSize(horizontal: false, vertical: true)
             }
             let who = [notice.name, notice.when].compactMap { $0 }.filter { !$0.isEmpty }.map { Sanitizer.line($0, maxLength: 80) }
             if !who.isEmpty {
                 Text(who.joined(separator: " · ")).font(RFont.small).foregroundColor(p.textSecondary)
             }
             if let did = notice.whatRavenDid, !did.isEmpty {
-                labelled(tr(.securityDidWhat), did)
+                labelled(tr(.securityDidWhat), Display.plainWords(did))
             }
             if let todo = notice.whatToDo, !todo.isEmpty {
-                labelled(tr(.securityToDo), todo)
+                labelled(tr(.securityToDo), Display.plainWords(todo))
             }
             if let details = notice.details, !details.isEmpty {
                 Button(tr(.messageDetails)) { showDetails.toggle() }
@@ -165,7 +165,7 @@ struct UpdatesPage: View {
     @Environment(\.palette) private var p
 
     var body: some View {
-        PageFrame(tr(.updatesTitle), intro: tr(.updatesIntro)) {
+        PageFrame(tr(.updatesTitle), intro: tr(.macUpdatesIntro)) {
             Button(tr(.networkRefresh)) { Task { await net.loadUpdates() } }
                 .buttonStyle(RButtonStyle(.secondary, compact: true))
                 .keyboardShortcut("r", modifiers: .command)
@@ -177,7 +177,7 @@ struct UpdatesPage: View {
                         HStack(spacing: 8) {
                             StateChip(state: u.available ? (u.lab == true ? .lab : .on) : .preview)
                             if let summary = u.summary, !summary.isEmpty {
-                                Text(summary).font(RFont.bodyBold).fixedSize(horizontal: false, vertical: true)
+                                Text(Display.plainWords(summary)).font(RFont.bodyBold).fixedSize(horizontal: false, vertical: true)
                             }
                         }
                         ForEach(Array(u.lines.enumerated()), id: \.offset) { _, line in
@@ -190,7 +190,7 @@ struct UpdatesPage: View {
                         }
                         .padding(.top, 4)
                         if u.available != true {
-                            Text(tr(.updatesNotAvailable)).font(RFont.smallish).foregroundColor(p.textSecondary)
+                            Text(tr(.macUpdatesNotAvailable)).font(RFont.smallish).foregroundColor(p.textSecondary)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                     }
@@ -207,7 +207,7 @@ struct UpdatesPage: View {
                     }
                 }
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(tr(.updatesInstall)).font(RFont.bodyBold).fixedSize(horizontal: false, vertical: true)
+                    Text(tr(.macUpdatesInstall)).font(RFont.bodyBold).fixedSize(horizontal: false, vertical: true)
                     // The engine's install text: Technical details only (E1).
                     if let text = Display.updatesInstallDetail(u.installText) { TechnicalDetails(lines: [text]) }
                 }
