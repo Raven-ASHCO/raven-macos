@@ -11,7 +11,7 @@ extension SnapshotCatalog {
         // Many friends: the menu lists eight, the one with new messages first, and says how many more.
         let (menu, _) = await readyModel(after: 3)
         let roles = ["Neighbour", "Teacher", "Cousin", "Workshop", "Landlord", "Coach", "Gardener", "Baker",
-                     "Tailor", "Choir", "Studio", "Pharmacy"]
+                     "Tailor", "Choir", "Florist", "Pharmacy"]
         for (i, role) in roles.enumerated() {
             let address = "rvn1menu" + String(i)
             menu.contacts.append(Contact(address: address, name: role, shortAddress: address, verified: i % 3 != 0,

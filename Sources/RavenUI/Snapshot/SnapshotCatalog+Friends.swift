@@ -3,7 +3,7 @@ import SwiftUI
 
 /// Setup, your identity and friends: the states the main list above does not show (your words and
 /// card, rename, the third step of Add a friend, a paste that is not a card, a name you already use,
-/// no friends yet, long names, many friends, a search).
+/// long names, many friends, a search). No friends yet is 61-main-no-friends, with the main window's.
 extension SnapshotCatalog {
     /// A card for a friend who is not in the demo yet (no address, so no network address shows).
     static let newFriendCard = "raven-card/1 address=rvn1qz8m4c7hj2kd9wl0a6vrsx5qtyn3pfe8gu7c2hla pub_hex=00 fingerprint=Ab3d-Ef56-Gh78"
@@ -23,7 +23,7 @@ extension SnapshotCatalog {
         failed.setupStep = .receive
         failed.actionError = RavenError(code: ErrorCode.internalError, message: tr(.errorInternal),
                                         detail: "node.start: could not start the background program")
-        shots.append(windowShot("70-setup-receive-error", failed))
+        shots.append(windowShot("03b-setup-receive-error", failed))
 
         // You: your fingerprint, words and card.
         let (you, _) = await readyModel(after: 2)
@@ -71,16 +71,6 @@ extension SnapshotCatalog {
         await unknownState.fieldChanged(unknown)
         shots.append(sheetShot("78-check-words-not-a-word", unknown, width: 560,
                                CheckWordsSheet(address: MockRaven.renaAddress, state: unknownState, highlight: 0)))
-
-        // No friends yet: a new profile set up without the demo friends.
-        let clock = MockClock(fixed: baseDate)
-        let lonely = AppModel(engine: MockRaven(start: .new, demo: false, clock: clock, identityDelay: 0), now: { clock.now })
-        await lonely.bootstrap()
-        lonely.beginSetup()
-        await lonely.chooseReceive(true)
-        await lonely.finishSetup()
-        await lonely.pollNow()
-        shots.append(windowShot("79-main-no-friends", lonely))
 
         // Long names: in the list, in the chat header and in the not verified banner.
         let (long, _) = await readyModel(after: 12)
