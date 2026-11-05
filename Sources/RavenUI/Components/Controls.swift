@@ -34,6 +34,27 @@ public struct RButtonStyle: ButtonStyle {
     public func makeBody(configuration: Configuration) -> some View {
         RButtonBody(configuration: configuration, kind: kind, compact: compact)
     }
+
+    /// The label's colour: white on the accent fill, else a text colour of the tokens. A danger button
+    /// says its word in `danger`, not in the fill colour `dangerFill` (3.0 to 1 on a dark card).
+    static func textColor(_ kind: Kind, _ p: Palette) -> Color {
+        switch kind {
+        case .primary: return p.onAccent
+        case .secondary: return p.textPrimary
+        case .danger: return p.danger
+        case .plain: return p.accent
+        }
+    }
+
+    /// The fill: a primary button darkens a little under the pointer (it lightened to `accentFillTop`,
+    /// where white text fell to 3.6 to 1 in light and 3.0 to 1 in dark).
+    static func fill(_ kind: Kind, hover: Bool, _ p: Palette) -> Color {
+        switch kind {
+        case .primary: return hover ? p.accentFill.blended(.black, 0.12) : p.accentFill
+        case .secondary, .danger: return hover ? p.surface.opacity(0.9).blended(p.textPrimary, 0.05) : p.surface
+        case .plain: return .clear
+        }
+    }
 }
 
 private struct RButtonBody: View {
@@ -64,13 +85,7 @@ private struct RButtonBody: View {
             .onHover { hover = $0 }
     }
 
-    var fill: Color {
-        switch kind {
-        case .primary: return hover && enabled ? p.accentFillTop : p.accentFill
-        case .secondary, .danger: return hover && enabled ? p.surface.opacity(0.9).blended(p.textPrimary, 0.05) : p.surface
-        case .plain: return .clear
-        }
-    }
+    var fill: Color { RButtonStyle.fill(kind, hover: hover && enabled, p) }
 
     var stroke: Color {
         switch kind {
@@ -79,14 +94,7 @@ private struct RButtonBody: View {
         }
     }
 
-    var foreground: Color {
-        switch kind {
-        case .primary: return p.onAccent
-        case .secondary: return p.textPrimary
-        case .danger: return p.dangerFill
-        case .plain: return p.accent
-        }
-    }
+    var foreground: Color { RButtonStyle.textColor(kind, p) }
 }
 
 extension Color {
@@ -103,7 +111,8 @@ extension Color {
 // MARK: - Text field
 
 /// A text field with Raven's look. In snapshots it is drawn as text, since ImageRenderer cannot draw
-/// an NSTextField.
+/// an NSTextField. While it has the keyboard focus its frame turns the focus colour with a soft ring
+/// (the plain style draws no focus ring of its own, so a Tab gave no sign of where typing would go).
 public struct RField: View {
     let placeholder: String
     @Binding var text: String
@@ -119,6 +128,10 @@ public struct RField: View {
     var onSubmit: () -> Void
     @Environment(\.palette) private var p
     @Environment(\.ravenSnapshot) private var snapshot
+    @Environment(\.motionOff) private var motionOff
+    /// The focus when the caller passes none.
+    @FocusState private var ownFocus: Bool
+    private var isFocused: Bool { focused?.wrappedValue ?? ownFocus }
 
     public init(_ placeholder: String, text: Binding<String>, icon: String? = nil, mono: Bool = false,
                 secure: Bool = false, focused: FocusState<Bool>.Binding? = nil, multiline: Bool = false,
@@ -156,29 +169,43 @@ public struct RField: View {
         .background(RoundedRectangle(cornerRadius: Theme.shared.radius.control, style: .continuous)
             .fill(bare ? Color.clear : p.background))
         .overlay(RoundedRectangle(cornerRadius: Theme.shared.radius.control, style: .continuous)
-            .strokeBorder(bare ? Color.clear : p.borderStrong, lineWidth: 1))
+            .strokeBorder(RField.border(focused: isFocused, bare: bare, p), lineWidth: isFocused && !bare ? 1.5 : 1))
+        .overlay {
+            if isFocused && !bare {
+                RoundedRectangle(cornerRadius: Theme.shared.radius.control + 2, style: .continuous)
+                    .stroke(p.focus.opacity(0.28), lineWidth: 3)
+                    .padding(-2.5)
+                    .allowsHitTesting(false)
+            }
+        }
+        .animation(motionOff || bare ? nil : .easeOut(duration: Theme.shared.motion.hover), value: isFocused)
+    }
+
+    /// The frame's colour: the focus colour while the field has the keyboard focus.
+    static func border(focused: Bool, bare: Bool, _ p: Palette) -> Color {
+        bare ? .clear : (focused ? p.focus : p.borderStrong)
     }
 
     @ViewBuilder private var field: some View {
         if secure {
-            let sf = SecureField(placeholder, text: $text)
+            SecureField(placeholder, text: $text)
                 .textFieldStyle(.plain)
                 .foregroundColor(p.textPrimary)
                 .onSubmit(onSubmit)
-            if let focused { sf.focused(focused) } else { sf }
+                .focused(focused ?? $ownFocus)
         } else if multiline {
-            let tf = TextField(placeholder, text: $text, axis: .vertical)
+            TextField(placeholder, text: $text, axis: .vertical)
                 .lineLimit(1...5)
                 .textFieldStyle(.plain)
                 .foregroundColor(p.textPrimary)
                 .onSubmit(onSubmit)
-            if let focused { tf.focused(focused) } else { tf }
+                .focused(focused ?? $ownFocus)
         } else {
-            let tf = TextField(placeholder, text: $text)
+            TextField(placeholder, text: $text)
                 .textFieldStyle(.plain)
                 .foregroundColor(p.textPrimary)
                 .onSubmit(onSubmit)
-            if let focused { tf.focused(focused) } else { tf }
+                .focused(focused ?? $ownFocus)
         }
     }
 }

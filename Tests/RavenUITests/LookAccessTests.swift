@@ -114,6 +114,35 @@ import Testing
         }
     }
 
+    /// A button's word reaches 4.5 to 1 on its fill. Erase said its word in the fill red, 3.0 to 1 on
+    /// a dark card; under the pointer a primary button now darkens, so its white word gains contrast.
+    @Test func buttonWordsReachFourAndAHalfToOne() {
+        for scheme in [ColorScheme.light, .dark] {
+            let p = Theme.shared.palette(scheme)
+            for kind in [RButtonStyle.Kind.secondary, .danger] {
+                let word = RButtonStyle.textColor(kind, p)
+                #expect(Self.contrast(word, RButtonStyle.fill(kind, hover: false, p)) >= 4.5, "\(kind) in \(scheme)")
+            }
+            for ground in [p.background, p.surface] {
+                #expect(Self.contrast(RButtonStyle.textColor(.plain, p), ground) >= 4.5, "plain in \(scheme)")
+            }
+            #expect(Self.contrast(p.onAccent, RButtonStyle.fill(.primary, hover: true, p))
+                    > Self.contrast(p.onAccent, RButtonStyle.fill(.primary, hover: false, p)))
+        }
+    }
+
+    /// A field with the keyboard focus shows it in the focus colour, which stands out from what it
+    /// rings (3 to 1 for a focus sign); the composer draws its own frame.
+    @Test func aFocusedFieldShowsTheFocusColour() {
+        for scheme in [ColorScheme.light, .dark] {
+            let p = Theme.shared.palette(scheme)
+            #expect(RField.border(focused: true, bare: false, p) == p.focus)
+            #expect(RField.border(focused: false, bare: false, p) == p.borderStrong)
+            #expect(RField.border(focused: true, bare: true, p) == .clear)
+            for ground in [p.background, p.surface] { #expect(Self.contrast(p.focus, ground) >= 3) }
+        }
+    }
+
     /// How wide `view` draws itself when offered `width` points (wider when a part of it cannot
     /// narrow that far).
     func drawnWidth(_ view: some View, _ model: AppModel, offered width: CGFloat) throws -> CGFloat {
