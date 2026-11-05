@@ -243,6 +243,9 @@ public enum Display {
         if !node.receive { return (tr(.netOff), .secondary, false) }
         if node.starting { return (tr(.netStarting), .secondary, true) }
         if node.localOnly { return (tr(.macNetworkLocalOnly), .warning, false) }
+        // Running with its listener down (the engine's `send_only` or `not_answering`): it said
+        // "Listening on your network." while the menu said Raven is not receiving.
+        if node.listening == nil { return (tr(.networkThisComputerNotListening), .warning, false) }
         return (tr(.macNetworkListening), .success, false)
     }
 

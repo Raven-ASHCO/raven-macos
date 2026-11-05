@@ -69,6 +69,33 @@ import Testing
         #expect(!Self.namesAnAddress(tr(.macNetworkP2pAddressCount, ["n": "2"])))
     }
 
+    /// A background program that runs with its listener down (the engine's `send_only`, or one that
+    /// does not answer) showed "Listening on your network." in green while the menu said Raven is not
+    /// receiving; one on the IPv6 loopback address counted as listening on the network.
+    @Test func aProgramThatDoesNotListenIsNotCalledListening() async throws {
+        let (model, _) = await readyModel()
+        let listening = try #require(model.node)
+        #expect(Display.listening(listening).text == tr(.macNetworkListening))
+        var node = listening
+        node.listening = nil
+        for state in ["send_only", "not_answering"] {
+            node.state = state
+            #expect(Display.listening(node).text == tr(.networkThisComputerNotListening))
+            #expect(Display.listening(node).tone == .warning)
+        }
+        node.state = "starting"
+        #expect(Display.listening(node).text == tr(.netStarting))
+        // An engine without `state` (and the mock): running and receiving without a listener is starting.
+        node.state = nil
+        #expect(Display.listening(node).text == tr(.netStarting))
+
+        node.listening = "[\(IPv6Address.loopback)]:7420"
+        #expect(node.localOnly && Display.listening(node).text == tr(.macNetworkLocalOnly))
+        node.listening = listening.listening
+        node.state = "local_only"
+        #expect(node.localOnly && Display.listening(node).text == tr(.macNetworkLocalOnly))
+    }
+
     // MARK: Plain words
 
     /// An apostrophe, a hyphen or a dash, or a plain "no server" (owner rule: visible texts in plain
