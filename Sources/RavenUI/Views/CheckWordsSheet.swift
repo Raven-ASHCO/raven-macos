@@ -248,7 +248,10 @@ struct CheckWordsBody: View {
         }
         .frame(minHeight: 26, alignment: .topLeading)
         if !state.matched && !state.complete && !state.stopped {
-            RField("", text: $state.field, focused: $focused) { Task { await state.submit(model) } }
+            // Which word comes next: the field had no placeholder at all.
+            RField(tr(.macCheckField, ["n": String(state.typed.count + 1)]), text: $state.field, focused: $focused) {
+                Task { await state.submit(model) }
+            }
                 .onChange(of: state.field) { _ in Task { await state.fieldChanged(model) } }
             hintRow
         }
