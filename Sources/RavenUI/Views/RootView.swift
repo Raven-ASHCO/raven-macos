@@ -137,7 +137,7 @@ public struct LockedView: View {
             Text(tr(.lockTitle)).font(.system(size: 20, weight: .semibold)).accessibilityAddTraits(.isHeader)
             // What locked means: Lock while running keeps the background program going without its keys;
             // the plain lock (the privacy pack) stops Raven until Unlock.
-            Text(v2 ? tr(.lockBody) : tr(.macLockPlainBody)).font(.system(size: 13)).foregroundColor(p.textSecondary)
+            Text(tr(v2 ? .macLockLockedBody : .macLockLockedPlainBody)).font(.system(size: 13)).foregroundColor(p.textSecondary)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.bottom, 8)
@@ -150,9 +150,9 @@ public struct LockedView: View {
                 .buttonStyle(RButtonStyle(.primary))
                 .keyboardShortcut(.defaultAction)
                 .disabled(working)
-            if let error = v2 ? model.lockError : model.actionError { ErrorNote(error) }
+            if let error = v2 ? model.lockError : model.actionError { ErrorNote(Display.lockError(error)) }
             if askPassphrase {
-                Text(tr(.lockPassphraseNote)).font(.system(size: 11.5)).foregroundColor(p.textSecondary)
+                Text(tr(.macLockPassphraseNote)).font(.system(size: 11.5)).foregroundColor(p.textSecondary)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, 4)

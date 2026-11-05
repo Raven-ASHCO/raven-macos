@@ -8,7 +8,7 @@ struct CheckNetworkPage: View {
     @Environment(\.palette) private var p
 
     var body: some View {
-        PageFrame(tr(.networkCheckTitle), intro: tr(.networkCheckIntro)) {
+        PageFrame(tr(.networkCheckTitle), intro: tr(.macNetworkCheckIntro)) {
             if net.checking { Spinner(size: 12) }
             Button(net.checking ? tr(.networkCheckRunning) : tr(.networkCheckAgain)) { Task { await net.runCheck() } }
                 .buttonStyle(RButtonStyle(.secondary, compact: true))
@@ -19,20 +19,25 @@ struct CheckNetworkPage: View {
             if let check = net.check {
                 PageSection(tr(.netThisComputer)) {
                     VStack(alignment: .leading, spacing: 3) {
-                        // The next step has its own line below.
-                        let summary = check.summary.filter { $0.key != "next_step" || check.nextStep.isEmpty }
-                        ForEach(Array(summary.enumerated()), id: \.offset) { _, row in
+                        ForEach(Array(CheckNetworkPage.summaryRows(check).enumerated()), id: \.offset) { _, row in
                             HStack(alignment: .firstTextBaseline, spacing: 8) {
-                                Text(row.label).font(RFont.smallish).foregroundColor(p.textSecondary)
-                                    .frame(width: 120, alignment: .leading)
-                                Text(row.value).font(RFont.smallish).fixedSize(horizontal: false, vertical: true).selectable()
+                                Text(Display.checkLabel(row)).font(RFont.smallish).foregroundColor(p.textSecondary)
+                                    .frame(width: 140, alignment: .leading)
+                                Text(Display.checkValue(row)).font(RFont.smallish).fixedSize(horizontal: false, vertical: true)
+                                    .selectable()
                             }
                             .accessibilityElement(children: .combine)
                         }
                         if !check.nextStep.isEmpty {
-                            Text(tr(.networkCheckNextStep, ["step": check.nextStep])).font(RFont.bodyBold)
-                                .fixedSize(horizontal: false, vertical: true)
-                                .padding(.top, 4)
+                            // "All set" is no step to take: said as done, with a tick.
+                            let next = Display.checkNextStep(check.nextStep)
+                            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                                if next.done {
+                                    Image(systemName: "checkmark.circle.fill").foregroundColor(p.success).accessibilityHidden(true)
+                                }
+                                Text(next.text).font(RFont.bodyBold).fixedSize(horizontal: false, vertical: true)
+                            }
+                            .padding(.top, 4)
                         }
                     }
                     .padding(.vertical, 8)
@@ -53,8 +58,8 @@ struct CheckNetworkPage: View {
             }
             PageSection(tr(.networkCheckRouterTitle)) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(tr(.networkCheckRouterBody)).font(RFont.smallish).fixedSize(horizontal: false, vertical: true)
-                    Text(tr(.networkCheckRouterMacos)).font(RFont.smallish).foregroundColor(p.textSecondary)
+                    Text(tr(.macNetworkCheckRouterBody)).font(RFont.smallish).fixedSize(horizontal: false, vertical: true)
+                    Text(tr(.macNetworkCheckRouterMacos)).font(RFont.smallish).foregroundColor(p.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                     HStack(spacing: 8) {
                         Button(net.askingRouter ? tr(.networkCheckRouterAsking) : tr(.networkCheckRouter)) {
@@ -77,10 +82,16 @@ struct CheckNetworkPage: View {
         .task { if net.check == nil { await net.runCheck() } }
     }
 
+    /// The summary rows the page lists: not the next step (it has its own line below), and no row
+    /// left with nothing to say once its command and addresses are out (a label beside nothing).
+    static func summaryRows(_ check: NetworkCheck) -> [CheckSummaryRow] {
+        check.summary.filter { ($0.key != "next_step" || check.nextStep.isEmpty) && !Display.checkValue($0).isEmpty }
+    }
+
     /// The rows Raven has a sentence for, each sentence once.
     static func plainLines(_ rows: [CheckRow]) -> [String] {
         var seen = Set<String>()
-        return rows.compactMap { $0.plain }.filter { !$0.isEmpty && seen.insert($0).inserted }
+        return rows.compactMap { $0.plain.map(Display.plainWords) }.filter { !$0.isEmpty && seen.insert($0).inserted }
     }
 
     /// A doctor line as it printed it ("key: value").

@@ -60,7 +60,7 @@ import Testing
     @Test func privacySaysWhatIsEncrypted() throws {
         let sealed = try JSONValue.decoder.decode(PrivacyState.self, from: Data(#"{"available":false,"encrypted":true,"locked":false}"#.utf8))
         let lines = SettingsView.storedLines(sealed)
-        #expect(lines == [tr(.settingsStoredEncrypted), tr(.settingsStoredPlain)])
+        #expect(lines == [tr(.settingsStoredEncrypted), tr(.macSettingsStoredPlain)])
         let plain = try JSONValue.decoder.decode(PrivacyState.self, from: Data(#"{"available":false,"encrypted":false,"locked":false}"#.utf8))
         #expect(SettingsView.storedLines(plain) == [tr(.settingsStoredNotEncrypted)])
     }
@@ -119,7 +119,7 @@ import Testing
         #expect(model.phase == .ready)
         // What it does is said; what it does not do is one click away (folded).
         let lines = ConfirmLockSheet.lines(model.lockV2)
-        #expect(lines.contains(tr(.lockConfirmDoes)) && ConfirmLockSheet.limits.contains(tr(.lockConfirmDoesNot)))
+        #expect(lines.contains(tr(.macLockConfirmDoes)) && ConfirmLockSheet.limits.contains(tr(.macLockConfirmDoesNot)))
         model.sheet = nil
         await model.lock()
         #expect(model.phase == .locked)

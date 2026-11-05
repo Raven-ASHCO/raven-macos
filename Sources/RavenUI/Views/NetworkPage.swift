@@ -174,7 +174,7 @@ struct LabBanner: View {
                     label.fixedSize(horizontal: false, vertical: true)
                 }
                 if !compact {
-                    Text(tr(.networkLabBody)).font(RFont.small).foregroundColor(p.textSecondary)
+                    Text(tr(.macNetworkLabBody)).font(RFont.small).foregroundColor(p.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -255,7 +255,7 @@ struct ChangesNote: View {
                     .font(RFont.small)
             }
             ForEach(Array(net.changes.enumerated()), id: \.offset) { _, change in
-                Text(change.effect).font(RFont.smallish).fixedSize(horizontal: false, vertical: true)
+                Text(Display.plainWords(change.effect)).font(RFont.smallish).fixedSize(horizontal: false, vertical: true)
                 if change.applies == "restart" {
                     Text(tr(.networkChangedRestart)).font(RFont.small).foregroundColor(p.warning)
                 }
@@ -268,8 +268,8 @@ struct ChangesNote: View {
 }
 
 /// This computer (Calm): the mark with its radar (two rings spread once per successful status check,
-/// `status_ok`), the listening line, the background program, the port and addresses, the heartbeat,
-/// and Check network.
+/// `status_ok`), the listening line, the background program, the heartbeat and Check network; the
+/// port, the addresses and the process number under Technical details.
 struct ThisComputerSection: View {
     let status: NetworkStatus
     @EnvironmentObject private var model: AppModel
@@ -296,24 +296,22 @@ struct ThisComputerSection: View {
                     Button(tr(.netStart)) { Task { await model.startNode(); await model.network.refresh() } }
                         .buttonStyle(RButtonStyle(.secondary, compact: true))
                 }
-                // While raven-node runs, the listening line already gives the port it really uses; the
-                // profile's port is said only while nothing listens.
-                if let port = NetworkModel.profilePortLine(status: status, node: model.node) {
-                    small(tr(.networkThisComputerPort, ["port": String(port)]))
-                }
-                let listening = (status.listening ?? []).map { Sanitizer.line($0, maxLength: 64) }
-                small(listening.isEmpty ? tr(.networkThisComputerNotListening)
-                      : tr(.networkThisComputerListening, ["addr": listening.joined(separator: ", ")]))
-                if let addr = model.node?.address { small(tr(.netAddress, ["addr": addr])) }
                 if status.policyUnreadable == true {
-                    Text(tr(.networkThisComputerPolicyUnreadable)).font(.system(size: 12)).foregroundColor(p.warning)
+                    Text(tr(.macNetworkThisComputerPolicyUnreadable)).font(.system(size: 12)).foregroundColor(p.warning)
                 }
-                HStack(spacing: 6) {
-                    Circle().fill(hb.ok ? p.successFill : p.dangerFill).frame(width: 7, height: 7).accessibilityHidden(true)
-                    Text(hb.text).foregroundColor(hb.ok ? p.success : p.danger)
+                // The heartbeat while the program runs; stopped, the first line says so (it said "not
+                // running" and, in red again below it, "not responding").
+                if model.node?.running == true {
+                    HStack(spacing: 6) {
+                        Circle().fill(hb.ok ? p.successFill : p.dangerFill).frame(width: 7, height: 7).accessibilityHidden(true)
+                        Text(Display.plainWords(hb.text)).foregroundColor(hb.ok ? p.success : p.danger)
+                    }
+                    .font(.system(size: 12))
+                    .padding(.top, 3)
                 }
-                .font(.system(size: 12))
-                .padding(.top, 3)
+                // The port, the addresses and the process number: one click away (owner rule).
+                TechnicalDetails(lines: Display.thisComputerDetails(status: status, node: model.node))
+                    .padding(.top, 2)
             }
             Spacer(minLength: 8)
             Button(tr(.networkCheckTitle) + "…") { model.open(.checkNetwork) }
@@ -323,11 +321,6 @@ struct ThisComputerSection: View {
         .padding(.vertical, 16)
         .calmCard()
         .accessibilityElement(children: .contain)
-    }
-
-    private func small(_ text: String) -> some View {
-        Text(text).font(.system(size: 12)).foregroundColor(p.textSecondary).selectable()
-            .fixedSize(horizontal: false, vertical: true)
     }
 }
 
@@ -397,7 +390,7 @@ struct WayRow: View {
     var body: some View {
         let setting = NetworkModel.setting(forWay: way.id)
         let toggle = NetworkModel.toggle(for: way)
-        let name = way.id == "tor" ? tr(.networkTorName) : (way.name.map { Sanitizer.line($0, maxLength: 80) } ?? way.id)
+        let name = Display.wayName(way)
         let family = PathFamily.of(way: way.id)
         let dim = card && [.off, .preview, .notOnThisOs].contains(way.state)
         VStack(alignment: .leading, spacing: 6) {
@@ -411,7 +404,8 @@ struct WayRow: View {
                 }
                 VStack(alignment: .leading, spacing: 4) {
                     Text(name).font(.system(size: 14, weight: .semibold)).fixedSize(horizontal: false, vertical: true)
-                    if let reason = card ? Display.wayReason(way.reason, state: way.state) : way.reason, !reason.isEmpty {
+                    if let reason = (card ? Display.wayReason(way.reason, state: way.state) : way.reason).map(Display.plainWords),
+                       !reason.isEmpty {
                         Text(reason).font(.system(size: 12.5)).foregroundColor(p.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -463,7 +457,8 @@ struct WayRow: View {
         .accessibilityElement(children: .contain)
     }
 
-    /// What goes under Technical details for a way: the CLI's row, and Bluetooth nearby's raw rows.
+    /// What goes under Technical details for a way: the CLI's row, Bluetooth nearby's raw rows, and the
+    /// way's own addresses and ports (`Display.wayAddressDetails`).
     static func technical(_ way: NetworkWay, _ status: NetworkStatus) -> [String] {
         var lines: [String] = []
         if way.id == "nearby" {
@@ -471,7 +466,7 @@ struct WayRow: View {
         }
         if let detail = way.detail, !detail.isEmpty, !lines.contains(detail) { lines.append(detail) }
         if way.id == "proxy" { lines += status.proxy?.lines ?? [] }
-        if way.id == "p2p" { lines += status.p2pAddresses ?? [] }
+        lines += Display.wayAddressDetails(way, status)
         return lines
     }
 }
@@ -483,8 +478,8 @@ private struct OptionalCard: ViewModifier {
     }
 }
 
-/// What a way adds below its reason: LAN for a while, ports, the router's answer, relays, the proxy
-/// and Bluetooth nearby.
+/// What a way adds below its reason: LAN for a while, NAT PMP and PCP, the relays in use, how many
+/// addresses friends can use, Tor, what lending a relay costs, and the proxy.
 struct WayExtras: View {
     let way: NetworkWay
     let status: NetworkStatus
@@ -507,35 +502,19 @@ struct WayExtras: View {
                     (label: label, action: { Task { await net.lanFor(span) } })
                 })
             }
-        case "internet":
-            if let at = status.internetListen {
-                small(tr(.networkThisComputerInternet, ["addr": at]))
-            }
+        // Where Internet direct and peer to peer listen, the router's answers, the relays' and peer to
+        // peer addresses: Technical details only (owner rule: addresses and ports only under Details).
         case "port_mapping":
-            if let pm = status.portMapping {
-                if let router = pm.router, !router.isEmpty { small(tr(.networkPortMappingRouter, ["result": router])) }
-                // v4 and v6 are raven-node's words (upnp, none, open, ...); v4_port is the port the router forwards.
-                if let v4 = pm.v4, !v4.isEmpty {
-                    if let port = pm.v4Port, port > 0 {
-                        small(tr(.networkPortMappingV4Port, ["how": v4, "port": String(port)]))
-                    } else {
-                        small(tr(.networkPortMappingV4, ["how": v4]))
-                    }
-                }
-                if let v6 = pm.v6, !v6.isEmpty { small(tr(.networkPortMappingV6, ["how": v6])) }
-                if let state = pm.natPmpPcp { small(tr(.networkPortMappingNatPmpPcp, ["state": Display.wayState(state).text])) }
+            if let state = status.portMapping?.natPmpPcp {
+                small(tr(.macNetworkPortMappingNatPmpPcp, ["state": Display.wayState(state).text]))
             }
         case "p2p":
-            if let at = status.p2pListen { small(tr(.networkThisComputerP2p, ["addr": at])) }
             relays
-            // Addresses friends can use; this computer's own (loopback, link-local) only under Technical
-            // details (E1: six rows, loopback ones among them).
+            // How many addresses friends can use; the addresses themselves (and this computer's own:
+            // loopback, link local) under Technical details.
             let addrs = Display.p2pAddressesShown(status.p2pAddresses ?? [])
             if !addrs.isEmpty {
-                small(tr(.networkP2pAddresses))
-                ForEach(addrs, id: \.self) { a in
-                    Text(a).font(RFont.mono).foregroundColor(p.textSecondary).lineLimit(1).truncationMode(.middle).selectable()
-                }
+                small(tr(.macNetworkP2pAddressCount, ["n": String(addrs.count)]))
             }
         case "tor":
             small(tr(.networkWayTor))
@@ -544,7 +523,7 @@ struct WayExtras: View {
             }
         case "friend_relay":
             // No consent sheet (the engine asks none): what lending a relay costs, beside its switch.
-            small(tr(.networkRelayForFriendsEffect))
+            small(tr(.macNetworkRelayForFriendsEffect))
         case "proxy":
             if way.state != .preview, let proxy = status.proxy { proxyControls(proxy) }
         default:
@@ -563,12 +542,10 @@ struct WayExtras: View {
             if list.isEmpty {
                 small(tr(.networkRelaysNone))
             }
+            // Each relay's state and who added it; its address under Technical details.
             ForEach(Array(list.enumerated()), id: \.offset) { _, relay in
-                VStack(alignment: .leading, spacing: 0) {
-                    Text(relay.relay).font(RFont.mono).lineLimit(1).truncationMode(.middle).selectable()
-                    small([relay.state, Display.relaySource(relay, name: { model.contact($0)?.name })]
-                        .compactMap { $0 }.joined(separator: " · "))
-                }
+                small([relay.state, Display.relaySource(relay, name: { model.contact($0)?.name })]
+                    .compactMap { $0 }.joined(separator: " · "))
             }
         }
     }
@@ -576,7 +553,7 @@ struct WayExtras: View {
     @ViewBuilder private func proxyControls(_ proxy: ProxyState) -> some View {
         let current = proxy.setting ?? "auto"
         let options: [(value: String, label: String)] = {
-            var o: [(value: String, label: String)] = [("auto", tr(.networkProxyAuto)), ("off", tr(.networkProxyOff))]
+            var o: [(value: String, label: String)] = [("auto", tr(.macNetworkProxyAuto)), ("off", tr(.networkProxyOff))]
             if current != "auto" && current != "off" { o.append((current, current)) }
             return o
         }()
@@ -614,8 +591,8 @@ struct CarrySection: View {
                 if let mine = carry?.friendsCarryMine {
                     switch mine.setting {
                     case "on": line(tr(.networkMailMineOn, ["n": String(mine.mailFriends ?? 0)]))
-                    case "off": line(tr(.networkMailMineOff))
-                    default: line(tr(.networkMailMineNotDecided))
+                    case "off": line(tr(.macNetworkMailMineOff))
+                    default: line(tr(.macNetworkMailMineNotDecided))
                     }
                     if let offering = mine.offering, offering > 0 {
                         line(tr(.networkCarryOffering, ["n": String(offering), "internet": String(mine.offeringOverInternet ?? 0),
@@ -667,25 +644,25 @@ struct HelpSection: View {
         PageSection(tr(.networkHelpTitle)) {
             VStack(alignment: .leading, spacing: 0) {
                 if let help = status.help {
-                    flag("bridge", tr(.networkHelpBridge), help.bridge, tr(.networkHelpBridgePlain),
+                    flag("bridge", tr(.networkHelpBridge), help.bridge, tr(.macNetworkHelpBridgePlain),
                          technical: help.effects?.bridge)
                     Rule()
                     // Store and Relay change nothing in this version of raven-node: their switches
                     // show only while one is on (so it can be turned off), E1.
                     if help.store {
-                        flag("store", tr(.networkHelpStore), help.store, help.effects?.store)
+                        flag("store", tr(.networkHelpStore), help.store, help.effects.map { Display.plainWords($0.store) })
                         Rule()
                     }
                     if help.relay {
-                        flag("relay", tr(.networkHelpRelay), help.relay, help.effects?.relay)
+                        flag("relay", tr(.macNetworkHelpRelay), help.relay, help.effects.map { Display.plainWords($0.relay) })
                         Rule()
                     }
                     if help.automatic == true {
-                        Text(tr(.networkHelpAutomatic)).font(RFont.small).foregroundColor(p.textSecondary).padding(.bottom, 6)
+                        Text(tr(.networkHelpAutomatic)).font(RFont.small).foregroundColor(p.textSecondary).padding(.vertical, 8)
                         Rule()
                     }
                 }
-                flag("hide_ip", tr(.networkHideIp), status.hideIp == true, tr(.networkHideIpBody))
+                flag("hide_ip", tr(.macNetworkHideIp), status.hideIp == true, tr(.networkHideIpBody))
             }
         }
     }

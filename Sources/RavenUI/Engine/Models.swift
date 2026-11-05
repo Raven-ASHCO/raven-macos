@@ -156,8 +156,13 @@ public struct NodeStatus: Codable, Equatable, Sendable {
 
     /// The port Raven listens on, e.g. "7420" from "0.0.0.0:7420".
     public var port: String? { listening?.split(separator: ":").last.map(String.init) }
-    /// Listening only on the loopback interface: friends on the network cannot reach this computer.
-    public var localOnly: Bool { listening?.hasPrefix("127.") ?? false }
+    /// Listening only on the loopback interface (IPv4 or IPv6), or as the engine says it
+    /// (`local_only`): friends on the network cannot reach this computer.
+    public var localOnly: Bool {
+        if state == "local_only" { return true }
+        guard let at = listening else { return false }
+        return at.hasPrefix("127.") || at.hasPrefix("[::1]") || at.hasPrefix("::1") || at.hasPrefix("localhost")
+    }
     /// Running, but not listening yet. The engine says so in `state`; without it, guessed from the
     /// fields (a node that runs but sends only would otherwise look like it is starting forever).
     public var starting: Bool {

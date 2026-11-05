@@ -208,9 +208,9 @@ public enum Display {
         var lines: [String] = []
         if let away = routes.carriers?.away {
             if away.firstMessage == true {
-                lines.append(tr(.networkRoutesAwayFirstMessage, ["name": name]))
+                lines.append(tr(.macNetworkRoutesAwayFirstMessage, ["name": name]))
             } else if away.meetFirst == true {
-                lines.append(tr(.networkRoutesAwayMeetFirst, ["name": name]))
+                lines.append(tr(.macNetworkRoutesAwayMeetFirst, ["name": name]))
             } else if let until = away.untilMs, until > 0 {
                 lines.append(tr(.networkRoutesAway, ["name": name, "time": TimeText.deadline(ms: until, now: now)]))
             }
@@ -280,18 +280,23 @@ public enum Display {
         return c.name + " · " + statusLine(c, now: now).text
     }
 
-    /// The listening chip of the Network panel.
+    /// The listening chip of the Network panel. No port or address: those are under Technical details
+    /// (`thisComputerDetails`), as the owner's privacy rule asks.
     public static func listening(_ node: NodeStatus?) -> (text: String, tone: AppModel.Tone, busy: Bool) {
         guard let node, node.running else { return (tr(.netProcessNone), .danger, false) }
         if !node.receive { return (tr(.netOff), .secondary, false) }
         if node.starting { return (tr(.netStarting), .secondary, true) }
-        if node.localOnly { return (tr(.netLocalOnly), .warning, false) }
-        return (tr(.netListening, ["port": node.port ?? "7420"]), .success, false)
+        if node.localOnly { return (tr(.macNetworkLocalOnly), .warning, false) }
+        // Running with its listener down (the engine's `send_only` or `not_answering`): it said
+        // "Listening on your network." while the menu said Raven is not receiving.
+        if node.listening == nil { return (tr(.networkThisComputerNotListening), .warning, false) }
+        return (tr(.macNetworkListening), .success, false)
     }
 
+    /// The background program line, without its process number (under Technical details).
     public static func process(_ node: NodeStatus?) -> String {
-        guard let node, node.running, let pid = node.pid else { return tr(.netProcessNone) }
-        return node.startedByApp ? tr(.netProcessApp, ["pid": String(pid)]) : tr(.netProcessEarlier, ["pid": String(pid)])
+        guard let node, node.running, node.pid != nil else { return tr(.netProcessNone) }
+        return node.startedByApp ? tr(.macNetworkProcessApp) : tr(.macNetworkProcessEarlier)
     }
 
     // MARK: Network screens
@@ -350,7 +355,7 @@ public enum Display {
         case "not_built": return (tr(.networkTorPhaseNotBuilt), .secondary)
         case "off": return (tr(.networkTorPhaseOff), .secondary)
         default:
-            let words = Sanitizer.line(tor.words ?? "", maxLength: 60)
+            let words = Display.plainWords(Sanitizer.line(tor.words ?? "", maxLength: 60))
             return (words.isEmpty ? tr(.networkTorPhaseOff) : words, .secondary)
         }
     }
@@ -358,10 +363,10 @@ public enum Display {
     /// The lines under the Tor way: why (with when it retries) and the outage history.
     public static func torLines(_ tor: TorState) -> [String] {
         var lines: [String] = []
-        let why = [tor.why, tor.retry].compactMap { $0 }.map { Sanitizer.line($0, maxLength: 160) }
+        let why = [tor.why, tor.retry].compactMap { $0 }.map { Display.plainWords(Sanitizer.line($0, maxLength: 160)) }
             .filter { !$0.isEmpty }.joined(separator: "; ")
         if !why.isEmpty { lines.append(tr(.networkTorWhy, ["text": why])) }
-        if let outages = tor.outages.map({ Sanitizer.line($0, maxLength: 200) }), !outages.isEmpty {
+        if let outages = tor.outages.map({ Display.plainWords(Sanitizer.line($0, maxLength: 200)) }), !outages.isEmpty {
             lines.append(tr(.networkTorOutages, ["text": outages]))
         }
         return lines
@@ -379,15 +384,15 @@ public enum Display {
     public static func consent(_ setting: String) -> (title: String, does: String, costs: String, sees: String, hidden: String)? {
         switch setting {
         case "carry_for_friends":
-            return (tr(.networkConsentCarryForFriendsTitle), tr(.networkConsentCarryForFriendsDoes),
-                    tr(.networkConsentCarryForFriendsCosts), tr(.networkConsentCarryForFriendsSees),
+            return (tr(.networkConsentCarryForFriendsTitle), tr(.macNetworkConsentCarryForFriendsDoes),
+                    tr(.macNetworkConsentCarryForFriendsCosts), tr(.networkConsentCarryForFriendsSees),
                     tr(.networkConsentCarryForFriendsHidden))
         case "friends_carry_mine":
-            return (tr(.networkConsentFriendsCarryMineTitle), tr(.networkConsentFriendsCarryMineDoes),
-                    tr(.networkConsentFriendsCarryMineCosts), tr(.networkConsentFriendsCarryMineSees),
+            return (tr(.networkConsentFriendsCarryMineTitle), tr(.macNetworkConsentFriendsCarryMineDoes),
+                    tr(.networkConsentFriendsCarryMineCosts), tr(.macNetworkConsentFriendsCarryMineSees),
                     tr(.networkConsentFriendsCarryMineHidden))
         case "handoff":
-            return (tr(.networkConsentHandoffTitle), tr(.networkConsentHandoffDoes), tr(.networkConsentHandoffCosts),
+            return (tr(.networkConsentHandoffTitle), tr(.networkConsentHandoffDoes), tr(.macNetworkConsentHandoffCosts),
                     tr(.networkConsentHandoffSees), tr(.networkConsentHandoffHidden))
         default:
             return nil
@@ -424,28 +429,28 @@ extension Display {
         version.map { tr(.appName) + " · " + tr(.netVersion, ["version": $0]) }
     }
 
-    /// Lock while running's note (Settings > Lock and the Security page).
+    /// Lock while running's note (Settings > Lock and the Security page), in plain words.
     public static func lockNote(_ lock: LockState?) -> String {
-        guard let lock, lock.available else { return tr(.lockNotAvailable) }
-        guard lock.supported else { return tr(.lockNotSupported) }
+        guard let lock, lock.available else { return tr(.macLockNotAvailable) }
+        guard lock.supported else { return tr(.macLockNotSupported) }
         if lock.hasPassphrase == false { return tr(.lockNoPassphrase) }
-        return tr(.lockReady)
+        return tr(.macLockReady)
     }
 
-    /// The Raven passphrase row: what it is, and that this app doesn't set it yet.
-    public static var passphraseLine: String { tr(.settingsPassphraseBody) + " " + tr(.lockPassphraseNotInApp) }
+    /// The Raven passphrase row: what it is, and that this app does not set it yet.
+    public static var passphraseLine: String { tr(.macLockPassphraseBody) + " " + tr(.macLockPassphraseNotInApp) }
 
     /// Whether Raven keeps security notices (`security.status` `kept`).
     public static func securityKept(_ word: String) -> String {
         switch word {
         case "live": return tr(.securityKeptLive)
-        case "unsealed": return tr(.securityKeptUnsealed)
+        case "unsealed": return tr(.macSecurityKeptUnsealed)
         default: return tr(.securityKeptOff)
         }
     }
 
     /// Under the notices: that this app doesn't mark a notice as resolved yet.
-    public static var securityResolveLine: String { tr(.securityResolve) }
+    public static var securityResolveLine: String { tr(.macSecurityResolve) }
 
     /// `updates.status` `install_text` for Technical details (the engine's words name no command).
     public static func updatesInstallDetail(_ text: String?) -> String? {

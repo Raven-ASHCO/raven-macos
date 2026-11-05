@@ -21,7 +21,8 @@ public struct MenuBarLabel: View {
     }
 }
 
-/// The menu: status, friends, Open, Add a friend, Lock, and the two ways to quit.
+/// The menu: status, friends (at most `maxFriends`, new messages first), Open, Add a friend, Lock, and
+/// the two ways to quit.
 public struct MenuBarContent: View {
     let openMain: () -> Void
     @EnvironmentObject private var model: AppModel
@@ -32,6 +33,9 @@ public struct MenuBarContent: View {
 
     public init(openMain: @escaping () -> Void) { self.openMain = openMain }
 
+    /// The friends the menu lists; the rest are one row away ("3 more friends" opens Raven).
+    static let maxFriends = 8
+
     public var body: some View {
         let node = model.node
         let listening = node?.running == true && node?.listening != nil && node?.localOnly == false
@@ -40,10 +44,10 @@ public struct MenuBarContent: View {
             HStack(spacing: 8) {
                 RavenMark(size: 22)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(listening ? tr(NetworkKind.shared.isWiFi ? .trayListening : .trayListeningNetwork) : tr(.trayNotListening)).font(RFont.bodyBold)
+                    Text(listening ? tr(NetworkKind.shared.isWiFi ? .macTrayListeningWifi : .trayListeningNetwork) : tr(.macTrayNotListening)).font(RFont.bodyBold)
                     HStack(spacing: 4) {
                         Text("♥").foregroundColor(heartbeat.ok ? p.success : p.danger).scaleEffect(beat)
-                        Text(heartbeat.ok ? tr(.trayBackground) : tr(.homeHeartbeatDown))
+                        Text(Display.menuBackground(node, ok: heartbeat.ok))
                             .foregroundColor(p.textSecondary)
                     }
                     .font(RFont.small)
@@ -53,11 +57,29 @@ public struct MenuBarContent: View {
             .padding(.vertical, 6)
             separator
             if model.phase == .ready {
-                ForEach(model.contacts) { c in
+                let friends = Display.menuFriends(model.contacts, unread: model.unread, limit: MenuBarContent.maxFriends)
+                ForEach(friends.shown) { c in
+                    let unread = model.unread[c.address] ?? 0
+                    let line = Display.menuLine(c, unread: unread, now: clock.now)
                     MenuRow(action: { model.select(c.address); openMain() }) {
                         HStack(spacing: 8) {
                             PresenceDot(presence: c.presence)
-                            Text(Display.menuLine(c, unread: model.unread[c.address] ?? 0, now: clock.now)).lineLimit(1)
+                            // The whole line where it fits, else the short one (never "(UTC…").
+                            ViewThatFits(in: .horizontal) {
+                                Text(line).lineLimit(1).fixedSize()
+                                Text(Display.menuLineShort(c, unread: unread, now: clock.now)).lineLimit(1)
+                            }
+                        }
+                        .help(line)
+                    }
+                    // VoiceOver reads the whole line, deadline included, where the short one shows.
+                    .accessibilityLabel(line)
+                }
+                if friends.more > 0 {
+                    MenuRow(action: openMain, secondary: true) {
+                        HStack(spacing: 8) {
+                            Color.clear.frame(width: Theme.shared.layout.presenceDot, height: 1).accessibilityHidden(true)
+                            Text(Display.menuMore(friends.more))
                         }
                     }
                 }

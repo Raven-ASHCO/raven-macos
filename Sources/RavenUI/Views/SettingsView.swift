@@ -52,7 +52,7 @@ public struct SettingsView: View {
 
     /// Settings > Privacy's honest lines about what this computer stores encrypted.
     static func storedLines(_ privacy: PrivacyState) -> [String] {
-        privacy.encrypted ? [tr(.settingsStoredEncrypted), tr(.settingsStoredPlain)] : [tr(.settingsStoredNotEncrypted)]
+        privacy.encrypted ? [tr(.settingsStoredEncrypted), tr(.macSettingsStoredPlain)] : [tr(.settingsStoredNotEncrypted)]
     }
 
     /// A section's title, its icon (SF Symbol) and the colour of the icon's square.
@@ -193,13 +193,13 @@ struct GeneralSection: View {
                     .onDisappear { saveName() }
                     .accessibilityLabel(tr(.settingsName))
                 }
-                CalmItem(tr(.settingsReceive), tr(.setupReceiveBody)) {
+                CalmItem(tr(.settingsReceive), tr(.macSettingsReceiveBody)) {
                     RSwitch(tr(.settingsReceive), isOn: settingBinding(model, \.receive, "receive") { .bool($0) })
                 }
             }
             CalmGroup {
                 VStack(alignment: .leading, spacing: 8) {
-                    CalmItem(tr(.settingsWhenQuit), tr(.quitRunning)).padding(.bottom, -14)
+                    CalmItem(tr(.settingsWhenQuit), tr(.macQuitRunning)).padding(.bottom, -14)
                     RRadioGroup(tr(.settingsWhenQuit),
                                 options: Array(zip(RavenSettings.whenQuitValues, Strings.shared.options(.settingsWhenQuitOptions)))
                                     .map { (value: $0.0, label: $0.1) },
@@ -236,7 +236,7 @@ struct AppearanceSection: View {
                                    .map { (value: $0.0, label: $0.1) },
                                selection: $model.themeChoice)
                 }
-                CalmItem(tr(.settingsReducedMotion), tr(.settingsReducedMotionBody)) {
+                CalmItem(tr(.settingsReducedMotion), tr(.macSettingsReducedMotionBody)) {
                     RSwitch(tr(.settingsReducedMotion), isOn: settingBinding(model, \.reducedMotion, "reduced_motion") { .bool($0) })
                 }
                 CalmItem(tr(.settingsDetails), tr(.settingsDetailsBody)) {
@@ -356,20 +356,20 @@ struct PrivacySection: View {
                 .accessibilityElement(children: .combine)
             }
             CalmGroup {
-                CalmItem(tr(.settingsKeepChats), tr(.settingsKeepChatsBody)) {
+                CalmItem(tr(.settingsKeepChats), tr(.macSettingsKeepChatsBody)) {
                     RSegmented(tr(.settingsKeepChats),
                                options: Array(zip(RavenSettings.keepChatsValues, Strings.shared.options(.settingsKeepChatsOptions)))
                                    .map { (value: $0.0, label: $0.1) },
                                selection: settingBinding(model, \.keepChatsDays, "keep_chats_days") { $0.map { .int($0) } ?? .null })
                 }
-                CalmItem(tr(.settingsForget), tr(.settingsForgetBody), disabled: true) {
+                CalmItem(tr(.macSettingsForget), tr(.settingsForgetBody), disabled: true) {
                     // Always on in this version: setting it off is NOT_AVAILABLE_YET (API.md).
-                    RSwitch(tr(.settingsForget), isOn: .constant(model.settings.forgetAddresses))
+                    RSwitch(tr(.macSettingsForget), isOn: .constant(model.settings.forgetAddresses))
                         .disabled(true)
                 }
             }
             CalmGroup {
-                CalmItem(tr(.settingsErase), available ? tr(.settingsEraseBody) : tr(.netPreview)) {
+                CalmItem(tr(.settingsErase), available ? tr(.macSettingsEraseBody) : tr(.netPreview)) {
                     Button(tr(.eraseConfirm) + "…") { confirmErase = true }
                         .buttonStyle(RButtonStyle(.danger))
                         .disabled(!available)
@@ -393,7 +393,7 @@ struct LockSettingsSection: View {
     var body: some View {
         let lock = model.lockV2
         VStack(alignment: .leading, spacing: 22) {
-            Lead(tr(.lockV2Body)).padding(.bottom, -22)
+            Lead(tr(.macLockV2Body)).padding(.bottom, -22)
             CalmGroup {
                 HStack(spacing: 14) {
                     LockIcon(closed: lock?.locked == true)
@@ -413,11 +413,13 @@ struct LockSettingsSection: View {
                 .padding(16)
             }
             CalmGroup {
-                CalmItem(tr(.settingsLockOnSleep), tr(.settingsLockOnSleepBody)) {
+                // Dimmed with its switch where this version cannot lock (the row above says so); only the
+                // switch was, and an off switch looks the same at a glance.
+                CalmItem(tr(.settingsLockOnSleep), tr(.settingsLockOnSleepBody), disabled: !model.lockOnSleepAvailable) {
                     RSwitch(tr(.settingsLockOnSleep), isOn: settingBinding(model, \.lockOnSleep, "lock_on_sleep") { .bool($0) })
                         .disabled(!model.lockOnSleepAvailable)
                 }
-                CalmItem(tr(.lockPassphrase), Display.passphraseLine) {
+                CalmItem(tr(.lockPassphrase), Display.passphraseLine(lock)) {
                     if let has = lock?.hasPassphrase {
                         StatChip(text: has ? tr(.settingsPassphraseSet) : tr(.settingsPassphraseNotSet),
                                  tone: has ? .success : .warning)
@@ -473,7 +475,7 @@ struct NetworkSettingsSection: View {
         let net = model.network
         VStack(alignment: .leading, spacing: 22) {
             VStack(alignment: .leading, spacing: 8) {
-                Text(tr(.settingsNetworkLead)).font(.system(size: 14)).foregroundColor(p.textSecondary)
+                Text(tr(.macSettingsNetworkLead)).font(.system(size: 14)).foregroundColor(p.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
                 Button(tr(.networkPageOpen)) { model.open(.network) }.buttonStyle(RButtonStyle(.plain))
             }
@@ -506,7 +508,7 @@ struct WaySettingRow: View {
         let family = PathFamily.of(way: way.id)
         let setting = NetworkModel.setting(forWay: way.id)
         let toggle = NetworkModel.toggle(for: way)
-        let name = way.name.map { Sanitizer.line($0, maxLength: 80) } ?? way.id
+        let name = Display.wayName(way)
         let state = Display.wayState(way.state)
         HStack(spacing: 12) {
             PathIcon(family: family, size: 15).foregroundColor(family.color(p)).frame(width: 18)
@@ -537,19 +539,19 @@ struct UpdatesSettingsSection: View {
     var body: some View {
         let u = model.network.updates
         VStack(alignment: .leading, spacing: 22) {
-            Lead(tr(.updatesIntro)).padding(.bottom, -22)
+            Lead(tr(.macUpdatesIntro)).padding(.bottom, -22)
             CalmGroup {
                 CalmItem(tr(.settingsUpdatesVersion), versionLine()) {
                     if let summary = u?.summary, !summary.isEmpty { StatChip(text: summary, tone: .success) }
                 }
-                CalmItem(tr(.updatesFromFriends), u?.available == true ? tr(.updatesAvailable) : tr(.updatesNotAvailable)) {
+                CalmItem(tr(.updatesFromFriends), u?.available == true ? tr(.updatesAvailable) : tr(.macUpdatesNotAvailable)) {
                     if let u {
                         StatChip(text: u.fromFriends == true ? (u.lab == true ? tr(.netLab) : tr(.netOn)) : tr(.netPreview),
                                  tone: u.fromFriends == true ? .success : .warning)
                     }
                 }
-                // Installing isn't in this app yet; the row says so.
-                CalmItem(tr(.updatesTitle), tr(.updatesInstall))
+                // Installing is not in this app yet; the row says so (it was titled Updates, as the page).
+                CalmItem(tr(.macSettingsUpdatesInstall), tr(.macUpdatesInstall))
             }
             if let error = model.network.updatesError { ErrorNote(error) }
             if let text = Display.updatesInstallDetail(u?.installText) { TechnicalDetails(lines: [text]) }
@@ -577,7 +579,7 @@ struct AboutSection: View {
                 VStack(spacing: 4) {
                     RavenMark(size: 74, color: p.textPrimary).padding(.bottom, 8)
                     Text(tr(.appName)).font(.system(size: 20, weight: .bold))
-                    Text(tr(.appTagline)).font(.system(size: 13)).foregroundColor(p.textSecondary)
+                    Text(tr(.macAboutTagline)).font(.system(size: 13)).foregroundColor(p.textSecondary)
                     if let version = model.shownVersion {
                         Text(tr(.netVersion, ["version": version])).font(.system(size: 13)).foregroundColor(p.textSecondary)
                     }
@@ -621,7 +623,7 @@ public struct EraseSheet: View {
     public var body: some View {
         SheetFrame(tr(.eraseTitle), width: 460) {
             VStack(alignment: .leading, spacing: 10) {
-                Text(tr(.eraseBody)).fixedSize(horizontal: false, vertical: true)
+                Text(tr(.macEraseBody)).fixedSize(horizontal: false, vertical: true)
                 Text(tr(.eraseTypeToConfirm)).font(RFont.smallish).foregroundColor(p.textSecondary)
                 RField(tr(.eraseTypeToConfirm), text: $typed) { Task { await erase() } }
                     .frame(maxWidth: 200)

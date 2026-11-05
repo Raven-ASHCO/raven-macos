@@ -38,7 +38,7 @@ struct FriendRoutesBody: View {
                             get: { routes.hideIp == true },
                             set: { v in Task { await net.setRoutes(address, ["hide_ip": .bool(v)]) } }
                         )) {
-                            Text(tr(.networkRoutesHideIp, ["name": name])).font(RFont.bodyBold)
+                            Text(tr(.macNetworkRoutesHideIp, ["name": name])).font(RFont.bodyBold)
                         }
                         .toggleStyle(RSwitchStyle())
                         carriers(routes, name: name)
@@ -70,7 +70,7 @@ struct FriendRoutesBody: View {
                     if i > 0 { Rule() }
                     VStack(alignment: .leading, spacing: 2) {
                         HStack(spacing: 8) {
-                            Text(route.label.map { Sanitizer.line($0, maxLength: 80) } ?? route.kind).font(RFont.bodyBold)
+                            Text(route.label.map { Display.plainWords(Sanitizer.line($0, maxLength: 80)) } ?? route.kind).font(RFont.bodyBold)
                             if let state = route.state { StateChip(state: state) }
                             Spacer(minLength: 8)
                             if ["lan", "internet", "p2p"].contains(route.kind) {
@@ -86,7 +86,7 @@ struct FriendRoutesBody: View {
                         if let via = route.via, !via.isEmpty {
                             small(tr(.networkRoutesVia, ["relays": via.joined(separator: ", ")]))
                         }
-                        if let next = route.next, !next.isEmpty { small(tr(.networkRoutesNext, ["id": next])) }
+                        if let next = route.next, !next.isEmpty { small(tr(.macNetworkRoutesNext, ["id": next])) }
                         if route.kind == "lan" { lanNow(routes) }
                     }
                     .padding(.vertical, 8)
@@ -123,8 +123,8 @@ struct FriendRoutesBody: View {
                     .disabled(internetDraft.trimmingCharacters(in: .whitespaces).isEmpty)
             }
             HStack(spacing: 8) {
-                RField(tr(.networkRoutesP2p), text: $p2pDraft, mono: true)
-                RField(tr(.networkRoutesRelays), text: $relaysDraft, mono: true) { saveP2p() }
+                RField(tr(.macNetworkRoutesP2p), text: $p2pDraft, mono: true)
+                RField(tr(.macNetworkRoutesRelays), text: $relaysDraft, mono: true) { saveP2p() }
                 Button(tr(.networkSave)) { saveP2p() }
                     .buttonStyle(RButtonStyle(.secondary, compact: true))
                     .disabled(p2pDraft.trimmingCharacters(in: .whitespaces).isEmpty)
@@ -145,17 +145,17 @@ struct FriendRoutesBody: View {
                 if let id = learned.peerId, !id.isEmpty {
                     // Only a proven ID gets a word: "not proven yet" was nothing the user could act on (E1).
                     let proven = learned.peerIdProven == true ? " · " + tr(.networkRoutesPeerIdProven) : ""
-                    small(tr(.networkRoutesPeerId, ["id": id]) + proven)
+                    small(tr(.macNetworkRoutesPeerId, ["id": id]) + proven)
                 }
             } else {
-                small(tr(.networkRoutesHintsNone, ["name": name]))
+                small(tr(.macNetworkRoutesHintsNone, ["name": name]))
             }
         }
     }
 
     private func carriers(_ routes: ContactRoutes, name: String) -> some View {
         VStack(alignment: .leading, spacing: 3) {
-            SectionLabel(tr(.networkRoutesCarriers, ["name": name]))
+            SectionLabel(tr(.macNetworkRoutesCarriers, ["name": name]))
             let told = routes.carriers?.told ?? []
             if !told.isEmpty {
                 let names = told.map { f -> String in
@@ -165,7 +165,7 @@ struct FriendRoutesBody: View {
                 small(tr(.networkRoutesTold, ["name": name, "friends": names.joined(separator: ", ")]))
             }
             if let unknown = routes.carriers?.toldUnknown, unknown > 0 {
-                small(tr(.networkRoutesToldUnknown, ["name": name, "n": String(unknown)]))
+                small(tr(.macNetworkRoutesToldUnknown, ["name": name, "n": String(unknown)]))
             }
             ForEach(Array(Display.awayLines(routes, name: name, now: model.now).enumerated()), id: \.offset) { _, line in
                 small(line)
@@ -186,7 +186,7 @@ struct FriendRoutesBody: View {
                 small(tr(.networkRoutesListedNone))
             } else {
                 let names = listed.map { f -> String in
-                    f.usable == false ? tr(.networkRoutesNotUsable, ["friend": friendName(f)]) : friendName(f)
+                    f.usable == false ? tr(.macNetworkRoutesNotUsable, ["friend": friendName(f)]) : friendName(f)
                 }
                 small(tr(.networkRoutesListed, ["name": name, "friends": names.joined(separator: ", ")]))
             }

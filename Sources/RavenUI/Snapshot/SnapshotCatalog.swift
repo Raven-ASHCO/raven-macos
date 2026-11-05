@@ -115,6 +115,7 @@ public enum SnapshotCatalog {
         let (narrow, _) = await readyModel(after: 12, network: .lab)
         shots.append(Shot(name: "41-main-smallest-window", width: Theme.shared.layout.minWidth,
                           height: Theme.shared.layout.minHeight, model: narrow, view: AnyView(RootView())))
+        shots += await networkSettingsLockShots()
         return shots
     }
 

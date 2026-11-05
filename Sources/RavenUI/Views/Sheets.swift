@@ -181,9 +181,8 @@ public struct NetworkContent: View {
             .padding(.vertical, 4)
             .overlay(Capsule().stroke(p.borderStrong, lineWidth: 0.5))
             Text(Display.process(node)).font(RFont.smallish)
-            if let addr = node?.address {
-                Text(tr(.netAddress, ["addr": addr])).font(RFont.smallish).selectable()
-            }
+            // The port, the addresses and the process number: one click away (owner rule).
+            TechnicalDetails(lines: Display.thisComputerDetails(status: model.network.status, node: node))
 
             SectionLabel(tr(.netWays)).padding(.top, 8)
             // The same states as the Network page (`network.status`, read from the running raven-node):
@@ -219,7 +218,7 @@ public struct NetworkContent: View {
     private func wayRow(_ way: NetworkWay) -> some View {
         let state = Display.wayState(way.state)
         return HStack {
-            Text(way.name.map { Sanitizer.line($0, maxLength: 80) } ?? way.id).font(RFont.smallish)
+            Text(Display.wayName(way)).font(RFont.smallish)
             Spacer(minLength: 8)
             Text(state.text).font(RFont.smallish).foregroundColor(p.tone(state.tone))
         }
@@ -253,7 +252,7 @@ public struct QuitDialog: View {
 
     public var body: some View {
         SheetFrame(tr(.quitTitle), width: 460) {
-            Text(tr(.quitRunning)).fixedSize(horizontal: false, vertical: true)
+            Text(tr(.macQuitRunning)).fixedSize(horizontal: false, vertical: true)
         } footer: {
             Button(tr(.quitStay)) { Task { await model.answerQuit(.stay) } }
                 .buttonStyle(RButtonStyle(.secondary))
@@ -350,15 +349,18 @@ public struct ConfirmLockSheet: View {
         Task { await model.lock() }
     }
 
-    /// What it does, and who can unlock it when the profile has no Raven passphrase.
+    /// What it does, and who can unlock it when the profile has no Raven passphrase. "With your
+    /// passphrase" only where waking asks for one: Lock while running on a profile with a Raven
+    /// passphrase (it said so above "This profile has no Raven passphrase", and for the plain lock).
     static func lines(_ lock: LockState?) -> [String] {
-        var lines = [tr(.lockConfirmDoes)]
+        let asksPassphrase = lock?.supported == true && lock?.hasPassphrase == true
+        var lines = [tr(asksPassphrase ? .macLockConfirmDoes : .macLockConfirmDoesNoPassphrase)]
         if lock?.hasPassphrase == false { lines.append(tr(.lockNoPassphrase)) }
         return lines
     }
 
     /// What lock does not do (folded).
-    static let limits = [tr(.lockConfirmDoesNot)]
+    static let limits = [tr(.macLockConfirmDoesNot)]
 }
 
 /// Rename a friend: the name only this computer shows (`contacts.rename`).
