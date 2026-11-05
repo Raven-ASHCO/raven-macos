@@ -124,7 +124,8 @@ public struct SetupView: View {
     private var receiveStep: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(tr(.setupReceiveTitle)).font(RFont.title)
-            Text(tr(.setupReceiveBody)).fixedSize(horizontal: false, vertical: true)
+            // The words of Settings > General, without "(port 7420)": ports only under Technical details.
+            Text(tr(.macSettingsReceiveBody)).fixedSize(horizontal: false, vertical: true)
             HStack(alignment: .top, spacing: 8) {
                 Image(systemName: "network").foregroundColor(p.accent).accessibilityHidden(true)
                 Text(tr(.setupReceiveMacos)).fixedSize(horizontal: false, vertical: true)

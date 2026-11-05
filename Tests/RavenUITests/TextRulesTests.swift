@@ -28,3 +28,18 @@ import Testing
         #expect(tr(.macWelcomeBody1).contains("no Raven server"))
     }
 }
+
+extension TextRulesTests {
+    /// Setup's receive step said "listens on your network (port 7420)", while Settings > General says
+    /// the same without the port (owner rule: ports and addresses only under Technical details).
+    @Test func setupNamesNoPortAsSettingsDoes() throws {
+        let source = try String(contentsOf: packageRoot.appendingPathComponent("Sources/RavenUI/Views/WelcomeView.swift"),
+                                encoding: .utf8)
+        #expect(!source.contains("tr(.setupReceiveBody)"))
+        #expect(source.contains("tr(.macSettingsReceiveBody)"))
+        let text = tr(.macSettingsReceiveBody)
+        #expect(text.range(of: #"\d"#, options: .regularExpression) == nil, "\(text)")
+        #expect(!text.lowercased().contains("port"), "\(text)")
+        #expect(Self.plain(text), "\(text)")
+    }
+}
