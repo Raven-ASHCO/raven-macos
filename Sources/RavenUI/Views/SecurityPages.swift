@@ -143,7 +143,7 @@ struct LockSection: View {
                             .buttonStyle(RButtonStyle(.secondary, compact: true))
                     }
                 }
-                Text(tr(.lockV2Body)).font(RFont.smallish).fixedSize(horizontal: false, vertical: true)
+                Text(tr(.macLockV2Body)).font(RFont.smallish).fixedSize(horizontal: false, vertical: true)
                 if lock?.available != true || lock?.supported != true {
                     Text(Display.lockNote(lock)).font(RFont.smallish).foregroundColor(p.textSecondary).fixedSize(horizontal: false, vertical: true)
                 } else if lock?.hasPassphrase == true {

@@ -65,4 +65,23 @@ import Testing
         for a in status.p2pAddresses ?? [] { #expect(technical.contains(tr(.macNetworkDetailP2pAddress, ["addr": a]))) }
         #expect(!Self.namesAnAddress(tr(.macNetworkP2pAddressCount, ["n": "2"])))
     }
+
+    // MARK: Lock (the Night curtain)
+
+    /// Lock now's question said "until you wake it with your passphrase" above "This profile has no
+    /// Raven passphrase", and for the plain lock, which asks for no passphrase either.
+    @Test func theLockQuestionNamesAPassphraseOnlyWhereWakingAsksForOne() {
+        let with = LockState(available: true, supported: true, locked: false, hasPassphrase: true)
+        let without = LockState(available: true, supported: true, locked: false, hasPassphrase: false)
+        let unknown = LockState(available: true, supported: true, locked: false)
+        let plain = LockState(available: false, supported: false, locked: false)
+        #expect(ConfirmLockSheet.lines(with) == [tr(.macLockConfirmDoes)])
+        #expect(ConfirmLockSheet.lines(without) == [tr(.macLockConfirmDoesNoPassphrase), tr(.lockNoPassphrase)])
+        for lock in [unknown, plain, nil] {
+            #expect(ConfirmLockSheet.lines(lock) == [tr(.macLockConfirmDoesNoPassphrase)])
+        }
+        #expect(tr(.macLockConfirmDoes).contains("passphrase"))
+        #expect(!tr(.macLockConfirmDoesNoPassphrase).contains("passphrase"))
+        #expect(ConfirmLockSheet.limits == [tr(.macLockConfirmDoesNot)])
+    }
 }

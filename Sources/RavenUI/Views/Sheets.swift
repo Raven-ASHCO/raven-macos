@@ -343,15 +343,18 @@ public struct ConfirmLockSheet: View {
         Task { await model.lock() }
     }
 
-    /// What it does, and who can unlock it when the profile has no Raven passphrase.
+    /// What it does, and who can unlock it when the profile has no Raven passphrase. "With your
+    /// passphrase" only where waking asks for one: Lock while running on a profile with a Raven
+    /// passphrase (it said so above "This profile has no Raven passphrase", and for the plain lock).
     static func lines(_ lock: LockState?) -> [String] {
-        var lines = [tr(.lockConfirmDoes)]
+        let asksPassphrase = lock?.supported == true && lock?.hasPassphrase == true
+        var lines = [tr(asksPassphrase ? .macLockConfirmDoes : .macLockConfirmDoesNoPassphrase)]
         if lock?.hasPassphrase == false { lines.append(tr(.lockNoPassphrase)) }
         return lines
     }
 
     /// What lock does not do (folded).
-    static let limits = [tr(.lockConfirmDoesNot)]
+    static let limits = [tr(.macLockConfirmDoesNot)]
 }
 
 /// Rename a friend: the name only this computer shows (`contacts.rename`).

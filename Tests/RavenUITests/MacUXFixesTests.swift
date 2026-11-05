@@ -165,10 +165,10 @@ import Testing
             #expect(!text.lowercased().contains("terminal"), "\(text)")
             #expect(text.range(of: #"\braven [a-z]"#, options: .regularExpression) == nil, "\(text)")
         }
-        #expect(Display.lockNote(locks[0]) == "Lock while running isn't in this version of Raven yet.")
-        #expect(Display.lockNote(locks[1]) == "Raven's background program can't lock now: it isn't running, or it is an older version.")
+        #expect(Display.lockNote(locks[0]) == "Lock while running is not in this version of Raven yet.")
+        #expect(Display.lockNote(locks[1]) == "The Raven background program cannot lock now: it is not running, or it is an older version.")
         #expect(Display.securityKept("unsealed") == "This profile isn't encrypted, so Raven keeps no security notices for it.")
-        #expect(Display.passphraseLine.hasSuffix(tr(.lockPassphraseNotInApp)))
+        #expect(Display.passphraseLine.hasSuffix(tr(.macLockPassphraseNotInApp)))
         #expect(Display.securityResolveLine == "Marking a notice as resolved isn't in this app yet.")
         #expect(Display.updatesInstallDetail("The app shows what is ready; it doesn't install updates yet.")
                 == "The app shows what is ready; it doesn't install updates yet.")

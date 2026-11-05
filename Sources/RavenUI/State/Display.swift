@@ -382,16 +382,16 @@ extension Display {
         version.map { tr(.appName) + " · " + tr(.netVersion, ["version": $0]) }
     }
 
-    /// Lock while running's note (Settings > Lock and the Security page).
+    /// Lock while running's note (Settings > Lock and the Security page), in plain words.
     public static func lockNote(_ lock: LockState?) -> String {
-        guard let lock, lock.available else { return tr(.lockNotAvailable) }
-        guard lock.supported else { return tr(.lockNotSupported) }
+        guard let lock, lock.available else { return tr(.macLockNotAvailable) }
+        guard lock.supported else { return tr(.macLockNotSupported) }
         if lock.hasPassphrase == false { return tr(.lockNoPassphrase) }
-        return tr(.lockReady)
+        return tr(.macLockReady)
     }
 
-    /// The Raven passphrase row: what it is, and that this app doesn't set it yet.
-    public static var passphraseLine: String { tr(.settingsPassphraseBody) + " " + tr(.lockPassphraseNotInApp) }
+    /// The Raven passphrase row: what it is, and that this app does not set it yet.
+    public static var passphraseLine: String { tr(.macLockPassphraseBody) + " " + tr(.macLockPassphraseNotInApp) }
 
     /// Whether Raven keeps security notices (`security.status` `kept`).
     public static func securityKept(_ word: String) -> String {

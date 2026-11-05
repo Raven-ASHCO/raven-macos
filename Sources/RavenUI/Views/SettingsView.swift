@@ -393,7 +393,7 @@ struct LockSettingsSection: View {
     var body: some View {
         let lock = model.lockV2
         VStack(alignment: .leading, spacing: 22) {
-            Lead(tr(.lockV2Body)).padding(.bottom, -22)
+            Lead(tr(.macLockV2Body)).padding(.bottom, -22)
             CalmGroup {
                 HStack(spacing: 14) {
                     LockIcon(closed: lock?.locked == true)
