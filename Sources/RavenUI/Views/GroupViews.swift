@@ -332,7 +332,7 @@ public struct NewGroupSheet: View {
 
     public var body: some View {
         let max = MockRavenLimits.groupMaxMembers - 1
-        SheetFrame(tr(.groupsCreateTitle), subtitle: tr(.groupsCreateBody), width: 480) {
+        SheetFrame(tr(.groupsCreateTitle), subtitle: tr(.macGroupsCreateBody), width: 480) {
             VStack(alignment: .leading, spacing: 14) {
                 VStack(alignment: .leading, spacing: 6) {
                     SectionLabel(tr(.groupsCreateName))

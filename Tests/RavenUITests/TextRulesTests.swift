@@ -27,6 +27,15 @@ import Testing
         #expect(tr(.macAppTagline).hasSuffix("No Raven server."))
         #expect(tr(.macWelcomeBody1).contains("no Raven server"))
     }
+
+    /// New group said "Each message is sealed once for every member; no server sees it." while the
+    /// group's composer note says "No Raven server".
+    @Test func newGroupSaysNoRavenServer() throws {
+        let source = try String(contentsOf: packageRoot.appendingPathComponent("Sources/RavenUI/Views/GroupViews.swift"),
+                                encoding: .utf8)
+        #expect(!source.contains("tr(.groupsCreateBody)"))
+        #expect(tr(.macGroupsCreateBody).contains("no Raven server") && Self.plain(tr(.macGroupsCreateBody)))
+    }
 }
 
 extension TextRulesTests {

@@ -110,6 +110,7 @@
   "mac.chat.encrypted": "End to end encrypted. Only {name} can read it. No Raven server.",
   "mac.chat.encrypted.short": "End to end encrypted. No Raven server.",
   "mac.groups.encrypted": "End to end encrypted. Only the members can read it. No Raven server.",
+  "mac.groups.create.body": "Write to several friends at once. Each message is sealed once for every member: no Raven server sees it.",
   "mac.home.banner.notVerified": "You have not checked this is really {name}. Compare security words.",
   "mac.chat.away.title": "{name} is not reachable right now. Your message waits.",
   "mac.tick.notSent.meetFirst": "Not sent: {name} is not reachable. A first message needs you both online.",
