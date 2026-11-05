@@ -90,6 +90,14 @@ extension SnapshotCatalog {
         shots.append(Shot(name: "81-main-long-names-smallest-window", width: Theme.shared.layout.minWidth,
                           height: Theme.shared.layout.minHeight, model: long, view: AnyView(RootView())))
 
+        // A long name that is not verified, in the smallest window (found by a search).
+        let (narrow, _) = await readyModel(after: 12)
+        await narrow.renameContact(MockRaven.renaAddress, to: longNotVerified)
+        narrow.searchText = "climbing"
+        narrow.select(MockRaven.renaAddress)
+        shots.append(Shot(name: "86-main-not-verified-smallest-window", width: Theme.shared.layout.minWidth,
+                          height: Theme.shared.layout.minHeight, model: narrow, view: AnyView(RootView())))
+
         // Many friends: the list scrolls under the add buttons.
         let (many, _) = await readyModel(after: 12)
         for (i, name) in manyNames.enumerated() {

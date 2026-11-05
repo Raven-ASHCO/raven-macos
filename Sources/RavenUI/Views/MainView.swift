@@ -258,12 +258,10 @@ struct FriendRow: View {
                 Avatar(contact, blink: model.presenceBlinks[contact.address] ?? 0,
                        retry: model.retryPulses[contact.address] ?? 0, ring: selected ? p.surface : p.sidebar)
                 VStack(alignment: .leading, spacing: 1) {
-                    HStack(spacing: 5) {
+                    if contact.verified {
                         Text(contact.name).font(RFont.label).lineLimit(1)
-                        if !contact.verified {
-                            Text(tr(.homeNotVerified)).font(.system(size: 10.5, weight: .semibold)).foregroundColor(p.warning)
-                                .lineLimit(1)
-                        }
+                    } else {
+                        NameNotVerified(name: contact.name)
                     }
                     ContactStatusText(contact: contact)
                 }
@@ -285,6 +283,36 @@ struct FriendRow: View {
             Button(tr(.homeBannerNotVerifiedAction)) { model.presentCheckWords(contact.address) }
             Button(tr(.networkRoutesTitle, ["name": contact.name])) { model.presentRoutes(contact.address) }
         }
+    }
+}
+
+/// A friend's name with "Not verified" beside it, never cut: the whole name when it fits, else the
+/// name cut short; where even that leaves no room (the smallest window) the words become the warning
+/// shield, with the words as its tooltip and for VoiceOver. It was cut to "Not ve…" there.
+struct NameNotVerified: View {
+    let name: String
+    @Environment(\.palette) private var p
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 5) { nameText.fixedSize(); words }
+            // Measured with 72 points of name; laid out, the name takes what the words leave.
+            HStack(spacing: 5) { nameText.frame(minWidth: 0, idealWidth: 72, alignment: .leading); words }
+            HStack(spacing: 4) { nameText; shield }
+        }
+    }
+
+    private var nameText: some View { Text(name).font(RFont.label).lineLimit(1) }
+
+    private var words: some View {
+        Text(tr(.homeNotVerified)).font(.system(size: 10.5, weight: .semibold)).foregroundColor(p.warning)
+            .lineLimit(1).fixedSize()
+    }
+
+    private var shield: some View {
+        Image(systemName: "exclamationmark.shield").font(.system(size: 11, weight: .semibold)).foregroundColor(p.warning)
+            .help(tr(.homeNotVerified))
+            .accessibilityLabel(tr(.homeNotVerified))
     }
 }
 
