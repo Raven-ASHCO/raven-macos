@@ -27,8 +27,21 @@ public final class AddFriendState: ObservableObject {
         self.check = check
     }
 
+    /// The card always matches the switch: an answer that comes after the switch moved again (on,
+    /// then quickly off) is dropped, or a card with your address would sit under a switch that is off.
     func loadCard(_ model: AppModel) async {
-        do { card = try await model.makeCard(includeAddress: includeAddress) } catch { card = nil }
+        let include = includeAddress
+        let made = try? await model.makeCard(includeAddress: include)
+        guard include == includeAddress else { return }
+        card = made
+    }
+
+    /// The switch moved (then `loadCard`). Off takes the card with your address off the screen at
+    /// once, and Copy waits for the new card: the old one can not be copied while it comes.
+    func switchAddress(_ include: Bool) {
+        includeAddress = include
+        copied = false
+        if !include { card = nil }
     }
 
     /// Parses whatever was pasted. On success the raw text leaves the screen and only a summary
@@ -112,8 +125,7 @@ public struct AddFriendSheet: View {
                 .background(RoundedRectangle(cornerRadius: Theme.shared.radius.control).fill(p.surfaceMuted))
                 .overlay(RoundedRectangle(cornerRadius: Theme.shared.radius.control).stroke(p.border, lineWidth: 0.5))
             Toggle(isOn: Binding(get: { state.includeAddress }, set: { v in
-                state.includeAddress = v
-                state.copied = false
+                state.switchAddress(v)
                 Task { await state.loadCard(model) }
             })) {
                 Text(Display.includeAddressLabel)

@@ -20,6 +20,20 @@ final class FailingOnce: RavenEngine, @unchecked Sendable {
     }
 }
 
+/// An engine whose card with the network address comes slowly (as over a busy connection).
+final class SlowAddressCard: RavenEngine, @unchecked Sendable {
+    let inner: MockRaven
+
+    init(_ inner: MockRaven) { self.inner = inner }
+
+    func call(op: String, args: [String: JSONValue]) async throws -> JSONValue {
+        if op == "card.make", args["include_address"]?.bool == true {
+            try await Task.sleep(nanoseconds: 300_000_000)
+        }
+        return try await inner.call(op: op, args: args)
+    }
+}
+
 /// Welcome and setup, your identity, adding and checking friends, the friends list.
 @MainActor
 @Suite struct SetupFriendsTests {
@@ -66,6 +80,39 @@ final class FailingOnce: RavenEngine, @unchecked Sendable {
             #expect(!label.contains(address))
             #expect(!label.contains(model.node?.address ?? "?"))
         }
+    }
+
+    /// The switch on and quickly off again: the slower answer for "on" came last and put a card
+    /// with this computer's address under a switch that says off.
+    @Test func aLateCardNeverBringsBackTheAddress() async throws {
+        let clock = MockClock(fixed: testStart)
+        let mock = MockRaven(start: .ready, demo: true, clock: clock, identityDelay: 0)
+        let model = AppModel(engine: SlowAddressCard(mock), now: { clock.now })
+        await model.bootstrap()
+        await model.pollNow()
+        let state = AddFriendState()
+        state.includeAddress = true
+        let slow = Task { await state.loadCard(model) }
+        try await Task.sleep(nanoseconds: 30_000_000)
+        state.includeAddress = false
+        await state.loadCard(model)
+        await slow.value
+        #expect(state.card != nil)
+        #expect(state.card?.addressIncluded == nil, "the card under a switch that is off has no address")
+    }
+
+    /// Off takes a card with the address off the screen before the new card comes: Copy has nothing
+    /// to copy in between.
+    @Test func switchingTheAddressOffHidesTheCardAtOnce() async throws {
+        let (model, _) = await readyModel()
+        let state = AddFriendState(includeAddress: true)
+        await state.loadCard(model)
+        #expect(state.card?.addressIncluded != nil)
+        state.copied = true
+        state.switchAddress(false)
+        #expect(state.card == nil && !state.copied && !state.includeAddress)
+        await state.loadCard(model)
+        #expect(state.card != nil && state.card?.addressIncluded == nil)
     }
 
     /// The Mac texts of this area are plain English: no apostrophes, hyphens or dashes, and never an
