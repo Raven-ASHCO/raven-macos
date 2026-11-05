@@ -117,7 +117,9 @@ public final class AppModel: ObservableObject {
     @Published public var setupReceive = true
     @Published public var identity: Identity?
     @Published public var contacts: [Contact] = []
-    @Published public var selectedAddress: String?
+    @Published public var selectedAddress: String? {
+        didSet { followDraft() }
+    }
     @Published public var messages: [String: [Message]] = [:]
     /// Unread messages by friend, as the engine counts them (`Contact.unread` and the `unread` event): a
     /// chat read in this app or in the terminal app counts as read in both, also after a restart.
@@ -154,7 +156,9 @@ public final class AppModel: ObservableObject {
         public let member: String
     }
     @Published public var groupMessages: [String: [GroupMessage]] = [:]
-    @Published public var selectedGroupID: String?
+    @Published public var selectedGroupID: String? {
+        didSet { followDraft() }
+    }
     /// Group messages of yours whose arcs changed (a receipt came): the ring's arcs fade to their colour.
     @Published public var groupDetailsOpen: Set<String> = []
     /// Bumped when a message's signed receipt arrives: its check fills and pops (Calm).
@@ -176,6 +180,9 @@ public final class AppModel: ObservableObject {
         didSet {
             if page == .chat, oldValue != .chat { readOpenChat() }
             if page == .group, oldValue != .group { readOpenGroup() }
+            // The route line is not on screen: packets queued for it now would fly, late, on return.
+            if oldValue == .chat, page != .chat { routeQueue.removeAll() }
+            followDraft()
         }
     }
     /// Lock v2 (`lock.state`): nil until read; an engine that can't say counts as not available.
@@ -184,6 +191,15 @@ public final class AppModel: ObservableObject {
     @Published public var actionError: RavenError?
     @Published public var searchText = ""
     @Published public var composerText = ""
+    /// Unsent texts of the chats not on screen. The composer is one field for every chat and group:
+    /// what was typed for a friend stays with that friend, and never shows in a group's composer,
+    /// where Return would send it to everyone.
+    private var drafts: [String: String] = [:]
+    /// The chat or group the composer's text belongs to (`conversationOnScreen` when it was last read).
+    private var draftKey: String?
+    /// Bumped each time the composer's text is swapped for another chat's draft: the composer must not
+    /// read the swap as typing (a draft ending in a line break would look like Return).
+    @Published public private(set) var draftSwaps = 0
     /// The main window's columns: the sidebar is shown unless it is `.detailOnly`. The toolbar button
     /// and View > Show Sidebar / Hide Sidebar change it, and the menu item's title follows it (E1: the
     /// menu said "Show Sidebar" while the sidebar was shown).
@@ -600,7 +616,6 @@ public final class AppModel: ObservableObject {
             return
         }
         selectedGroupID = id
-        composerText = ""
         readOpenGroup()
     }
 
@@ -631,7 +646,7 @@ public final class AppModel: ObservableObject {
                 groups[i].lastFrom = m.fromName
             }
         } catch {
-            composerText = text
+            putBack(text, into: AppModel.draftKey(group: id))
             fail(error)
         }
     }
@@ -728,7 +743,7 @@ public final class AppModel: ObservableObject {
     }
 
     private func queueRoute(_ kind: RouteKind, _ address: String) {
-        guard !motionOff, address == selectedAddress, windowVisible else { return }
+        guard !motionOff, page == .chat, address == selectedAddress, windowVisible else { return }
         routeQueue.append(RouteMotion(kind: kind, address: address))
         if routeQueue.count > 6 { routeQueue.removeFirst(routeQueue.count - 6) }
     }
@@ -822,7 +837,6 @@ public final class AppModel: ObservableObject {
         guard selectedAddress != address else { return }
         selectedAddress = address
         routeQueue.removeAll()
-        composerText = ""
         readOpenChat()
     }
 
@@ -830,7 +844,42 @@ public final class AppModel: ObservableObject {
         let text = composerText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty, let address = selectedAddress else { return }
         composerText = ""
-        await send(text, to: address)
+        if await !send(text, to: address) { putBack(text, into: AppModel.draftKey(friend: address)) }
+    }
+
+    // MARK: Drafts
+
+    static func draftKey(friend address: String) -> String { "friend:" + address }
+    static func draftKey(group id: String) -> String { "group:" + id }
+
+    /// The chat or group whose composer is on screen; nil on the other pages.
+    var conversationOnScreen: String? {
+        switch page {
+        case .chat: return selectedAddress.map { AppModel.draftKey(friend: $0) }
+        case .group: return selectedGroupID.map { AppModel.draftKey(group: $0) }
+        default: return nil
+        }
+    }
+
+    /// Another chat came on screen (or none): the composer's text stays with the chat it was typed
+    /// in, and the composer shows the draft of the chat now open.
+    private func followDraft() {
+        let key = conversationOnScreen
+        guard key != draftKey else { return }
+        if let old = draftKey { drafts[old] = composerText.isEmpty ? nil : composerText }
+        draftKey = key
+        draftSwaps += 1
+        composerText = key.flatMap { drafts[$0] } ?? ""
+    }
+
+    /// A send that failed: its text goes back to its chat's composer (unless something new was
+    /// typed there meanwhile), whichever chat is on screen now.
+    private func putBack(_ text: String, into key: String) {
+        if key == draftKey {
+            if composerText.isEmpty { composerText = text }
+        } else if drafts[key]?.isEmpty ?? true {
+            drafts[key] = text
+        }
     }
 
     /// No message with this friend, and none on its way: the "Say hello!" text shows only then.
@@ -842,7 +891,9 @@ public final class AppModel: ObservableObject {
         messages.isEmpty && sendsInFlight == 0
     }
 
-    public func send(_ text: String, to address: String) async {
+    /// Sends a message; false when the engine refused it (the toast says why).
+    @discardableResult
+    public func send(_ text: String, to address: String) async -> Bool {
         sendsInFlight[address, default: 0] += 1
         defer {
             sendsInFlight[address, default: 1] -= 1
@@ -858,8 +909,10 @@ public final class AppModel: ObservableObject {
                 messages[address] = list
             }
             await pollNow()
+            return true
         } catch {
             fail(error)
+            return false
         }
     }
 
@@ -1147,6 +1200,8 @@ public final class AppModel: ObservableObject {
         messages = [:]
         unread = [:]
         selectedAddress = nil
+        drafts = [:]
+        composerText = ""
         lastSeq = 0
         waitedIDs = []
         settings = RavenSettings()

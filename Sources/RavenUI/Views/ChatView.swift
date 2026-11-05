@@ -712,6 +712,9 @@ struct ComposerBar: View {
     @FocusState private var focused: Bool
     /// The text as it was before its last change, for `ComposerInput.change`.
     @ViewState private var before = ""
+    /// `AppModel.draftSwaps` as last seen: a change of text that comes with a new count is another
+    /// chat's draft coming in, not typing.
+    @ViewState private var swaps = 0
     /// Shift-Return's key monitor while the composer is on screen.
     @ViewState private var monitor: Any?
 
@@ -726,6 +729,11 @@ struct ComposerBar: View {
                 }
                 .disabled(disabled)
                 .onChange(of: model.composerText) { text in
+                    guard swaps == model.draftSwaps else {
+                        swaps = model.draftSwaps
+                        before = text
+                        return
+                    }
                     let change = ComposerInput.change(old: before, new: text,
                                                       newLineKey: ComposerInput.newLineKeyDown(NSApp.currentEvent))
                     before = text
@@ -780,6 +788,7 @@ struct ComposerBar: View {
         .onAppear {
             focused = true
             before = model.composerText
+            swaps = model.draftSwaps
             // Shift-Return: the field editor's own "insert a line break" (what Option-Return does).
             monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
                 guard focused, ComposerInput.isShiftReturn(keyCode: event.keyCode, modifiers: event.modifierFlags),
