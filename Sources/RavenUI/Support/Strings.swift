@@ -530,6 +530,13 @@ public enum Str: String, CaseIterable, Sendable {
     case lockPassphraseNote = "lock.passphrase.note"
     case lockPassphraseNotInApp = "lock.passphrase.notInApp"
     // The Mac app's own texts (Resources/strings.macos.json), until raven-core's strings.en.json has them.
+    case macTrayListeningWifi = "mac.tray.listening.wifi"
+    case macTrayNotListening = "mac.tray.notListening"
+    case macTrayBackgroundDown = "mac.tray.background.down"
+    case macTrayWaiting = "mac.tray.waiting"
+    case macTrayMoreFriend = "mac.tray.moreFriend"
+    case macTrayMoreFriends = "mac.tray.moreFriends"
+    case macQuitRunning = "mac.quit.running"
     case macLockLockedBody = "mac.lock.locked.body"
     case macLockLockedPlainBody = "mac.lock.locked.plainBody"
     case macLockPassphraseNote = "mac.lock.passphrase.note"

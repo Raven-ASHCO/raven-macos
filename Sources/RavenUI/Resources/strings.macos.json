@@ -1,5 +1,12 @@
 {
   "_note": "Texts the Mac app needs that core/desktop/design/strings.en.json doesn't have yet (the shared file is a copy of raven-core's and must stay identical to it). Every key starts with mac. and only adds a text: Strings.shared loads this file after strings.en.json and never lets it replace a shared key. Move each text into the shared file with raven-core, then delete it here (MacUXFixesTests fails while a key is in both).",
+  "mac.tray.listening.wifi": "Raven is listening on WiFi",
+  "mac.tray.notListening": "Raven is not receiving",
+  "mac.tray.background.down": "background program not responding",
+  "mac.tray.waiting": "{n} waiting",
+  "mac.tray.moreFriend": "1 more friend",
+  "mac.tray.moreFriends": "{n} more friends",
+  "mac.quit.running": "The Raven background program keeps running while this computer is on and you stay logged in, so friends can still reach you and waiting messages keep trying.",
   "mac.lock.locked.body": "The Raven background program keeps running without its keys. It does not receive, read or send messages until you unlock.",
   "mac.lock.locked.plainBody": "While Raven is locked it does not receive, read or send messages. Unlock to use it again.",
   "mac.lock.passphrase.note": "Your passphrase goes only to the Raven background program on this computer.",

@@ -52,4 +52,30 @@ extension Display {
         }
         return lines
     }
+
+    // MARK: Menu bar
+
+    /// The menu bar's friends: all of them in the sidebar's order while they fit in `limit` rows;
+    /// with more, those with new messages first, then the others, and `more` says how many are left
+    /// out (Open Raven lists them all). With many friends the menu grew taller than the screen, its
+    /// last rows (Quit among them) out of reach.
+    public static func menuFriends(_ contacts: [Contact], unread: [String: Int], limit: Int) -> (shown: [Contact], more: Int) {
+        guard contacts.count > limit else { return (contacts, 0) }
+        let ordered = contacts.filter { (unread[$0.address] ?? 0) > 0 } + contacts.filter { (unread[$0.address] ?? 0) == 0 }
+        let shown = Array(ordered.prefix(max(0, limit)))
+        return (shown, contacts.count - shown.count)
+    }
+
+    /// A friend's menu line where the whole one does not fit: "Neighbour · 1 waiting" without its
+    /// deadline (the chat says until when), instead of "Neighbour · 1 waiting · until Wed 12:05 (UTC…".
+    public static func menuLineShort(_ c: Contact, unread: Int, now: Date) -> String {
+        if unread > 0 { return menuLine(c, unread: unread, now: now) }
+        if let w = c.waiting, w.count > 0 { return c.name + " · " + tr(.macTrayWaiting, ["n": String(w.count)]) }
+        return menuLine(c, unread: unread, now: now)
+    }
+
+    /// The row under the menu's friends when some are left out.
+    public static func menuMore(_ n: Int) -> String {
+        n == 1 ? tr(.macTrayMoreFriend) : tr(.macTrayMoreFriends, ["n": String(n)])
+    }
 }

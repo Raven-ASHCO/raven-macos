@@ -246,7 +246,7 @@ public struct QuitDialog: View {
 
     public var body: some View {
         SheetFrame(tr(.quitTitle), width: 460) {
-            Text(tr(.quitRunning)).fixedSize(horizontal: false, vertical: true)
+            Text(tr(.macQuitRunning)).fixedSize(horizontal: false, vertical: true)
         } footer: {
             Button(tr(.quitStay)) { Task { await model.answerQuit(.stay) } }
                 .buttonStyle(RButtonStyle(.secondary))

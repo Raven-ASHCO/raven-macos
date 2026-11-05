@@ -199,7 +199,7 @@ struct GeneralSection: View {
             }
             CalmGroup {
                 VStack(alignment: .leading, spacing: 8) {
-                    CalmItem(tr(.settingsWhenQuit), tr(.quitRunning)).padding(.bottom, -14)
+                    CalmItem(tr(.settingsWhenQuit), tr(.macQuitRunning)).padding(.bottom, -14)
                     RRadioGroup(tr(.settingsWhenQuit),
                                 options: Array(zip(RavenSettings.whenQuitValues, Strings.shared.options(.settingsWhenQuitOptions)))
                                     .map { (value: $0.0, label: $0.1) },

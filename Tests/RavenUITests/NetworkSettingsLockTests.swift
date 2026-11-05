@@ -84,4 +84,32 @@ import Testing
         #expect(!tr(.macLockConfirmDoesNoPassphrase).contains("passphrase"))
         #expect(ConfirmLockSheet.limits == [tr(.macLockConfirmDoesNot)])
     }
+
+    // MARK: Menu bar
+
+    /// The menu listed every friend: with many, it grew taller than the screen and Quit was out of
+    /// reach. It lists eight, new messages first, and says how many more there are.
+    @Test func theMenuListsAtMostEightFriendsNewMessagesFirst() {
+        let contacts = (0..<20).map { Contact(address: "a\($0)", name: "Friend \($0)", shortAddress: "a\($0)", verified: true,
+                                              presence: .inTouch) }
+        let few = Display.menuFriends(Array(contacts.prefix(MenuBarContent.maxFriends)), unread: ["a3": 1],
+                                      limit: MenuBarContent.maxFriends)
+        #expect(few.shown.map(\.address) == contacts.prefix(MenuBarContent.maxFriends).map(\.address) && few.more == 0)
+        let many = Display.menuFriends(contacts, unread: ["a15": 2], limit: MenuBarContent.maxFriends)
+        #expect(many.shown.count == MenuBarContent.maxFriends && many.more == 20 - MenuBarContent.maxFriends)
+        #expect(many.shown.first?.address == "a15")
+        #expect(Display.menuMore(12) == "12 more friends" && Display.menuMore(1) == "1 more friend")
+    }
+
+    /// "Neighbour · 1 waiting · until Wed 12:05 (UTC…" was cut in the menu: where the whole line does
+    /// not fit it says "Neighbour · 1 waiting" (the chat says until when).
+    @Test func aLongMenuLineHasAShortForm() {
+        var waiting = Contact(address: "w", name: "Neighbour", shortAddress: "w", verified: true, presence: .waiting)
+        waiting.waiting = Waiting(count: 1, untilMs: testStart.addingTimeInterval(3600).ms)
+        #expect(Display.menuLine(waiting, unread: 0, now: testStart).hasPrefix("Neighbour · 1 waiting · "))
+        #expect(Display.menuLineShort(waiting, unread: 0, now: testStart) == "Neighbour · 1 waiting")
+        #expect(Display.menuLineShort(waiting, unread: 2, now: testStart) == "2 new from Neighbour")
+        let quiet = Contact(address: "q", name: "Teacher", shortAddress: "q", verified: true, presence: .none)
+        #expect(Display.menuLineShort(quiet, unread: 0, now: testStart) == Display.menuLine(quiet, unread: 0, now: testStart))
+    }
 }
