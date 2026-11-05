@@ -375,9 +375,12 @@ struct CheckWordsButtons: View {
                 .buttonStyle(RButtonStyle(.secondary))
                 .keyboardShortcut(.cancelAction)
             if !state.stopped {
+                // Return checks once Check can: after the tenth word the field goes away and Return
+                // did nothing. Only then, so Return in the field still takes the word typed.
                 Button(tr(.checkVerify)) { Task { await state.check(model) } }
                     .buttonStyle(RButtonStyle(.primary))
                     .disabled(!state.canCheck)
+                    .keyboardShortcut(state.canCheck ? .defaultAction : nil)
             }
         }
     }
