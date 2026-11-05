@@ -20,6 +20,26 @@ final class FailingOnce: RavenEngine, @unchecked Sendable {
     }
 }
 
+/// An engine whose erase works (as with the privacy pack): Raven's data goes and the profile is new
+/// again, as on a computer where Raven was never set up.
+final class ErasableMock: RavenEngine, @unchecked Sendable {
+    private let clock: MockClock
+    private var inner: MockRaven
+
+    init(clock: MockClock) {
+        self.clock = clock
+        self.inner = MockRaven(start: .new, demo: false, clock: clock, identityDelay: 0)
+    }
+
+    func call(op: String, args: [String: JSONValue]) async throws -> JSONValue {
+        if op == "privacy.erase" {
+            inner = MockRaven(start: .new, demo: false, clock: clock, identityDelay: 0)
+            return [:]
+        }
+        return try await inner.call(op: op, args: args)
+    }
+}
+
 /// An engine whose card with the network address comes slowly (as over a busy connection).
 final class SlowAddressCard: RavenEngine, @unchecked Sendable {
     let inner: MockRaven
@@ -65,6 +85,27 @@ final class SlowAddressCard: RavenEngine, @unchecked Sendable {
         #expect(model.actionError == nil, "the error of the first try is gone")
         #expect(model.identity?.words.count == 10)
         #expect(model.node?.running == true)
+    }
+
+    /// Erase, then set up again: the new profile needs an identity of its own. Setup still
+    /// remembered the erased one, skipped `identity.create` and could never finish.
+    @Test func setupAfterAnEraseMakesANewIdentity() async {
+        let clock = MockClock(fixed: testStart)
+        let model = AppModel(engine: ErasableMock(clock: clock), now: { clock.now })
+        await model.bootstrap()
+        model.beginSetup()
+        model.submitName()
+        await model.chooseReceive(true)
+        await model.finishSetup()
+        #expect(model.phase == .ready)
+        #expect(await model.erase() == nil)
+        #expect(model.phase == .welcome)
+        model.beginSetup()
+        model.submitName()
+        await model.chooseReceive(true)
+        #expect(model.actionError == nil)
+        #expect(model.setupStep == .words)
+        #expect(model.identity?.words.count == 10)
     }
 
     // MARK: Add a friend

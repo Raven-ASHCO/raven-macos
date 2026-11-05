@@ -301,7 +301,10 @@ public final class AppModel: ObservableObject {
                 profile \(profile.state.rawValue, privacy: .public)
                 """)
             switch profile.state {
-            case .new: phase = .welcome
+            case .new:
+                // A new profile has no identity (also after an erase): setup must make one.
+                setupMadeIdentity = false
+                phase = .welcome
             case .ready:
                 try await loadAll()
                 // Lock v2: raven-node runs without its keys; the app opens on the locked screen.
