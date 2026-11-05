@@ -251,7 +251,8 @@ struct MessagesList: View {
 
     var body: some View {
         let list = model.messages[contact.address] ?? []
-        ChatScroll(isEmpty: model.chatIsEmpty(contact.address),
+        let empty = model.chatIsEmpty(contact.address)
+        ChatScroll(isEmpty: empty,
                    emptyText: tr(.homeEmptyChat, ["name": contact.name]),
                    newest: ChatFollow.newest(list)) { width in
             VStack(spacing: 4) {
@@ -268,6 +269,15 @@ struct MessagesList: View {
                     AwayCard(contact: contact, message: waiting)
                 }
                 if !contact.verified { NotVerifiedBanner(contact: contact) }
+            }
+        }
+        // Before the first message too: the banner was missing exactly when it matters most.
+        .overlay(alignment: .bottom) {
+            if empty && !contact.verified {
+                NotVerifiedBanner(contact: contact)
+                    .padding(.horizontal, 28)
+                    .padding(.bottom, 36)
+                    .frame(maxWidth: Theme.shared.layout.contentMaxWidth)
             }
         }
     }
