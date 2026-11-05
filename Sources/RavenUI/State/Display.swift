@@ -421,15 +421,10 @@ extension Display {
         return (title, tr(.macGroupsRemoveBody, ["name": name]) + " " + back)
     }
 
-    /// Add a friend's switch: "Include my network address (ip:port)…" with the address the card holds
-    /// (or would hold); without one, the same words with no address (never "(–:7420)").
-    public static func includeAddressLabel(card: ShareCard?, node: NodeStatus?) -> String {
-        if let addr = card?.addressIncluded, !addr.isEmpty { return tr(.addShareIncludeAddress, ["addr": addr]) }
-        if card?.addressMissing == nil, let addr = node?.address, !addr.isEmpty {
-            return tr(.addShareIncludeAddress, ["addr": "\(addr):\(node?.port ?? "7420")"])
-        }
-        return tr(.macAddShareIncludeAddressNone)
-    }
+    /// Add a friend's switch. It never names the address: it showed this computer's address and port
+    /// even with the switch off (owner rule: addresses and ports only under Details). Once you
+    /// include it, the address is in the card you send, and only there.
+    public static var includeAddressLabel: String { tr(.macAddShareIncludeAddressNone) }
 
     /// Why a card asked to hold your address holds none (`card.make` `address_missing`), else nil.
     public static func noAddressReason(_ card: ShareCard?) -> String? {

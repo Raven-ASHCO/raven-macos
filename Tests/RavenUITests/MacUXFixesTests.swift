@@ -239,7 +239,7 @@ import Testing
         let card = try await model.makeCard(includeAddress: true)
         #expect(card.addressIncluded == nil && card.addressMissing == "not_receiving")
         #expect(!card.card.contains("lan="))
-        let label = Display.includeAddressLabel(card: card, node: nil)
+        let label = Display.includeAddressLabel
         #expect(!label.contains("–") && !label.contains("7420"))
         #expect(Display.noAddressReason(card) == tr(.macAddNoAddressNotReceiving))
         for why in ["this_computer_only", "no_network", "something_new"] {
@@ -250,7 +250,9 @@ import Testing
         _ = try await mock.call(op: "node.start", args: [:])
         let with = try await model.makeCard(includeAddress: true)
         #expect(with.addressIncluded != nil && with.addressMissing == nil && Display.noAddressReason(with) == nil)
-        #expect(Display.includeAddressLabel(card: with, node: nil).contains(with.addressIncluded ?? "?"))
+        // The address is in the card only, never in the switch's label (addresses only under Details).
+        #expect(with.card.contains(with.addressIncluded ?? "?"))
+        #expect(!Display.includeAddressLabel.contains(with.addressIncluded ?? "?"))
     }
 
     /// ⌥⌘1–4 looked enabled on the Welcome and Locked screens and did nothing: they follow the screen.

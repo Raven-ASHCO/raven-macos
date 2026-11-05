@@ -116,7 +116,7 @@ public struct AddFriendSheet: View {
                 state.copied = false
                 Task { await state.loadCard(model) }
             })) {
-                Text(Display.includeAddressLabel(card: state.card, node: model.node))
+                Text(Display.includeAddressLabel)
                     .font(RFont.smallish)
                     .fixedSize(horizontal: false, vertical: true)
             }

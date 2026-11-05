@@ -53,6 +53,21 @@ final class FailingOnce: RavenEngine, @unchecked Sendable {
         #expect(model.node?.running == true)
     }
 
+    // MARK: Add a friend
+
+    /// The switch named this computer's address and port even while it was off, and one reason
+    /// named 127.0.0.1: addresses and ports show only under Details.
+    @Test func addAFriendNamesNoAddress() async throws {
+        let (model, mock) = await readyModel()
+        let off = try await mock.makeCard(includeAddress: false)
+        let on = try await mock.makeCard(includeAddress: true)
+        let address = try #require(on.addressIncluded)
+        for label in [Display.includeAddressLabel, Display.noAddressReason(off) ?? ""] {
+            #expect(!label.contains(address))
+            #expect(!label.contains(model.node?.address ?? "?"))
+        }
+    }
+
     // MARK: Check words
 
     /// Pasting the words with one that is not a Raven word kept that word but lost every word after
