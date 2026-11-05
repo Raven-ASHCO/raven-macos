@@ -299,12 +299,16 @@ struct ThisComputerSection: View {
                 if status.policyUnreadable == true {
                     Text(tr(.macNetworkThisComputerPolicyUnreadable)).font(.system(size: 12)).foregroundColor(p.warning)
                 }
-                HStack(spacing: 6) {
-                    Circle().fill(hb.ok ? p.successFill : p.dangerFill).frame(width: 7, height: 7).accessibilityHidden(true)
-                    Text(hb.text).foregroundColor(hb.ok ? p.success : p.danger)
+                // The heartbeat while the program runs; stopped, the first line says so (it said "not
+                // running" and, in red again below it, "not responding").
+                if model.node?.running == true {
+                    HStack(spacing: 6) {
+                        Circle().fill(hb.ok ? p.successFill : p.dangerFill).frame(width: 7, height: 7).accessibilityHidden(true)
+                        Text(Display.plainWords(hb.text)).foregroundColor(hb.ok ? p.success : p.danger)
+                    }
+                    .font(.system(size: 12))
+                    .padding(.top, 3)
                 }
-                .font(.system(size: 12))
-                .padding(.top, 3)
                 // The port, the addresses and the process number: one click away (owner rule).
                 TechnicalDetails(lines: Display.thisComputerDetails(status: status, node: model.node))
                     .padding(.top, 2)

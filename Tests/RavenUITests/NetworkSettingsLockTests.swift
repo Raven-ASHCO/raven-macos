@@ -169,7 +169,9 @@ import Testing
         lock.hasPassphrase = true
         shown += ConfirmLockSheet.lines(lock)
         shown += [tr(.macQuitRunning), tr(.quitTitle), tr(.macLockLockedBody), tr(.macLockLockedPlainBody), tr(.macLockPassphraseNote),
-                  Display.lockNote(nil), Display.passphraseLine, Display.menuMore(3), Display.menuMore(1)]
+                  Display.lockNote(nil), Display.passphraseLine, Display.menuMore(3), Display.menuMore(1),
+                  // This computer's heartbeat line, as the Network page shows it.
+                  Display.plainWords(Display.heartbeat(node: nil, lastOk: nil, now: testStart).text)]
         for text in shown { #expect(Self.plain(text), "\(text)") }
         #expect(tr(.macAboutTagline).contains("No Raven server"))
     }
