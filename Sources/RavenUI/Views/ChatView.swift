@@ -480,7 +480,9 @@ struct MetaRow: View {
         }
         .font(.system(size: 11.5))
         .lineLimit(1)
-        .frame(minHeight: 20)
+        // As wide as the message column: a frame only as wide as the row measured itself handed the
+        // row back a width rounded down to the pixel, and "Not delivered" ended in "…".
+        .frame(maxWidth: .infinity, minHeight: 20, alignment: out ? .trailing : .leading)
         .padding(.top, 5)
         .padding(.horizontal, 4)
     }
