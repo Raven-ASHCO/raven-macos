@@ -115,6 +115,8 @@ public final class AppModel: ObservableObject {
     @Published public var setupStep: SetupStep = .name
     @Published public var setupName = ""
     @Published public var setupReceive = true
+    /// Setup made the identity already (`identity.create` worked), so a try again skips it.
+    @Published public private(set) var setupMadeIdentity = false
     @Published public var identity: Identity?
     @Published public var contacts: [Contact] = []
     @Published public var selectedAddress: String?
@@ -790,12 +792,20 @@ public final class AppModel: ObservableObject {
 
     public func submitName() { setupStep = .receive }
 
+    /// Receive or not, then the identity, the settings, the background program and your words. A try
+    /// after a later step failed does not make the identity again: the engine refuses a second one,
+    /// and setup could never finish.
     public func chooseReceive(_ receive: Bool) async {
+        guard setupStep != .creating else { return }   // a second click while the first one works
         setupReceive = receive
+        actionError = nil
         setupStep = .creating
         do {
             let name = Sanitizer.line(setupName, maxLength: 64)
-            _ = try await engine.createIdentity(displayName: name.isEmpty ? nil : name)
+            if !setupMadeIdentity {
+                _ = try await engine.createIdentity(displayName: name.isEmpty ? nil : name)
+                setupMadeIdentity = true
+            }
             settings = try await engine.setSettings(["receive": .bool(receive), "display_name": .opt(name.isEmpty ? nil : name)])
             node = try await engine.startNode()
             identity = try await engine.me()
