@@ -8,6 +8,10 @@ let packageRoot = URL(fileURLWithPath: #filePath)
 /// The shared design in the raven-core submodule (core/desktop/design).
 let designRoot = packageRoot.appendingPathComponent("core/desktop/design")
 
+/// Whether the raven-core submodule is checked out (`git submodule update --init`). The tests that
+/// compare with the shared design need it; in a checkout without it they are skipped and say why.
+let coreCheckedOut = FileManager.default.fileExists(atPath: designRoot.appendingPathComponent("strings.en.json").path)
+
 /// A fixed moment for clocks in tests.
 let testStart = Date(timeIntervalSince1970: 1_792_497_900)
 

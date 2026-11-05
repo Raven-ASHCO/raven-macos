@@ -145,7 +145,7 @@ import Testing
 
 /// The bundled copies must match the shared design files (run scripts/sync-design.sh after a change).
 @Suite struct DesignSyncTests {
-    @Test(arguments: [
+    @Test(.enabled(if: coreCheckedOut, "needs the raven-core submodule"), arguments: [
         ("strings.en", "json", "strings.en.json"),
         ("tokens", "json", "tokens.json"),
         ("raven-mark-1024", "png", "assets/raven-mark-1024.png"),
