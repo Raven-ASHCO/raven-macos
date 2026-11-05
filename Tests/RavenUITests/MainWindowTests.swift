@@ -162,6 +162,16 @@ import Testing
         #expect(Display.deliveredTicker(name: "Ali", path: " ", ms: 600) == "Delivered to Ali in 0.6 s · receipt signed by Ali")
     }
 
+    /// In a narrow sidebar the fingerprint is the code alone, which skipped the cleaning the whole line
+    /// has: an override character in the code could turn the text around.
+    @Test func theShortFingerprintIsCleanedLikeTheWholeLine() {
+        let id = Identity(address: "a", words: [], oldCode: "\u{202E}KLHQ-uLWW-5iB0\u{200B}")
+        #expect(Display.youCode(id) == "KLHQ-uLWW-5iB0")
+        #expect(Display.you(id, name: nil).fingerprint == "Fingerprint KLHQ-uLWW-5iB0")
+        #expect(Display.youCode(Identity(address: "a", words: [], oldCode: " ")) == nil)
+        #expect(Display.youCode(nil) == nil)
+    }
+
     /// Visible texts in plain words: no apostrophes, hyphens or dashes, and "No Raven server" (never a
     /// plain "no server").
     @Test func theMainWindowSaysItPlainly() {

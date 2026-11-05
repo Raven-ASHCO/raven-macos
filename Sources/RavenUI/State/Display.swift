@@ -119,8 +119,14 @@ public enum Display {
     public static func you(_ identity: Identity?, name: String?) -> (title: String, fingerprint: String?) {
         let shown = (identity?.displayName ?? name).map { Sanitizer.line($0, maxLength: 40) } ?? ""
         let title = shown.isEmpty ? tr(.youTitle) : tr(.youRow, ["name": shown])
+        return (title, youCode(identity).map { tr(.youFingerprint, ["code": $0]) })
+    }
+
+    /// Your code alone ("KLHQ-uLWW-5iB0"), cleaned as in the fingerprint line: a narrow sidebar
+    /// shows it under "You" instead of the whole line.
+    public static func youCode(_ identity: Identity?) -> String? {
         let code = identity.map { Sanitizer.line($0.oldCode, maxLength: 32) } ?? ""
-        return (title, code.isEmpty ? nil : tr(.youFingerprint, ["code": code]))
+        return code.isEmpty ? nil : code
     }
 
     /// "node ok · now", or the "isn't responding" sentence when the last status check is too old.

@@ -167,7 +167,7 @@ struct YouRow: View {
                         // A fingerprint is never shown cut: in a narrow sidebar the code alone.
                         ViewThatFits(in: .horizontal) {
                             Text(fingerprint).fixedSize()
-                            if let code = model.identity?.oldCode, !code.isEmpty { Text(code).fixedSize() }
+                            if let code = Display.youCode(model.identity) { Text(code).fixedSize() }
                         }
                         .font(.system(size: 12)).foregroundColor(p.textSecondary).lineLimit(1)
                     }
