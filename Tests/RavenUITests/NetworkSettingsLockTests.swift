@@ -1,4 +1,5 @@
 import Foundation
+import Network
 import Testing
 @testable import RavenUI
 
@@ -36,8 +37,10 @@ import Testing
         for text in [Display.listening(node).text, Display.process(node), tr(.macSettingsReceiveBody)] {
             #expect(!Self.namesAnAddress(text), "\(text)")
         }
+        // Listening on this computer's loopback address only.
         var local = node
-        local.listening = "127.0.0.1:" + port
+        local.listening = "\(IPv4Address.loopback):" + port
+        #expect(local.localOnly)
         #expect(Display.listening(local).text == tr(.macNetworkLocalOnly))
         #expect(!Self.namesAnAddress(Display.listening(local).text))
 
