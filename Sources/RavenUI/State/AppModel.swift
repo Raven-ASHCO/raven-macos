@@ -796,6 +796,15 @@ public final class AppModel: ObservableObject {
         return contacts.filter { $0.name.localizedCaseInsensitiveContains(q) || $0.shortAddress.localizedCaseInsensitiveContains(q) }
     }
 
+    /// The groups the sidebar lists: none where this build has no groups; with a search, the groups
+    /// whose name matches (the search left every group in the list).
+    public var filteredGroups: [RavenGroup] {
+        guard groupsAvailable else { return [] }
+        let q = searchText.trimmingCharacters(in: .whitespaces)
+        guard !q.isEmpty else { return groups }
+        return groups.filter { $0.name.localizedCaseInsensitiveContains(q) }
+    }
+
     // MARK: Setup
 
     public func beginSetup() {

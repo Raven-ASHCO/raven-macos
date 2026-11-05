@@ -71,17 +71,26 @@ struct SidebarView: View {
             YouRow()
             SearchField()
             RScroll {
+                // Only the sections with rows: no friends yet is said once, beside "Add your first
+                // friend"; a search that finds nothing says so.
+                let friends = model.filteredContacts
+                let query = model.searchText.trimmingCharacters(in: .whitespaces)
                 VStack(alignment: .leading, spacing: 1) {
-                    SectionLabel(tr(.homeFriends)).padding(.horizontal, 8).padding(.top, 8).padding(.bottom, 2)
-                    if model.contacts.isEmpty {
-                        Text(tr(.homeNoFriends)).font(RFont.caption).foregroundColor(p.textSecondary)
-                            .padding(.horizontal, 8).padding(.vertical, 4)
-                    }
-                    ForEach(model.filteredContacts) { contact in
-                        FriendRow(contact: contact)
+                    if !friends.isEmpty {
+                        SectionLabel(tr(.homeFriends)).padding(.horizontal, 8).padding(.top, 8).padding(.bottom, 2)
+                        ForEach(friends) { contact in
+                            FriendRow(contact: contact)
+                        }
                     }
                     GroupsSidebarSection()
+                    if !query.isEmpty && friends.isEmpty && model.filteredGroups.isEmpty {
+                        Text(tr(.macHomeSearchNone, ["query": query])).font(RFont.caption).foregroundColor(p.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.horizontal, 8).padding(.top, 10)
+                    }
                 }
+                // As wide as the sidebar: a short list sat in the middle.
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             SidebarAddButtons()
             BottomNav()

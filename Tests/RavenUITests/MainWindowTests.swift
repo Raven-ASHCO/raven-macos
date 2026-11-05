@@ -96,3 +96,25 @@ import Testing
         #expect(model.routeQueue.isEmpty)
     }
 }
+
+/// What the main window says: whole or in a shorter form, never cut, and in plain words.
+@MainActor
+@Suite struct MainWindowTextTests {
+    let now = testStart
+
+    /// The search left every group in the sidebar, and said nothing when nothing matched.
+    @Test func searchFindsGroupsToo() async {
+        let mock = readyMock(demo: false)
+        let model = AppModel(engine: mock, now: { mock.clock.now })
+        await model.bootstrap()
+        #expect(model.filteredGroups.map(\.name) == ["Book club"])
+        model.searchText = "book"
+        #expect(model.filteredGroups.map(\.name) == ["Book club"] && model.filteredContacts.isEmpty)
+        model.searchText = "Plumber"
+        #expect(model.filteredGroups.isEmpty && model.filteredContacts.isEmpty)
+        #expect(tr(.macHomeSearchNone, ["query": "Plumber"]) == "Nothing found for “Plumber”")
+        model.groupsAvailable = false
+        model.searchText = ""
+        #expect(model.filteredGroups.isEmpty)
+    }
+}

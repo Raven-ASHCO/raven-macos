@@ -543,6 +543,7 @@ public enum Str: String, CaseIterable, Sendable {
     case macAddNoAddressOther = "mac.add.noAddress.other"
     case macTrayQuitKeepReceiving = "mac.tray.quitKeepReceiving"
     case macLockPlainBody = "mac.lock.plainBody"
+    case macHomeSearchNone = "mac.home.search.none"
 }
 
 /// The English text table, loaded at runtime from the bundled strings.en.json, plus the Mac app's own
