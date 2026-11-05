@@ -261,27 +261,28 @@ struct MessagesList: View {
     var body: some View {
         let list = model.messages[contact.address] ?? []
         let empty = model.chatIsEmpty(contact.address)
-        ChatScroll(isEmpty: empty,
-                   emptyText: tr(.homeEmptyChat, ["name": contact.name]),
-                   newest: ChatFollow.newest(list)) { width in
-            VStack(spacing: 4) {
-                ForEach(Array(list.enumerated()), id: \.element.id) { i, m in
-                    // A line between days: "Today", "Yesterday", "Tue 2026-10-20".
-                    if i == 0 || TimeText.differentDays(list[i - 1].atMs, m.atMs) {
-                        DayLine(atMs: m.atMs)
+        VStack(spacing: 0) {
+            ChatScroll(isEmpty: empty,
+                       emptyText: tr(.homeEmptyChat, ["name": contact.name]),
+                       newest: ChatFollow.newest(list)) { width in
+                VStack(spacing: 4) {
+                    ForEach(Array(list.enumerated()), id: \.element.id) { i, m in
+                        // A line between days: "Today", "Yesterday", "Tue 2026-10-20".
+                        if i == 0 || TimeText.differentDays(list[i - 1].atMs, m.atMs) {
+                            DayLine(atMs: m.atMs)
+                        }
+                        MessageRow(message: m, name: contact.name, maxBubble: width * Theme.shared.layout.bubbleMaxFraction)
+                            .id(m.id)
                     }
-                    MessageRow(message: m, name: contact.name, maxBubble: width * Theme.shared.layout.bubbleMaxFraction)
-                        .id(m.id)
+                    if let waiting = list.last(where: { $0.direction == .outgoing && $0.state == .waiting }),
+                       (contact.waiting?.count ?? 0) > 0 || contact.presence == .waiting {
+                        AwayCard(contact: contact, message: waiting)
+                    }
+                    if !contact.verified { NotVerifiedBanner(contact: contact) }
                 }
-                if let waiting = list.last(where: { $0.direction == .outgoing && $0.state == .waiting }),
-                   (contact.waiting?.count ?? 0) > 0 || contact.presence == .waiting {
-                    AwayCard(contact: contact, message: waiting)
-                }
-                if !contact.verified { NotVerifiedBanner(contact: contact) }
             }
-        }
-        // Before the first message too: the banner was missing exactly when it matters most.
-        .overlay(alignment: .bottom) {
+            // Before the first message too: the banner was missing exactly when it matters most. Under
+            // the empty chat text, not over it: in the smallest window the banner covered that text.
             if empty && !contact.verified {
                 NotVerifiedBanner(contact: contact)
                     .padding(.horizontal, 28)
