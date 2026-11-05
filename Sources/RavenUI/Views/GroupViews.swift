@@ -124,9 +124,15 @@ struct GroupHeader: View {
             .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
                 Text(group.name).font(.system(size: Theme.shared.type.title, weight: .semibold)).lineLimit(1)
-                // The route line under it says "a sealed copy for each member".
-                Text(Display.groupMembersLine(group, members: members, contacts: model.contacts))
-                    .font(RFont.caption).foregroundColor(p.textSecondary).lineLimit(1)
+                // The route line under it says "a sealed copy for each member". Never cut in the middle
+                // ("3 members · 1 i…"): the members alone where the whole line does not fit.
+                let line = Display.groupMembersLine(group, members: members, contacts: model.contacts)
+                ViewThatFits(in: .horizontal) {
+                    Text(line).fixedSize()
+                    Text(tr(.groupsMembers, ["n": String(members.isEmpty ? group.members : members.count)])).fixedSize()
+                    Text(line)
+                }
+                .font(RFont.caption).foregroundColor(p.textSecondary).lineLimit(1)
             }
             .layoutPriority(1)
             Spacer(minLength: 8)
