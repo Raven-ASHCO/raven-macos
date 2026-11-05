@@ -1,0 +1,216 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 -32 1260 136" width="2520" height="272">
+<title>Raven bird</title>
+<desc>The one raven of Raven, generated from raven-ios Shared/RavenFigure.swift. Units: a 120 by 100 box facing right, feet at (66, 90). Each pose is a group (id = pose name); its parts have ids pose-part and classes tail, body, wing, head, beak, eye, eye-shut, legs. Light colours by default, dark under prefers-color-scheme: dark (or add class dark to the svg).</desc>
+<style>
+.ink { fill: #1F1E1C; }
+.wing { fill: #6B6A65; }
+.feathers { fill: none; stroke: #1F1E1C; stroke-opacity: 0.5; stroke-width: 1; stroke-linecap: round; }
+.legs { fill: none; stroke: #1F1E1C; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.eye { fill: #FFFFFF; }
+.eye-shut { fill: none; stroke: #FFFFFF; stroke-width: 1.1; stroke-linecap: round; }
+.paper { fill: #F5F4EF; stroke: #6B6A65; stroke-width: 1.2; }
+.flap { fill: none; stroke: #6B6A65; stroke-width: 1.1; stroke-linejoin: round; }
+.seal { fill: #8E4EC6; }
+.outline { display: none; fill: none; stroke: #85847E; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+@media (prefers-color-scheme: dark) {
+.ink { fill: #0B0B0B; }
+.wing { fill: #3C3C3C; }
+.feathers { stroke: #0B0B0B; }
+.legs { stroke: #85847E; stroke-width: 2; }
+.eye { fill: #ECEBE6; }
+.eye-shut { stroke: #ECEBE6; }
+.paper { fill: #1C1C1A; stroke: #A3A29B; }
+.flap { stroke: #A3A29B; }
+.seal { fill: #C59AF0; }
+.outline { display: inline; }
+}
+svg.dark .ink { fill: #0B0B0B; }
+svg.dark .wing { fill: #3C3C3C; }
+svg.dark .feathers { stroke: #0B0B0B; }
+svg.dark .legs { stroke: #85847E; stroke-width: 2; }
+svg.dark .eye { fill: #ECEBE6; }
+svg.dark .eye-shut { stroke: #ECEBE6; }
+svg.dark .paper { fill: #1C1C1A; stroke: #A3A29B; }
+svg.dark .flap { stroke: #A3A29B; }
+svg.dark .seal { fill: #C59AF0; }
+svg.dark .outline { display: inline; }
+</style>
+<g transform="translate(0 0)">
+<g id="perched" transform="rotate(0 66 90) translate(66 90) scale(1 1) translate(-66 -90) rotate(0 60 56)">
+  <g id="perched-outline" class="outline">
+    <path d="M26 82 L15 95 L24 98 L50 80 Z"/><path d="M73 19 Q52 28 44 52 Q34 70 26 82 L50 80 Q60 82 68 78 Q84 72 87 54 L89 47 L86 44 L90 40 L87 36 Q90 33 88 30 Z"/>
+    <g transform="translate(76 30) rotate(0) scale(1 1) translate(-76 -30)"><ellipse id="perched-outline-head" class="" cx="80" cy="22.5" rx="11" ry="10.5"/><path d="M86 15 Q102 15 108 27 Q99 31 88 31 Z"/></g>
+  </g>
+  <path id="perched-tail" class="tail ink" d="M26 82 L15 95 L24 98 L50 80 Z"/>
+  <path id="perched-body" class="body ink" d="M73 19 Q52 28 44 52 Q34 70 26 82 L50 80 Q60 82 68 78 Q84 72 87 54 L89 47 L86 44 L90 40 L87 36 Q90 33 88 30 Z"/>
+  <path id="perched-legs" class="legs" opacity="1" d="M61 76 L60 90 M69 74 L70 90 M54 91 L65 91 M64 91 L75 91"/>
+  <g id="perched-wing" class="wing folded" opacity="1"><path class="wing" d="M72 35 Q42 46 21 88 L29 90 Q54 78 70 62 Q80 46 72 35 Z"/><path class="feathers" d="M52 60 L30 84 M58 64 L36 86 M64 66 L44 84"/></g>
+  <g id="perched-head-group" transform="translate(76 30) rotate(0) scale(1 1) translate(-76 -30)">
+    <ellipse id="perched-head" class="head ink" cx="80" cy="22.5" rx="11" ry="10.5"/>
+    <path id="perched-beak" class="beak ink" d="M86 15 Q102 15 108 27 Q99 31 88 31 Z"/>
+    <ellipse id="perched-eye" class="eye" cx="84.8" cy="20.8" rx="1.8" ry="1.8"/>
+    <path id="perched-eye-shut" class="eye-shut" d="M82.4 20.6 Q84.8 23.4 87.2 20.6" visibility="hidden"/>
+  </g>
+</g>
+</g>
+<g transform="translate(140 0)">
+<g id="head-tilt" transform="rotate(0 66 90) translate(66 90) scale(1 1) translate(-66 -90) rotate(0 60 56)">
+  <g id="head-tilt-outline" class="outline">
+    <path d="M26 82 L15 95 L24 98 L50 80 Z"/><path d="M73 19 Q52 28 44 52 Q34 70 26 82 L50 80 Q60 82 68 78 Q84 72 87 54 L89 47 L86 44 L90 40 L87 36 Q90 33 88 30 Z"/>
+    <g transform="translate(76 30) rotate(16) scale(1 1) translate(-76 -30)"><ellipse id="head-tilt-outline-head" class="" cx="80" cy="22.5" rx="11" ry="10.5"/><path d="M86 15 Q102 15 108 27 Q99 31 88 31 Z"/></g>
+  </g>
+  <path id="head-tilt-tail" class="tail ink" d="M26 82 L15 95 L24 98 L50 80 Z"/>
+  <path id="head-tilt-body" class="body ink" d="M73 19 Q52 28 44 52 Q34 70 26 82 L50 80 Q60 82 68 78 Q84 72 87 54 L89 47 L86 44 L90 40 L87 36 Q90 33 88 30 Z"/>
+  <path id="head-tilt-legs" class="legs" opacity="1" d="M61 76 L60 90 M69 74 L70 90 M54 91 L65 91 M64 91 L75 91"/>
+  <g id="head-tilt-wing" class="wing folded" opacity="1"><path class="wing" d="M72 35 Q42 46 21 88 L29 90 Q54 78 70 62 Q80 46 72 35 Z"/><path class="feathers" d="M52 60 L30 84 M58 64 L36 86 M64 66 L44 84"/></g>
+  <g id="head-tilt-head-group" transform="translate(76 30) rotate(16) scale(1 1) translate(-76 -30)">
+    <ellipse id="head-tilt-head" class="head ink" cx="80" cy="22.5" rx="11" ry="10.5"/>
+    <path id="head-tilt-beak" class="beak ink" d="M86 15 Q102 15 108 27 Q99 31 88 31 Z"/>
+    <ellipse id="head-tilt-eye" class="eye" cx="84.8" cy="20.8" rx="1.8" ry="1.8"/>
+    <path id="head-tilt-eye-shut" class="eye-shut" d="M82.4 20.6 Q84.8 23.4 87.2 20.6" visibility="hidden"/>
+  </g>
+</g>
+</g>
+<g transform="translate(280 0)">
+<g id="flying" transform="rotate(0 66 90) translate(66 90) scale(1 1) translate(-66 -90) rotate(22 60 56)">
+  <g id="flying-outline" class="outline">
+    <path d="M26 82 L15 95 L24 98 L50 80 Z"/><path d="M73 19 Q52 28 44 52 Q34 70 26 82 L50 80 Q60 82 68 78 Q84 72 87 54 L89 47 L86 44 L90 40 L87 36 Q90 33 88 30 Z"/>
+    <g transform="translate(76 30) rotate(-14) scale(1 1) translate(-76 -30)"><ellipse id="flying-outline-head" class="" cx="80" cy="22.5" rx="11" ry="10.5"/><path d="M86 15 Q102 15 108 27 Q99 31 88 31 Z"/></g>
+    <path transform="translate(5 -3)" opacity="1" d="M66 40 Q64 16 50 8 Q38 -1.6 22 -8 L17 -4 L18 -0.8 L11 1.6 L13 4.8 L6 7.2 L10 10.4 L4 13.6 Q20 33.6 42 43.2 Q56 44.8 66 40 Z"/>
+  </g>
+  <path id="flying-wing-far" class="wing far" transform="translate(5 -3)" opacity="0.55" d="M66 40 Q64 16 50 8 Q38 -1.6 22 -8 L17 -4 L18 -0.8 L11 1.6 L13 4.8 L6 7.2 L10 10.4 L4 13.6 Q20 33.6 42 43.2 Q56 44.8 66 40 Z"/>
+  <path id="flying-tail" class="tail ink" d="M26 82 L15 95 L24 98 L50 80 Z"/>
+  <path id="flying-body" class="body ink" d="M73 19 Q52 28 44 52 Q34 70 26 82 L50 80 Q60 82 68 78 Q84 72 87 54 L89 47 L86 44 L90 40 L87 36 Q90 33 88 30 Z"/>
+  <path id="flying-legs" class="legs" opacity="0" d="M61 76 L60 90 M69 74 L70 90 M54 91 L65 91 M64 91 L75 91"/>
+  <g id="flying-wing" class="wing folded" opacity="0"><path class="wing" d="M72 35 Q42 46 21 88 L29 90 Q54 78 70 62 Q80 46 72 35 Z"/><path class="feathers" d="M52 60 L30 84 M58 64 L36 86 M64 66 L44 84"/></g>
+  <g id="flying-head-group" transform="translate(76 30) rotate(-14) scale(1 1) translate(-76 -30)">
+    <ellipse id="flying-head" class="head ink" cx="80" cy="22.5" rx="11" ry="10.5"/>
+    <path id="flying-beak" class="beak ink" d="M86 15 Q102 15 108 27 Q99 31 88 31 Z"/>
+    <ellipse id="flying-eye" class="eye" cx="84.8" cy="20.8" rx="1.8" ry="1.8"/>
+    <path id="flying-eye-shut" class="eye-shut" d="M82.4 20.6 Q84.8 23.4 87.2 20.6" visibility="hidden"/>
+  </g>
+  <g id="flying-wing-open" opacity="1"><path class="outline" d="M66 40 Q64 10 50 0 Q38 -12 22 -20 L17 -15 L18 -11 L11 -8 L13 -4 L6 -1 L10 3 L4 7 Q20 32 42 44 Q56 46 66 40 Z"/><path id="flying-wing-near" class="wing near" d="M66 40 Q64 10 50 0 Q38 -12 22 -20 L17 -15 L18 -11 L11 -8 L13 -4 L6 -1 L10 3 L4 7 Q20 32 42 44 Q56 46 66 40 Z"/></g>
+</g>
+</g>
+<g transform="translate(420 0)">
+<g id="takeoff" transform="rotate(0 66 90) translate(66 90) scale(1 1) translate(-66 -90) rotate(22 60 56)">
+  <g id="takeoff-outline" class="outline">
+    <path d="M26 82 L15 95 L24 98 L50 80 Z"/><path d="M73 19 Q52 28 44 52 Q34 70 26 82 L50 80 Q60 82 68 78 Q84 72 87 54 L89 47 L86 44 L90 40 L87 36 Q90 33 88 30 Z"/>
+    <g transform="translate(76 30) rotate(-14) scale(1 1) translate(-76 -30)"><ellipse id="takeoff-outline-head" class="" cx="80" cy="22.5" rx="11" ry="10.5"/><path d="M86 15 Q102 15 108 27 Q99 31 88 31 Z"/></g>
+    <path transform="translate(5 -3)" opacity="1" d="M66 40 Q64 16 50 8 Q38 -1.6 22 -8 L17 -4 L18 -0.8 L11 1.6 L13 4.8 L6 7.2 L10 10.4 L4 13.6 Q20 33.6 42 43.2 Q56 44.8 66 40 Z"/>
+  </g>
+  <path id="takeoff-wing-far" class="wing far" transform="translate(5 -3)" opacity="0.55" d="M66 40 Q64 16 50 8 Q38 -1.6 22 -8 L17 -4 L18 -0.8 L11 1.6 L13 4.8 L6 7.2 L10 10.4 L4 13.6 Q20 33.6 42 43.2 Q56 44.8 66 40 Z"/>
+  <path id="takeoff-tail" class="tail ink" d="M26 82 L15 95 L24 98 L50 80 Z"/>
+  <path id="takeoff-body" class="body ink" d="M73 19 Q52 28 44 52 Q34 70 26 82 L50 80 Q60 82 68 78 Q84 72 87 54 L89 47 L86 44 L90 40 L87 36 Q90 33 88 30 Z"/>
+  <path id="takeoff-legs" class="legs" opacity="0.3" d="M61 76 L60 90 M69 74 L70 90 M54 91 L65 91 M64 91 L75 91"/>
+  <g id="takeoff-wing" class="wing folded" opacity="0"><path class="wing" d="M72 35 Q42 46 21 88 L29 90 Q54 78 70 62 Q80 46 72 35 Z"/><path class="feathers" d="M52 60 L30 84 M58 64 L36 86 M64 66 L44 84"/></g>
+  <g id="takeoff-head-group" transform="translate(76 30) rotate(-14) scale(1 1) translate(-76 -30)">
+    <ellipse id="takeoff-head" class="head ink" cx="80" cy="22.5" rx="11" ry="10.5"/>
+    <path id="takeoff-beak" class="beak ink" d="M86 15 Q102 15 108 27 Q99 31 88 31 Z"/>
+    <ellipse id="takeoff-eye" class="eye" cx="84.8" cy="20.8" rx="1.8" ry="1.8"/>
+    <path id="takeoff-eye-shut" class="eye-shut" d="M82.4 20.6 Q84.8 23.4 87.2 20.6" visibility="hidden"/>
+    <g id="takeoff-letter" transform="translate(101 32) rotate(14)"><rect class="paper" x="-10" y="-6.5" width="20" height="13" rx="1.56"/><path class="flap" d="M-9 -5.5 L0 0.78 L9 -5.5"/><circle class="seal" cx="0" cy="0.78" r="2.73"/></g>
+  </g>
+  <g id="takeoff-wing-open" opacity="1"><path class="outline" d="M66 40 Q64 10 50 0 Q38 -12 22 -20 L17 -15 L18 -11 L11 -8 L13 -4 L6 -1 L10 3 L4 7 Q20 32 42 44 Q56 46 66 40 Z"/><path id="takeoff-wing-near" class="wing near" d="M66 40 Q64 10 50 0 Q38 -12 22 -20 L17 -15 L18 -11 L11 -8 L13 -4 L6 -1 L10 3 L4 7 Q20 32 42 44 Q56 46 66 40 Z"/></g>
+</g>
+</g>
+<g transform="translate(560 0)">
+<g id="carrying" transform="rotate(0 66 90) translate(66 90) scale(1 1) translate(-66 -90) rotate(28 60 56)">
+  <g id="carrying-outline" class="outline">
+    <path d="M26 82 L15 95 L24 98 L50 80 Z"/><path d="M73 19 Q52 28 44 52 Q34 70 26 82 L50 80 Q60 82 68 78 Q84 72 87 54 L89 47 L86 44 L90 40 L87 36 Q90 33 88 30 Z"/>
+    <g transform="translate(76 30) rotate(-18) scale(1 1) translate(-76 -30)"><ellipse id="carrying-outline-head" class="" cx="80" cy="22.5" rx="11" ry="10.5"/><path d="M86 15 Q102 15 108 27 Q99 31 88 31 Z"/></g>
+    <path transform="translate(5 -3)" opacity="1" d="M66 40 Q64 31.6 50 28.8 Q38 25.44 22 23.2 L17 24.6 L18 25.72 L11 26.56 L13 27.68 L6 28.52 L10 29.64 L4 30.76 Q20 37.76 42 41.12 Q56 41.68 66 40 Z"/>
+  </g>
+  <path id="carrying-wing-far" class="wing far" transform="translate(5 -3)" opacity="0.55" d="M66 40 Q64 31.6 50 28.8 Q38 25.44 22 23.2 L17 24.6 L18 25.72 L11 26.56 L13 27.68 L6 28.52 L10 29.64 L4 30.76 Q20 37.76 42 41.12 Q56 41.68 66 40 Z"/>
+  <path id="carrying-tail" class="tail ink" d="M26 82 L15 95 L24 98 L50 80 Z"/>
+  <path id="carrying-body" class="body ink" d="M73 19 Q52 28 44 52 Q34 70 26 82 L50 80 Q60 82 68 78 Q84 72 87 54 L89 47 L86 44 L90 40 L87 36 Q90 33 88 30 Z"/>
+  <path id="carrying-legs" class="legs" opacity="0" d="M61 76 L60 90 M69 74 L70 90 M54 91 L65 91 M64 91 L75 91"/>
+  <g id="carrying-wing" class="wing folded" opacity="0"><path class="wing" d="M72 35 Q42 46 21 88 L29 90 Q54 78 70 62 Q80 46 72 35 Z"/><path class="feathers" d="M52 60 L30 84 M58 64 L36 86 M64 66 L44 84"/></g>
+  <g id="carrying-head-group" transform="translate(76 30) rotate(-18) scale(1 1) translate(-76 -30)">
+    <ellipse id="carrying-head" class="head ink" cx="80" cy="22.5" rx="11" ry="10.5"/>
+    <path id="carrying-beak" class="beak ink" d="M86 15 Q102 15 108 27 Q99 31 88 31 Z"/>
+    <ellipse id="carrying-eye" class="eye" cx="84.8" cy="20.8" rx="1.8" ry="1.8"/>
+    <path id="carrying-eye-shut" class="eye-shut" d="M82.4 20.6 Q84.8 23.4 87.2 20.6" visibility="hidden"/>
+    <g id="carrying-letter" transform="translate(101 32) rotate(14)"><rect class="paper" x="-10" y="-6.5" width="20" height="13" rx="1.56"/><path class="flap" d="M-9 -5.5 L0 0.78 L9 -5.5"/><circle class="seal" cx="0" cy="0.78" r="2.73"/></g>
+  </g>
+  <g id="carrying-wing-open" opacity="1"><path class="outline" d="M66 40 Q64 29.5 50 26 Q38 21.8 22 19 L17 20.75 L18 22.15 L11 23.2 L13 24.6 L6 25.65 L10 27.05 L4 28.45 Q20 37.2 42 41.4 Q56 42.1 66 40 Z"/><path id="carrying-wing-near" class="wing near" d="M66 40 Q64 29.5 50 26 Q38 21.8 22 19 L17 20.75 L18 22.15 L11 23.2 L13 24.6 L6 25.65 L10 27.05 L4 28.45 Q20 37.2 42 41.4 Q56 42.1 66 40 Z"/></g>
+</g>
+</g>
+<g transform="translate(700 0)">
+<g id="gliding" transform="rotate(0 66 90) translate(66 90) scale(1 1) translate(-66 -90) rotate(30 60 56)">
+  <g id="gliding-outline" class="outline">
+    <path d="M26 82 L15 95 L24 98 L50 80 Z"/><path d="M73 19 Q52 28 44 52 Q34 70 26 82 L50 80 Q60 82 68 78 Q84 72 87 54 L89 47 L86 44 L90 40 L87 36 Q90 33 88 30 Z"/>
+    <g transform="translate(76 30) rotate(-20) scale(1 1) translate(-76 -30)"><ellipse id="gliding-outline-head" class="" cx="80" cy="22.5" rx="11" ry="10.5"/><path d="M86 15 Q102 15 108 27 Q99 31 88 31 Z"/></g>
+    <path transform="translate(5 -3)" opacity="1" d="M66 40 Q64 49.6 50 52.8 Q38 56.64 22 59.2 L17 57.6 L18 56.32 L11 55.36 L13 54.08 L6 53.12 L10 51.84 L4 50.56 Q20 42.56 42 38.72 Q56 38.08 66 40 Z"/>
+  </g>
+  <path id="gliding-wing-far" class="wing far" transform="translate(5 -3)" opacity="0.55" d="M66 40 Q64 49.6 50 52.8 Q38 56.64 22 59.2 L17 57.6 L18 56.32 L11 55.36 L13 54.08 L6 53.12 L10 51.84 L4 50.56 Q20 42.56 42 38.72 Q56 38.08 66 40 Z"/>
+  <path id="gliding-tail" class="tail ink" d="M26 82 L15 95 L24 98 L50 80 Z"/>
+  <path id="gliding-body" class="body ink" d="M73 19 Q52 28 44 52 Q34 70 26 82 L50 80 Q60 82 68 78 Q84 72 87 54 L89 47 L86 44 L90 40 L87 36 Q90 33 88 30 Z"/>
+  <path id="gliding-legs" class="legs" opacity="0" d="M61 76 L60 90 M69 74 L70 90 M54 91 L65 91 M64 91 L75 91"/>
+  <g id="gliding-wing" class="wing folded" opacity="0"><path class="wing" d="M72 35 Q42 46 21 88 L29 90 Q54 78 70 62 Q80 46 72 35 Z"/><path class="feathers" d="M52 60 L30 84 M58 64 L36 86 M64 66 L44 84"/></g>
+  <g id="gliding-head-group" transform="translate(76 30) rotate(-20) scale(1 1) translate(-76 -30)">
+    <ellipse id="gliding-head" class="head ink" cx="80" cy="22.5" rx="11" ry="10.5"/>
+    <path id="gliding-beak" class="beak ink" d="M86 15 Q102 15 108 27 Q99 31 88 31 Z"/>
+    <ellipse id="gliding-eye" class="eye" cx="84.8" cy="20.8" rx="1.8" ry="1.8"/>
+    <path id="gliding-eye-shut" class="eye-shut" d="M82.4 20.6 Q84.8 23.4 87.2 20.6" visibility="hidden"/>
+  </g>
+  <g id="gliding-wing-open" opacity="1"><path class="outline" d="M66 40 Q64 52 50 56 Q38 60.8 22 64 L17 62 L18 60.4 L11 59.2 L13 57.6 L6 56.4 L10 54.8 L4 53.2 Q20 43.2 42 38.4 Q56 37.6 66 40 Z"/><path id="gliding-wing-near" class="wing near" d="M66 40 Q64 52 50 56 Q38 60.8 22 64 L17 62 L18 60.4 L11 59.2 L13 57.6 L6 56.4 L10 54.8 L4 53.2 Q20 43.2 42 38.4 Q56 37.6 66 40 Z"/></g>
+</g>
+</g>
+<g transform="translate(840 0)">
+<g id="sleeping" transform="rotate(0 66 90) translate(66 90) scale(1 0.97) translate(-66 -90) rotate(0 60 56)">
+  <g id="sleeping-outline" class="outline">
+    <path d="M26 82 L15 95 L24 98 L50 80 Z"/><path d="M73 19 Q52 28 44 52 Q34 70 26 82 L50 80 Q60 82 68 78 Q84 72 87 54 L89 47 L86 44 L90 40 L87 36 Q90 33 88 30 Z"/>
+    <g transform="translate(76 39) rotate(0) scale(-1 1) translate(-76 -30)"><ellipse id="sleeping-outline-head" class="" cx="80" cy="22.5" rx="11" ry="10.5"/><path d="M86 15 Q102 15 108 27 Q99 31 88 31 Z"/></g>
+  </g>
+  <path id="sleeping-tail" class="tail ink" d="M26 82 L15 95 L24 98 L50 80 Z"/>
+  <path id="sleeping-body" class="body ink" d="M73 19 Q52 28 44 52 Q34 70 26 82 L50 80 Q60 82 68 78 Q84 72 87 54 L89 47 L86 44 L90 40 L87 36 Q90 33 88 30 Z"/>
+  <path id="sleeping-legs" class="legs" opacity="1" d="M61 76 L60 90 M69 74 L70 90 M54 91 L65 91 M64 91 L75 91"/>
+  <g id="sleeping-head-group" transform="translate(76 39) rotate(0) scale(-1 1) translate(-76 -30)">
+    <ellipse id="sleeping-head" class="head ink" cx="80" cy="22.5" rx="11" ry="10.5"/>
+    <path id="sleeping-beak" class="beak ink" d="M86 15 Q102 15 108 27 Q99 31 88 31 Z"/>
+    <ellipse id="sleeping-eye" class="eye" cx="84.8" cy="20.8" rx="1.8" ry="1.8" visibility="hidden"/>
+    <path id="sleeping-eye-shut" class="eye-shut" d="M82.4 20.6 Q84.8 23.4 87.2 20.6"/>
+  </g>
+  <g id="sleeping-wing" class="wing folded" opacity="1" transform="translate(66 37) scale(1.1) translate(-66 -40)"><path class="wing" d="M72 35 Q42 46 21 88 L29 90 Q54 78 70 62 Q80 46 72 35 Z"/><path class="feathers" d="M52 60 L30 84 M58 64 L36 86 M64 66 L44 84"/></g>
+</g>
+</g>
+<g transform="translate(980 0)">
+<g id="holding-letter" transform="rotate(0 66 90) translate(66 90) scale(1 1) translate(-66 -90) rotate(0 60 56)">
+  <g id="holding-letter-outline" class="outline">
+    <path d="M26 82 L15 95 L24 98 L50 80 Z"/><path d="M73 19 Q52 28 44 52 Q34 70 26 82 L50 80 Q60 82 68 78 Q84 72 87 54 L89 47 L86 44 L90 40 L87 36 Q90 33 88 30 Z"/>
+    <g transform="translate(76 30) rotate(0) scale(1 1) translate(-76 -30)"><ellipse id="holding-letter-outline-head" class="" cx="80" cy="22.5" rx="11" ry="10.5"/><path d="M86 15 Q102 15 108 27 Q99 31 88 31 Z"/></g>
+  </g>
+  <path id="holding-letter-tail" class="tail ink" d="M26 82 L15 95 L24 98 L50 80 Z"/>
+  <path id="holding-letter-body" class="body ink" d="M73 19 Q52 28 44 52 Q34 70 26 82 L50 80 Q60 82 68 78 Q84 72 87 54 L89 47 L86 44 L90 40 L87 36 Q90 33 88 30 Z"/>
+  <path id="holding-letter-legs" class="legs" opacity="1" d="M61 76 L60 90 M69 74 L70 90 M54 91 L65 91 M64 91 L75 91"/>
+  <g id="holding-letter-wing" class="wing folded" opacity="1"><path class="wing" d="M72 35 Q42 46 21 88 L29 90 Q54 78 70 62 Q80 46 72 35 Z"/><path class="feathers" d="M52 60 L30 84 M58 64 L36 86 M64 66 L44 84"/></g>
+  <g id="holding-letter-head-group" transform="translate(76 30) rotate(0) scale(1 1) translate(-76 -30)">
+    <ellipse id="holding-letter-head" class="head ink" cx="80" cy="22.5" rx="11" ry="10.5"/>
+    <path id="holding-letter-beak" class="beak ink" d="M86 15 Q102 15 108 27 Q99 31 88 31 Z"/>
+    <ellipse id="holding-letter-eye" class="eye" cx="84.8" cy="20.8" rx="1.8" ry="1.8"/>
+    <path id="holding-letter-eye-shut" class="eye-shut" d="M82.4 20.6 Q84.8 23.4 87.2 20.6" visibility="hidden"/>
+    <g id="holding-letter-letter" transform="translate(101 32) rotate(14)"><rect class="paper" x="-10" y="-6.5" width="20" height="13" rx="1.56"/><path class="flap" d="M-9 -5.5 L0 0.78 L9 -5.5"/><circle class="seal" cx="0" cy="0.78" r="2.73"/></g>
+  </g>
+</g>
+</g>
+<g transform="translate(1120 0)">
+<g id="holding-card" transform="rotate(0 66 90) translate(66 90) scale(1 1) translate(-66 -90) rotate(0 60 56)">
+  <g id="holding-card-outline" class="outline">
+    <path d="M26 82 L15 95 L24 98 L50 80 Z"/><path d="M73 19 Q52 28 44 52 Q34 70 26 82 L50 80 Q60 82 68 78 Q84 72 87 54 L89 47 L86 44 L90 40 L87 36 Q90 33 88 30 Z"/>
+    <g transform="translate(76 30) rotate(-6) scale(1 1) translate(-76 -30)"><ellipse id="holding-card-outline-head" class="" cx="80" cy="22.5" rx="11" ry="10.5"/><path d="M86 15 Q102 15 108 27 Q99 31 88 31 Z"/></g>
+  </g>
+  <path id="holding-card-tail" class="tail ink" d="M26 82 L15 95 L24 98 L50 80 Z"/>
+  <path id="holding-card-body" class="body ink" d="M73 19 Q52 28 44 52 Q34 70 26 82 L50 80 Q60 82 68 78 Q84 72 87 54 L89 47 L86 44 L90 40 L87 36 Q90 33 88 30 Z"/>
+  <path id="holding-card-legs" class="legs" opacity="1" d="M61 76 L60 90 M69 74 L70 90 M54 91 L65 91 M64 91 L75 91"/>
+  <g id="holding-card-wing" class="wing folded" opacity="1"><path class="wing" d="M72 35 Q42 46 21 88 L29 90 Q54 78 70 62 Q80 46 72 35 Z"/><path class="feathers" d="M52 60 L30 84 M58 64 L36 86 M64 66 L44 84"/></g>
+  <g id="holding-card-head-group" transform="translate(76 30) rotate(-6) scale(1 1) translate(-76 -30)">
+    <ellipse id="holding-card-head" class="head ink" cx="80" cy="22.5" rx="11" ry="10.5"/>
+    <path id="holding-card-beak" class="beak ink" d="M86 15 Q102 15 108 27 Q99 31 88 31 Z"/>
+    <ellipse id="holding-card-eye" class="eye" cx="84.8" cy="20.8" rx="1.8" ry="1.8"/>
+    <path id="holding-card-eye-shut" class="eye-shut" d="M82.4 20.6 Q84.8 23.4 87.2 20.6" visibility="hidden"/>
+    <g id="holding-card-card" transform="translate(101 32) rotate(14)"><rect class="paper" x="-11" y="-7.5" width="22" height="15" rx="3"/><circle class="seal" cx="-5.22" cy="0" r="2.7"/><path class="flap" d="M-1.32 -2.1 L7.92 -2.1 M-1.32 2.4 L7.92 2.4" stroke-linecap="round"/></g>
+  </g>
+</g>
+</g>
+</svg>

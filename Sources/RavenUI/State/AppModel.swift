@@ -1046,6 +1046,9 @@ public final class AppModel: ObservableObject {
 
     /// The page shown when Raven was locked: Unlock comes back to it (E1).
     var pageBeforeLock: Page?
+    /// When Lock locked Raven from this app (the wall clock): the locked screen's night comes down
+    /// then, not when Raven was found locked.
+    public private(set) var lockedAt: Date?
 
     /// Lock now asks first, saying what Lock does and doesn't protect (E1).
     public func requestLock() {
@@ -1069,6 +1072,7 @@ public final class AppModel: ObservableObject {
             _ = try await engine.lock()
             sheet = nil
             pageBeforeLock = page
+            lockedAt = Date()
             phase = .locked
         } catch { fail(error) }
     }
@@ -1087,6 +1091,7 @@ public final class AppModel: ObservableObject {
             if state.locked {
                 sheet = nil
                 pageBeforeLock = page
+                lockedAt = Date()
                 phase = .locked
             }
         } catch {
@@ -1096,10 +1101,11 @@ public final class AppModel: ObservableObject {
     }
 
     /// The locked screen's Unlock: Lock v2 (with the Raven passphrase when the profile has one; it
-    /// goes only to raven-node), else the privacy pack's unlock.
-    public func unlockLocked(passphrase: String?) async {
+    /// goes only to raven-node), else the privacy pack's unlock. `beforeOpen` runs once Raven is
+    /// unlocked and loaded, just before the main window shows (the locked screen's night rises then).
+    public func unlockLocked(passphrase: String?, beforeOpen: (@MainActor () async -> Void)? = nil) async {
         guard lockV2?.locked == true else {
-            await unlock()
+            await unlock(beforeOpen: beforeOpen)
             return
         }
         lockError = nil
@@ -1109,6 +1115,7 @@ public final class AppModel: ObservableObject {
             lockV2 = state
             guard !state.locked else { return }
             try await loadAll()
+            await beforeOpen?()
             returnToPageBeforeLock()
             phase = .ready
         } catch {
@@ -1147,11 +1154,12 @@ public final class AppModel: ObservableObject {
         return nil
     }
 
-    public func unlock() async {
+    public func unlock(beforeOpen: (@MainActor () async -> Void)? = nil) async {
         actionError = nil
         do {
             _ = try await engine.unlock()
             try await loadAll()
+            await beforeOpen?()
             returnToPageBeforeLock()
             phase = .ready
         } catch { fail(error) }

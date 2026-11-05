@@ -92,9 +92,23 @@ public enum SnapshotCatalog {
         let (lockSheet, _) = await readyModel(after: 2, network: .lab)
         await lockSheet.refreshLock()
         shots.append(sheetShot("51-lock-sheet", lockSheet, width: 460, ConfirmLockSheet()))
+        // The lock scene (D, "Night curtain"): what lock does not do unfolded, and the Reduce Motion still.
+        shots.append(sheetShot("51b-lock-sheet-what-lock-does-not-do", lockSheet, width: 460, ConfirmLockSheet(showLimits: true)))
+        shots.append(sheetShot("51c-lock-sheet-reduced-motion", lockSheet, width: 460,
+                               ConfirmLockSheet().environment(\.motionOff, true)))
         let (locked, _) = await readyModel(after: 2, network: .lab)
         await locked.lockNow()
         shots.append(windowShot("39-locked-while-running", locked))
+        // The night coming down 1.1 s after Lock, the raven waking 1 s after Unlock, and the Reduce
+        // Motion still (night, asleep).
+        shots.append(Shot(name: "39b-locked-night-falling", width: window.width, height: window.height, model: locked,
+                          view: AnyView(LockedView(lockedFor: 1.1))))
+        shots.append(Shot(name: "39c-locked-waking", width: window.width, height: window.height, model: locked,
+                          view: AnyView(LockedView(wokeFor: 1.0))))
+        let (lockedStill, _) = await readyModel(after: 2, network: .lab)
+        await lockedStill.lockNow()
+        lockedStill.settings.reducedMotion = true
+        shots.append(windowShot("39d-locked-reduced-motion", lockedStill))
         let (paths, _) = await readyModel(after: 2, network: .lab)
         shots.append(windowShot("40-main-lab-paths", paths))
         // The smallest window (tokens.json minWindow): the chat header still shows Routes (E1).
