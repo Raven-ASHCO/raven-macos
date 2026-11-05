@@ -23,6 +23,19 @@ public enum Display {
         }
     }
 
+    /// The status line in a short form, for where the whole line does not fit: "1 waiting" without
+    /// its deadline (the chat says until when). Nil when the line has no shorter form.
+    public static func shortStatus(_ c: Contact) -> String? {
+        guard let w = c.waiting, w.count > 0 else { return nil }
+        return tr(.macHomeWaitingShort, ["n": String(w.count)])
+    }
+
+    /// A message's status in a short form, for a narrow chat: "Waiting for Mina" without its deadline
+    /// (the away card under it says until when). Nil when the status has no shorter form.
+    public static func shortStatus(_ m: Message, name: String) -> String? {
+        m.state == .waiting && (m.untilMs ?? 0) > 0 ? tr(.tickWaitingNoTime, ["name": name]) : nil
+    }
+
     /// The tick text under one of your messages.
     public static func tick(_ m: Message, name: String, now: Date) -> (text: String, tone: AppModel.Tone) {
         switch m.state {
@@ -116,6 +129,16 @@ public enum Display {
         let since = now.timeIntervalSince(lastOk)
         if since > 4 * Theme.shared.motion.statusCheckInterval + 2 { return (tr(.homeHeartbeatDown), false) }
         return (tr(.homeHeartbeatOk, ["when": TimeText.heartbeat(since: since)]), true)
+    }
+
+    /// The heartbeat in the sidebar, longest first: "your node: ok · now", then "ok · now" for a narrow
+    /// sidebar; when down, "your node: not responding", then "not responding" (the whole sentence of
+    /// `heartbeat` did not fit the sidebar and ended in "…").
+    public static func sidebarHeartbeat(node: NodeStatus?, lastOk: Date?, now: Date) -> (text: String, short: String, ok: Bool) {
+        let hb = heartbeat(node: node, lastOk: lastOk, now: now)
+        guard hb.ok, let lastOk else { return (tr(.macHomeHeartbeatDown), tr(.macHomeHeartbeatDownShort), false) }
+        let when = TimeText.heartbeat(since: now.timeIntervalSince(lastOk))
+        return (hb.text, tr(.macHomeHeartbeatOkShort, ["when": when]), true)
     }
 
     /// The toast line when nothing just happened. "Wi-Fi" only when this Mac's network really is

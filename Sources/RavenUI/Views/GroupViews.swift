@@ -32,7 +32,13 @@ struct GroupRow: View {
                 MemberStack(members: members.filter { !$0.me }, ring: selected ? p.surface : p.sidebar)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(group.name).font(RFont.label).lineLimit(1)
-                    Text(groupLine(members)).font(.system(size: 12)).foregroundColor(p.textSecondary).lineLimit(1)
+                    // "4 members · 1 in touch now", or "4 members" where that does not fit beside the badge.
+                    ViewThatFits(in: .horizontal) {
+                        Text(groupLine(members)).fixedSize()
+                        if group.active { Text(tr(.groupsMembers, ["n": String(max(group.members, members.count))])) }
+                        Text(groupLine(members))
+                    }
+                    .font(.system(size: 12)).foregroundColor(p.textSecondary).lineLimit(1)
                 }
                 Spacer(minLength: 0)
                 if group.unread > 0 { UnreadBadge(n: group.unread) }

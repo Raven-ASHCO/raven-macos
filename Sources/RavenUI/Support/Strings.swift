@@ -543,6 +543,10 @@ public enum Str: String, CaseIterable, Sendable {
     case macAddNoAddressOther = "mac.add.noAddress.other"
     case macTrayQuitKeepReceiving = "mac.tray.quitKeepReceiving"
     case macLockPlainBody = "mac.lock.plainBody"
+    case macHomeHeartbeatDown = "mac.home.heartbeat.down"
+    case macHomeHeartbeatDownShort = "mac.home.heartbeat.downShort"
+    case macHomeHeartbeatOkShort = "mac.home.heartbeat.okShort"
+    case macHomeWaitingShort = "mac.home.waiting.short"
     case macHomeSearchNone = "mac.home.search.none"
 }
 

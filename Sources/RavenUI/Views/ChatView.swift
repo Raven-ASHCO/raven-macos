@@ -65,11 +65,17 @@ struct ChatHeader: View {
                             .lineLimit(1)
                     }
                 }
-                Text(path != nil && contact.presence == .inTouch ? status.text + " · " + (path ?? "") : status.text)
-                    .font(RFont.caption)
-                    .foregroundColor(status.tone == .warning ? p.warning : p.textSecondary)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
+                // Never a status cut in the middle ("1 waiting · until We…"): without the path, then
+                // the short form, then cut.
+                ViewThatFits(in: .horizontal) {
+                    if let path, contact.presence == .inTouch { Text(status.text + " · " + path).fixedSize() }
+                    Text(status.text).fixedSize()
+                    if let short = Display.shortStatus(contact) { Text(short).fixedSize() }
+                    Text(status.text).truncationMode(.tail)
+                }
+                .font(RFont.caption)
+                .foregroundColor(status.tone == .warning ? p.warning : p.textSecondary)
+                .lineLimit(1)
             }
             .layoutPriority(1)
             Spacer(minLength: 8)
@@ -464,7 +470,12 @@ struct MetaRow: View {
                 Button { model.openDetails(message.id) } label: {
                     HStack(spacing: 5) {
                         StatusIcon(kind: s.icon, pop: model.deliveredPops[message.id] ?? 0)
-                        Text(s.text)
+                        // In a narrow chat "Waiting for Mina · until Wed 1…" became "Waiting for Mina".
+                        ViewThatFits(in: .horizontal) {
+                            Text(s.text).fixedSize()
+                            if let short = Display.shortStatus(message, name: name) { Text(short).fixedSize() }
+                            Text(s.text)
+                        }
                     }
                     .foregroundColor(s.tone == .secondary ? p.textSecondary : p.tone(s.tone))
                 }

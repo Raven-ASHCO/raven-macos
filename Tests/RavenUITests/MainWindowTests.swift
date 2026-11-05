@@ -117,4 +117,29 @@ import Testing
         model.searchText = ""
         #expect(model.filteredGroups.isEmpty)
     }
+
+    /// "1 waiting · until Wed 1…", "Raven's background…", "Fingerprint If4x-36F…": each has a shorter
+    /// form that fits whole.
+    @Test func shortFormsSayTheSameWithoutCutting() {
+        var c = Contact(address: "a", name: "Mina", shortAddress: "a", verified: true, presence: .waiting)
+        #expect(Display.shortStatus(c) == nil)
+        c.waiting = Waiting(count: 2, untilMs: now.addingTimeInterval(22 * 3600).ms)
+        #expect(Display.statusLine(c, now: now).text.hasPrefix("2 waiting · until "))
+        #expect(Display.shortStatus(c) == "2 waiting")
+
+        let waiting = Message(id: "1", address: "a", direction: .outgoing, text: "t", atMs: now.ms, state: .waiting,
+                              untilMs: now.addingTimeInterval(22 * 3600).ms)
+        #expect(Display.status(waiting, name: "Mina", now: now).text.hasPrefix("Waiting for Mina · until "))
+        #expect(Display.shortStatus(waiting, name: "Mina") == "Waiting for Mina")
+        var delivered = waiting
+        delivered.state = .delivered
+        #expect(Display.shortStatus(delivered, name: "Mina") == nil)
+
+        let node = NodeStatus(running: true, startedByApp: true, receive: true, lastOkMs: now.ms, build: "dev",
+                              carriers: Carriers(lan: "on", internet: "preview", p2p: "preview", custody: "preview"))
+        let ok = Display.sidebarHeartbeat(node: node, lastOk: now, now: now.addingTimeInterval(4))
+        #expect(ok.ok && ok.text == "your node: ok · 4 s" && ok.short == "ok · 4 s")
+        let down = Display.sidebarHeartbeat(node: nil, lastOk: now, now: now)
+        #expect(!down.ok && down.text == "your node: not responding" && down.short == "not responding")
+    }
 }

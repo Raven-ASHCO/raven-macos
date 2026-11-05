@@ -113,7 +113,7 @@ struct BrandRow: View {
     @ViewState private var beat: CGFloat = 0
 
     var body: some View {
-        let hb = Display.heartbeat(node: model.node, lastOk: model.lastStatusOk, now: clock.now)
+        let hb = Display.sidebarHeartbeat(node: model.node, lastOk: model.lastStatusOk, now: clock.now)
         HStack(spacing: 10) {
             RavenMark(size: 26, color: p.textPrimary)
             Text(tr(.appName)).font(RFont.brand).tracking(0.3)
@@ -127,12 +127,19 @@ struct BrandRow: View {
                             .scaleEffect(1 + (beat > 0 && beat < 0.5 ? 0.35 : 0))
                     }
                     .frame(width: 7, height: 7)
-                    Text(hb.text).font(.system(size: 11)).foregroundColor(hb.ok ? p.textSecondary : p.danger)
-                        .lineLimit(1).truncationMode(.tail)
+                    // The longest text that fits; in the narrowest sidebar the dot alone.
+                    ViewThatFits(in: .horizontal) {
+                        Text(hb.text).fixedSize()
+                        Text(hb.short).fixedSize()
+                        Color.clear.frame(width: 0, height: 0)
+                    }
+                    .font(.system(size: 11))
+                    .foregroundColor(hb.ok ? p.textSecondary : p.danger)
                 }
             }
             .buttonStyle(.plain)
-            .help(tr(.netTitle))
+            .help(hb.text)
+            .accessibilityLabel(hb.text)
         }
         .padding(.horizontal, 6)
         .padding(.top, 2)
@@ -157,7 +164,12 @@ struct YouRow: View {
                 VStack(alignment: .leading, spacing: 1) {
                     Text(you.title).font(RFont.label).lineLimit(1)
                     if let fingerprint = you.fingerprint {
-                        Text(fingerprint).font(.system(size: 12)).foregroundColor(p.textSecondary).lineLimit(1)
+                        // A fingerprint is never shown cut: in a narrow sidebar the code alone.
+                        ViewThatFits(in: .horizontal) {
+                            Text(fingerprint).fixedSize()
+                            if let code = model.identity?.oldCode, !code.isEmpty { Text(code).fixedSize() }
+                        }
+                        .font(.system(size: 12)).foregroundColor(p.textSecondary).lineLimit(1)
                     }
                 }
                 Spacer(minLength: 0)
@@ -303,10 +315,23 @@ struct ContactStatusText: View {
     var body: some View {
         // The row shows "Not verified" beside the name; the line says when you were last in touch.
         let line = Display.statusLine(contact, now: clock.now, verifiedShown: true)
-        Text(line.text)
+        if let short = Display.shortStatus(contact) {
+            // "1 waiting · until Wed 12:05 (UTC+2)" does not fit beside the avatar: "1 waiting", and the
+            // whole line on hover (the chat says until when).
+            ViewThatFits(in: .horizontal) {
+                Text(line.text).fixedSize()
+                Text(short)
+            }
             .font(.system(size: 12))
             .foregroundColor(p.tone(line.tone))
             .lineLimit(1)
+            .help(line.text)
+        } else {
+            Text(line.text)
+                .font(.system(size: 12))
+                .foregroundColor(p.tone(line.tone))
+                .lineLimit(1)
+        }
     }
 }
 

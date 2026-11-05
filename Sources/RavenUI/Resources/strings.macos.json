@@ -13,5 +13,9 @@
   "mac.add.noAddress.other": "Your card has no network address: Raven has none to share now.",
   "mac.tray.quitKeepReceiving": "Quit Raven (keeps receiving)",
   "mac.lock.plainBody": "While Raven is locked it doesn't receive, read or send messages. Unlock to use it again.",
+  "mac.home.heartbeat.down": "your node: not responding",
+  "mac.home.heartbeat.downShort": "not responding",
+  "mac.home.heartbeat.okShort": "ok · {when}",
+  "mac.home.waiting.short": "{n} waiting",
   "mac.home.search.none": "Nothing found for “{query}”"
 }
