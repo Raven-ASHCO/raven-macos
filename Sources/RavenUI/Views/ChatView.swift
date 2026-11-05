@@ -581,7 +581,7 @@ struct AwayCard: View {
                                               "left": TimeText.left(left)])
         }()
         let words = VStack(alignment: .leading, spacing: 4) {
-            Text(tr(.chatAwayTitle, ["name": contact.name])).font(.system(size: 14.5, weight: .semibold))
+            Text(tr(.macChatAwayTitle, ["name": contact.name])).font(.system(size: 14.5, weight: .semibold))
                 .fixedSize(horizontal: false, vertical: true)
             Text(status).font(.system(size: 13)).foregroundColor(p.textSecondary).fixedSize(horizontal: false, vertical: true)
             if held {
@@ -690,7 +690,7 @@ struct NotVerifiedBanner: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: "checkmark.shield").foregroundColor(p.warning).accessibilityHidden(true)
-            Text(tr(.homeBannerNotVerified, ["name": contact.name]))
+            Text(tr(.macHomeBannerNotVerified, ["name": contact.name]))
                 .font(.system(size: 13))
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)

@@ -290,7 +290,7 @@ import Testing
         #expect(Display.tick(message(.delivered), name: "Ali", now: now).text == "✓✓ Delivered")
         #expect(Display.tick(message(.timeRanOut), name: "Ali", now: now).text == "Time ran out")
         #expect(Display.tick(message(.notSentMeetFirst), name: "Ali", now: now).text
-                == "Not sent: Ali isn't reachable. A first message needs you both online.")
+                == "Not sent: Ali is not reachable. A first message needs you both online.")
         #expect(Display.tick(message(.failed), name: "Ali", now: now).text == "Not delivered")
         let soon = Display.tick(message(.waiting, until: now.addingTimeInterval(40 * 60)), name: "Mina", now: now)
         #expect(soon.text == "Waiting for Mina · about 40 min left")

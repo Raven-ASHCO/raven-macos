@@ -93,8 +93,8 @@ import Testing
     /// 7. "Not sent: meet first" told a user nothing.
     @Test func notSentSaysWhoAndWhy() {
         let m = Message(id: "1", address: "a", direction: .outgoing, text: "t", atMs: 1, state: .notSentMeetFirst)
-        let text = Display.tick(m, name: "mac-b", now: testStart).text
-        #expect(text == "Not sent: mac-b isn't reachable. A first message needs you both online.")
+        let text = Display.tick(m, name: "Cousin", now: testStart).text
+        #expect(text == "Not sent: Cousin is not reachable. A first message needs you both online.")
     }
 
     /// 8. The window never said who you are.

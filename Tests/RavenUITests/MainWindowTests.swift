@@ -153,4 +153,28 @@ import Testing
         #expect(Display.deliveredTicker(name: "Ali", path: nil, ms: 600) == "Delivered to Ali in 0.6 s · receipt signed by Ali")
         #expect(Display.deliveredTicker(name: "Ali", path: " ", ms: 600) == "Delivered to Ali in 0.6 s · receipt signed by Ali")
     }
+
+    /// Visible texts in plain words: no apostrophes, hyphens or dashes, and "No Raven server" (never a
+    /// plain "no server").
+    @Test func theMainWindowSaysItPlainly() {
+        func plain(_ text: String) -> Bool {
+            text.range(of: #"['’–—]|\w-\w"#, options: .regularExpression) == nil
+                && text.range(of: "no server", options: .caseInsensitive) == nil
+        }
+        let name = ["name": "Mina"]
+        var shown = [tr(.macChatEncrypted, name), tr(.macChatEncryptedShort), tr(.macGroupsEncrypted),
+                     tr(.macHomeBannerNotVerified, name), tr(.macChatAwayTitle, name), tr(.macHomeNoFriendsBody),
+                     tr(.macHomeSearchNone, ["query": "Sam"]), tr(.macHomeWaitingShort, ["n": "1"]),
+                     Display.deliveredTicker(name: "Ali", path: nil, ms: 600)]
+        for state in [MessageState.sending, .sent, .delivered, .waiting, .timeRanOut, .notSentMeetFirst, .failed] {
+            let m = Message(id: "1", address: "a", direction: .outgoing, text: "t", atMs: now.ms, state: state,
+                            untilMs: now.addingTimeInterval(3600).ms)
+            shown.append(Display.status(m, name: "Mina", now: now).text)
+        }
+        let hb = Display.sidebarHeartbeat(node: nil, lastOk: nil, now: now)
+        shown += [hb.text, hb.short]
+        for text in shown { #expect(plain(text), "\(text)") }
+        #expect([tr(.macChatEncrypted, name), tr(.macChatEncryptedShort), tr(.macGroupsEncrypted)]
+            .allSatisfy { $0.contains("No Raven server") })
+    }
 }

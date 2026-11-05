@@ -56,7 +56,7 @@ public enum Display {
             }
             return (tr(.tickWaiting, ["name": name, "time": TimeText.deadline(ms: until, now: now)]), .warning)
         case .timeRanOut: return (tr(.tickTimeRanOut), .danger)
-        case .notSentMeetFirst: return (tr(.tickNotSentMeetFirst, ["name": name]), .danger)
+        case .notSentMeetFirst: return (tr(.macTickNotSentMeetFirst, ["name": name]), .danger)
         case .failed: return (tr(.tickFailed), .danger)
         }
     }
