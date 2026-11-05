@@ -282,7 +282,7 @@ import Testing
 
     /// The texts this app needs that the shared strings.en.json doesn't have yet live in
     /// strings.macos.json: they only add keys (mac.*), never replace a shared one.
-    @Test func macTextsOnlyAddToTheSharedTable() throws {
+    @Test(.enabled(if: coreCheckedOut, "needs the raven-core submodule")) func macTextsOnlyAddToTheSharedTable() throws {
         let shared = try Strings(json: Data(contentsOf: designRoot.appendingPathComponent("strings.en.json")))
         let mac = try Strings(json: Data(contentsOf: packageRoot.appendingPathComponent("Sources/RavenUI/Resources/strings.macos.json")))
         #expect(!mac.texts.isEmpty)
