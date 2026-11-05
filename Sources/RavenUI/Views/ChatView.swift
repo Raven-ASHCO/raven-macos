@@ -298,15 +298,20 @@ struct ChatScroll<Rows: View>: View {
     let isEmpty: Bool
     let emptyText: String
     let newest: ChatFollow.Newest?
+    /// Whether the composer, and with it the toast, sits under the list (a group you left has none).
+    let toastBelow: Bool
     let rows: (CGFloat) -> Rows
+    @EnvironmentObject private var model: AppModel
     @Environment(\.palette) private var p
     @Environment(\.ravenSnapshot) private var snapshot
     @ViewState private var follow = ChatFollow()
 
-    init(isEmpty: Bool, emptyText: String, newest: ChatFollow.Newest?, @ViewBuilder rows: @escaping (CGFloat) -> Rows) {
+    init(isEmpty: Bool, emptyText: String, newest: ChatFollow.Newest?, toastBelow: Bool = true,
+         @ViewBuilder rows: @escaping (CGFloat) -> Rows) {
         self.isEmpty = isEmpty
         self.emptyText = emptyText
         self.newest = newest
+        self.toastBelow = toastBelow
         self.rows = rows
     }
 
@@ -321,13 +326,14 @@ struct ChatScroll<Rows: View>: View {
         } else {
             GeometryReader { outer in
                 let width = min(Theme.shared.layout.contentMaxWidth, outer.size.width) - 56
+                let toastWidth = ComposerBar.toastWidth(in: outer.size.width)
                 if snapshot {
-                    RScroll(bottomAligned: true) { column(width) }
+                    RScroll(bottomAligned: true) { column(width, toastWidth: toastWidth) }
                 } else {
                     ScrollViewReader { proxy in
                         ScrollView(.vertical) {
                             VStack(spacing: 0) {
-                                column(width)
+                                column(width, toastWidth: toastWidth)
                                 Color.clear.frame(height: 1).id(ChatFollow.bottomID)
                             }
                             .background(GeometryReader { geo in
@@ -351,15 +357,33 @@ struct ChatScroll<Rows: View>: View {
         }
     }
 
-    private func column(_ width: CGFloat) -> some View {
-        rows(max(200, width))
-            .padding(.horizontal, 28)
-            .padding(.top, 18)
-            // Room under the newest message for the toast pill above the composer.
-            .padding(.bottom, 36)
-            .frame(maxWidth: Theme.shared.layout.contentMaxWidth)
-            .frame(maxWidth: .infinity)
+    private func column(_ width: CGFloat, toastWidth: CGFloat) -> some View {
+        VStack(spacing: 0) {
+            rows(max(200, width))
+                .padding(.horizontal, 28)
+                .padding(.top, 18)
+            // Room under the newest message for the toast pill above the composer: 36 pt hold a pill
+            // of one line; one of two or three lines gets the room it needs, so it never covers the
+            // newest message's status. A hidden copy of the pill, as wide as the real one, measures it
+            // in the same layout pass.
+            ZStack(alignment: .bottom) {
+                Color.clear.frame(height: ChatScroll.toastRoom)
+                if toastBelow, let toast = model.toast {
+                    ToastPill(toast: toast)
+                        .frame(maxWidth: toastWidth)
+                        .padding(.top, ChatScroll.toastGap)
+                        .hidden()
+                        .accessibilityHidden(true)
+                }
+            }
+        }
+        .frame(maxWidth: Theme.shared.layout.contentMaxWidth)
+        .frame(maxWidth: .infinity)
     }
+
+    /// The room under the newest message, and the least space between it and the toast's top.
+    static var toastRoom: CGFloat { 36 }
+    static var toastGap: CGFloat { 7 }
 
     /// To the end, once this layout pass has placed the newest message (a new row has no height
     /// before it).
@@ -763,6 +787,15 @@ struct ComposerBar: View {
     /// Shift-Return's key monitor while the composer is on screen.
     @ViewState private var monitor: Any?
 
+    /// The toast above the composer: at most this wide, and this far from the chat's sides.
+    static let toastMaxWidth: CGFloat = 680
+    static let toastInset: CGFloat = 22
+
+    /// How wide the toast can be in a chat this wide (the message list keeps room for it).
+    static func toastWidth(in chatWidth: CGFloat) -> CGFloat {
+        min(toastMaxWidth, max(0, chatWidth - 2 * toastInset))
+    }
+
     var body: some View {
         let empty = model.composerText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         VStack(spacing: 6) {
@@ -830,8 +863,8 @@ struct ComposerBar: View {
                         .transition(motionOff ? .opacity : .offset(y: 8).combined(with: .opacity))
                 }
             }
-            .frame(maxWidth: 680)
-            .padding(.horizontal, 22)
+            .frame(maxWidth: ComposerBar.toastMaxWidth)
+            .padding(.horizontal, ComposerBar.toastInset)
             .alignmentGuide(.top) { d in d[.bottom] + 2 }
             .animation(motionOff ? nil : Theme.shared.curve("toast", Theme.shared.motion.toastIn), value: model.toast)
         }

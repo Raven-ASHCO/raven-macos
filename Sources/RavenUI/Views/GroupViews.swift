@@ -155,7 +155,8 @@ struct GroupMessagesList: View {
     var body: some View {
         let list = model.groupMessages[group.id] ?? []
         let newest = list.last.map { ChatFollow.Newest(id: $0.id, own: $0.mine && model.liftIDs.contains($0.id)) }
-        ChatScroll(isEmpty: list.isEmpty, emptyText: tr(.groupsEmpty, ["name": group.name]), newest: newest) { width in
+        ChatScroll(isEmpty: list.isEmpty, emptyText: tr(.groupsEmpty, ["name": group.name]), newest: newest,
+                   toastBelow: group.active) { width in
             VStack(spacing: 4) {
                 ForEach(Array(list.enumerated()), id: \.element.id) { i, m in
                     if i == 0 || TimeText.differentDays(list[i - 1].atMs, m.atMs) {

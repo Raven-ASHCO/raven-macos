@@ -95,6 +95,14 @@ import Testing
         model.open(.settings)                         // the route line leaves the screen: so do its packets
         #expect(model.routeQueue.isEmpty)
     }
+
+    /// A toast of two or three lines covered the newest message's status in a narrow chat. The list
+    /// keeps room for it, measured at the toast's own width.
+    @Test func theListMeasuresTheToastAtItsOwnWidth() {
+        #expect(ComposerBar.toastWidth(in: 340) == 340 - 2 * ComposerBar.toastInset)   // the smallest window
+        #expect(ComposerBar.toastWidth(in: 1200) == ComposerBar.toastMaxWidth)
+        #expect(ComposerBar.toastWidth(in: 20) == 0)
+    }
 }
 
 /// What the main window says: whole or in a shorter form, never cut, and in plain words.
