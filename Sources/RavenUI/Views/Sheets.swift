@@ -359,6 +359,7 @@ public struct ConfirmLockSheet: View {
 public struct RenameSheet: View {
     let address: String
     @EnvironmentObject private var model: AppModel
+    @Environment(\.palette) private var p
     @ViewState private var name: String?
     @ViewState private var error: RavenError?
     @ViewState private var busy = false
@@ -369,9 +370,11 @@ public struct RenameSheet: View {
         let current = model.contact(address)?.name ?? Fallback.short(address)
         SheetFrame(tr(.contactRenameTitle, ["name": current]), width: 420) {
             VStack(alignment: .leading, spacing: 8) {
-                RField(tr(.setupNamePlaceholder), text: Binding(get: { name ?? current }, set: { name = $0 })) { save() }
+                // The question Add a friend asks: an empty field said "Your name (optional)", but it is
+                // your friend's name and Save needs one.
+                RField(tr(.addNameTitle), text: Binding(get: { name ?? current }, set: { name = $0 })) { save() }
                     .accessibilityLabel(tr(.contactRenameTitle, ["name": current]))
-                Text(tr(.contactRenameNote, ["name": current])).font(RFont.small)
+                Text(tr(.contactRenameNote, ["name": current])).font(RFont.small).foregroundColor(p.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
                 if let error { ErrorNote(error) }
             }
