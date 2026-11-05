@@ -79,6 +79,7 @@ struct SidebarView: View {
                     } else if model.filteredContacts.isEmpty {
                         // A search that finds no friend says so: the list under Friends was blank.
                         Text(tr(.macFriendsSearchNoMatch)).font(RFont.caption).foregroundColor(p.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)   // wraps in the smallest window
                             .padding(.horizontal, 8).padding(.vertical, 4)
                     }
                     ForEach(model.filteredContacts) { contact in
