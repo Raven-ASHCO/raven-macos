@@ -111,15 +111,23 @@ final class SlowAddressCard: RavenEngine, @unchecked Sendable {
     // MARK: Add a friend
 
     /// The switch named this computer's address and port even while it was off, and one reason
-    /// named 127.0.0.1: addresses and ports show only under Details.
+    /// named the loopback address: addresses and ports show only under Details.
     @Test func addAFriendNamesNoAddress() async throws {
         let (model, mock) = await readyModel()
         let off = try await mock.makeCard(includeAddress: false)
         let on = try await mock.makeCard(includeAddress: true)
         let address = try #require(on.addressIncluded)
-        for label in [Display.includeAddressLabel, Display.noAddressReason(off) ?? ""] {
-            #expect(!label.contains(address))
-            #expect(!label.contains(model.node?.address ?? "?"))
+        // A card made with the switch off has no reason to give: check every reason the engine sends.
+        var texts = [Display.includeAddressLabel]
+        for why in ["not_receiving", "this_computer_only", "no_network", "something_new"] {
+            var card = off
+            card.addressMissing = why
+            texts.append(try #require(Display.noAddressReason(card)))
+        }
+        for text in texts {
+            #expect(!text.contains(address))
+            #expect(!text.contains(model.node?.address ?? "?"))
+            #expect(text.range(of: #"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"#, options: .regularExpression) == nil, "\(text)")
         }
     }
 
