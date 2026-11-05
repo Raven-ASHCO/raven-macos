@@ -145,6 +145,46 @@ import Testing
         #expect(!step.done && step.text == tr(.networkCheckNextStep, ["step": "The Raven background program is not running. Start it on the Network page."]))
     }
 
+    /// With the desktop engine Check network's summary said "On - " with this computer's address and
+    /// port, "This computer only (" with the loopback address, and "port 4001"; its next step named the
+    /// loopback address. The doctor's own lines under Technical details keep them. While LAN was off
+    /// the Same network row said nothing (the engine drops "off - raven lan on", a command).
+    @Test func checkNetworkNamesNoAddressOrPort() {
+        let any = "\(IPv4Address.any):7420", loopback = "\(IPv4Address.loopback):7420"
+        let loopback6 = "[\(IPv6Address.loopback)]:7420"
+        func row(_ key: String, _ value: String) -> CheckSummaryRow { CheckSummaryRow(key: key, label: key, value: value) }
+        let said: [(CheckSummaryRow, String)] = [
+            (row("lan", "on - \(any)"), "On"),
+            (row("lan", "on - \(any), \(loopback6)"), "On"),
+            (row("lan", "this computer only (\(loopback))"), "This computer only"),
+            (row("lan", "this computer only (\(loopback6))"), "This computer only"),
+            (row("lan", "on until 14:30 (local time) - \(any)"), "On until 14:30 (local time)"),
+            (row("lan", "on - all networks of this computer, contacts only"), "On: all networks of this computer, contacts only"),
+            (row("lan", "off in settings, but the running raven-node still listens on \(any) - restart raven-node to apply"),
+             "Off in settings, but the Raven background program still listens: restart the Raven background program to apply"),
+            (row("lan", ""), tr(.netWayOff)),
+            (row("internet", "reachable through your router's port mapping (UPnP, port 4001); waiting for 2 independent checks to confirm it"),
+             "Reachable through a port mapping on your router (UPnP); waiting for 2 independent checks to confirm it"),
+            (row("internet", "behind NAT: contacts reach you through 1 relay; your router mapped port 4001, but the check could not reach it"),
+             "Behind NAT: contacts reach you through 1 relay; your router mapped a port, but the check could not reach it"),
+            (row("disk", "OK \u{2014} 120 GB free"), "OK: 120 GB free"),
+            (row("contacts", "3"), "3"),
+        ]
+        for (r, want) in said {
+            let got = Display.checkValue(r)
+            #expect(got == want)
+            // (14:30 is a time.)
+            #expect(!Self.namesAnAddress(got.replacingOccurrences(of: "14:30", with: "")) && Self.plain(got), "\(got)")
+        }
+        let step = Display.checkNextStep("Friends cannot reach you: Raven's background program listens on this computer only (\(loopback)).")
+        #expect(step.text == tr(.networkCheckNextStep, ["step": "Friends cannot reach you: the Raven background program listens on this computer only."]))
+
+        // A row with nothing left to say is not listed; the next step has its own line.
+        let check = NetworkCheck(summary: [row("identity", "OK"), row("updates", " - "), row("lan", "")],
+                                 nextStep: "All set.", rows: [], router: nil, technical: nil)
+        #expect(CheckNetworkPage.summaryRows(check).map(\.key) == ["identity", "lan"])
+    }
+
     /// Every text the Network screens, Settings and the menu bar show, and the lock's, quit's and the
     /// locked window's, in plain words (and "No Raven server" in About).
     @Test func theseScreensSayItPlainly() throws {

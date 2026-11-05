@@ -19,9 +19,7 @@ struct CheckNetworkPage: View {
             if let check = net.check {
                 PageSection(tr(.netThisComputer)) {
                     VStack(alignment: .leading, spacing: 3) {
-                        // The next step has its own line below.
-                        let summary = check.summary.filter { $0.key != "next_step" || check.nextStep.isEmpty }
-                        ForEach(Array(summary.enumerated()), id: \.offset) { _, row in
+                        ForEach(Array(CheckNetworkPage.summaryRows(check).enumerated()), id: \.offset) { _, row in
                             HStack(alignment: .firstTextBaseline, spacing: 8) {
                                 Text(Display.checkLabel(row)).font(RFont.smallish).foregroundColor(p.textSecondary)
                                     .frame(width: 140, alignment: .leading)
@@ -82,6 +80,12 @@ struct CheckNetworkPage: View {
             }
         }
         .task { if net.check == nil { await net.runCheck() } }
+    }
+
+    /// The summary rows the page lists: not the next step (it has its own line below), and no row
+    /// left with nothing to say once its command and addresses are out (a label beside nothing).
+    static func summaryRows(_ check: NetworkCheck) -> [CheckSummaryRow] {
+        check.summary.filter { ($0.key != "next_step" || check.nextStep.isEmpty) && !Display.checkValue($0).isEmpty }
     }
 
     /// The rows Raven has a sentence for, each sentence once.

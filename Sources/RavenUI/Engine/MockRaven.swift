@@ -116,6 +116,11 @@ public final class MockRaven: RavenEngine, @unchecked Sendable {
     private var lockedV2 = false
     /// Groups: on in the demo (`groups.list` says `available`), off when a test turns them off.
     public var groupsOn = true
+    /// Check network's summary rows, next step and network lines as a test or a still sets them
+    /// (the desktop engine's words), instead of the demo's.
+    public var checkSummary: [CheckSummaryRow]?
+    public var checkNextStep: String?
+    public var checkRows: [CheckRow]?
     private struct MockMember {
         var address: String
         var name: String
@@ -921,6 +926,15 @@ public final class MockRaven: RavenEngine, @unchecked Sendable {
                 ["key": "policy", "value": .string("bridge=\(helpFlags.bridge) store=\(helpFlags.store) relay=\(helpFlags.relay)")],
             ],
         ]
+        if let checkSummary {
+            v["summary"] = .array(checkSummary.map { .object(["key": .string($0.key), "label": .string($0.label), "value": .string($0.value)]) })
+        }
+        if let checkNextStep { v["next_step"] = .string(checkNextStep) }
+        if let checkRows {
+            v["rows"] = .array(checkRows.map { r in
+                .object(["key": .string(r.key), "value": .string(r.value), "plain": r.plain.map(JSONValue.string) ?? .null])
+            })
+        }
         if router {
             v["router"] = [["key": "router_gateway_v4", "value": "found"],
                            ["key": "router_upnp_igd", "value": "none", "plain": "No UPnP router answered."],

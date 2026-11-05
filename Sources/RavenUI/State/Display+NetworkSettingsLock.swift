@@ -76,6 +76,9 @@ extension Display {
         ("this computer's network", "the network of this computer"),
         ("the profile's port", "the port of this profile"),
         ("a friend's address", "the address of a friend"),
+        ("your router's port mapping", "a port mapping on your router"),
+        ("the running raven-node", "the Raven background program"),
+        ("restart raven-node", "restart the Raven background program"),
         ("Wi-Fi", "WiFi"),
         ("Peer-to-peer", "Peer to peer"), ("peer-to-peer", "peer to peer"),
         ("NAT-PMP", "NAT\u{00A0}PMP"),   // kept on one line
@@ -131,17 +134,54 @@ extension Display {
         }
     }
 
-    /// A summary row's value in plain words, starting with a capital letter ("on" said "On").
+    /// A summary row's value in plain words, starting with a capital letter ("on" said "On"), with no
+    /// address or port: the doctor's own lines under Technical details keep them (owner rule). With
+    /// the desktop engine the Same network row said "On - " and this computer's address and port.
+    /// The engine drops the doctor's "off - raven lan on" whole (it names a command), so an empty
+    /// Same network row is LAN off.
     public static func checkValue(_ row: CheckSummaryRow) -> String {
-        capitalFirst(plainWords(row.value))
+        let value = capitalFirst(checkWords(row.value))
+        if value.isEmpty, row.key == "lan" { return tr(.netWayOff) }
+        return value
     }
 
     /// Check network's next step: "All set: ..." is no step to take, so it is said as done (it read
-    /// "Next step: All set: Raven can send ...").
+    /// "Next step: All set: Raven can send ..."). No address or port either (a background program
+    /// that listens on this computer only named its loopback address and port).
     public static func checkNextStep(_ step: String) -> (text: String, done: Bool) {
-        let plain = plainWords(step.trimmingCharacters(in: .whitespacesAndNewlines))
+        let plain = checkWords(step.trimmingCharacters(in: .whitespacesAndNewlines))
         if plain.lowercased().hasPrefix("all set") { return (plain, true) }
         return (tr(.networkCheckNextStep, ["step": plain]), false)
+    }
+
+    /// The doctor's words for Check network: plain, without addresses or ports, and " - " said ": ".
+    static func checkWords(_ text: String) -> String {
+        plainWords(withoutAddresses(text)).replacingOccurrences(of: " - ", with: ": ")
+    }
+
+    /// `text` without the IP addresses (with their ports) and peer to peer addresses raven-node's
+    /// lines name, and without a port number: "on - ADDRESS:PORT" says "on", "this computer only
+    /// (ADDRESS:PORT)" says "this computer only", "(UPnP, port 4001)" says "(UPnP)" and "mapped
+    /// port 4001" says "mapped a port".
+    static func withoutAddresses(_ text: String) -> String {
+        let ip4 = #"(?<![\w.])\d{1,3}(?:\.\d{1,3}){3}(?::\d{1,5})?(?![\w.])"#
+        let ip6 = #"\[[0-9A-Fa-f:.%\w]*\](?::\d{1,5})?|(?<![\w:])(?:[0-9A-Fa-f]{0,4}:){2,7}[0-9A-Fa-f]{0,4}(?:%\w+)?(?![\w:])"#
+        let multiaddr = #"/(?:ip4|ip6|dns|dns4|dns6)/[^\s,;)]+"#
+        let one = "(?:\(multiaddr)|\(ip6)|\(ip4))"
+        let list = "\(one)(?:,\\s*\(one))*"
+        var s = text
+        for (pattern, with) in [
+            (#"\s+(?:on|at)\s+"# + list, ""),          // "still listens on ADDR"
+            (#"\s*\(\s*"# + list + #"\s*\)"#, ""),     // "this computer only (ADDR)"
+            (#"\s+-\s+"# + list, ""),                  // "on - ADDR, ADDR"
+            (list, ""),
+            (#",\s*port\s+\d{1,5}"#, ""),              // "(UPnP, port 4001)"
+            (#"\bport\s+\d{1,5}"#, "a port"),          // "your router mapped port 4001"
+            (#"\s{2,}"#, " "),
+        ] {
+            s = s.replacingOccurrences(of: pattern, with: with, options: .regularExpression)
+        }
+        return s.trimmingCharacters(in: CharacterSet(charactersIn: " -:,;"))
     }
 
     static func capitalFirst(_ text: String) -> String {
