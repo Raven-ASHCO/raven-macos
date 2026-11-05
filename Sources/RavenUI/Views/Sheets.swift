@@ -56,19 +56,22 @@ public struct MessageDetailsSheet: View {
                 }
             }
         } footer: {
-            actionButtons(message)
+            // The Mac's order: the main action last, at the right edge, Close before it.
+            if message?.state == .waiting || message?.state == .sent {
+                Button(tr(.messageStopTrying)) { Task { await model.stopTrying(id); await load() } }
+                    .buttonStyle(RButtonStyle(.secondary))
+            }
             Button(tr(.commonClose)) { model.sheet = nil }
                 .buttonStyle(RButtonStyle(.secondary))
                 .keyboardShortcut(.cancelAction)
+            mainAction(message)
         }
         .task { await load() }
     }
 
-    @ViewBuilder private func actionButtons(_ message: Message?) -> some View {
+    @ViewBuilder private func mainAction(_ message: Message?) -> some View {
         switch message?.state {
         case .waiting?, .sent?:
-            Button(tr(.messageStopTrying)) { Task { await model.stopTrying(id); await load() } }
-                .buttonStyle(RButtonStyle(.secondary))
             Button(tr(.messageTryNow)) { Task { await model.retry(id); await load() } }
                 .buttonStyle(RButtonStyle(.primary))
                 .keyboardShortcut(.defaultAction)
@@ -81,6 +84,7 @@ public struct MessageDetailsSheet: View {
                 }
             }
             .buttonStyle(RButtonStyle(.primary))
+            .keyboardShortcut(.defaultAction)
         default:
             EmptyView()
         }
