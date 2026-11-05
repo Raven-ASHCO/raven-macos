@@ -322,9 +322,12 @@ struct ChatScroll<Rows: View>: View {
     var body: some View {
         if isEmpty {
             // Gone at once when the first message is on its way (sending, waiting, or in): it never
-            // fades out behind the first bubble.
+            // fades out behind the first bubble. Centred, within the column's margins: with a long name
+            // it ran to both edges of a narrow chat.
             Text(emptyText)
                 .foregroundColor(p.textSecondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 28)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .transition(.identity)
         } else {
