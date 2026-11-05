@@ -88,6 +88,9 @@ struct ChatHeader: View {
                 .font(RFont.caption)
                 .foregroundColor(status.tone == .warning ? p.warning : p.textSecondary)
                 .lineLimit(1)
+                // VoiceOver reads the whole line, whichever form fits on screen.
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(path != nil && contact.presence == .inTouch ? status.text + " · " + (path ?? "") : status.text)
             }
             .frame(minWidth: 120, maxWidth: .infinity, alignment: .leading)
             .layoutPriority(1)

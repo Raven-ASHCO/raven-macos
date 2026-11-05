@@ -364,6 +364,9 @@ struct ContactStatusText: View {
             .foregroundColor(p.tone(line.tone))
             .lineLimit(1)
             .help(line.text)
+            // VoiceOver reads the whole line too, not the short form.
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(line.text)
         } else {
             Text(line.text)
                 .font(.system(size: 12))
