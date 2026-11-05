@@ -111,13 +111,13 @@ import Testing
         #expect(model.groupMembers[id] == before)              // nothing removed yet
         let texts = Display.groupRemoval(ask, members: before, group: model.groups.first { $0.id == id })
         #expect(texts.title == "Remove Sam from Book club?")
-        #expect(texts.body.contains("isn't your friend") && texts.body.contains("can't add"))
+        #expect(texts.body.contains("is not your friend") && texts.body.contains("cannot add"))
         model.cancelGroupRemoval()
         #expect(model.groupRemoval == nil && model.groupMembers[id] == before)
         // A friend can be added back, and the text says that instead.
         model.askRemoveGroupMember(id, member: MockRaven.aliAddress)
         let friend = Display.groupRemoval(try #require(model.groupRemoval), members: before, group: nil)
-        #expect(!friend.body.contains("can't add"))
+        #expect(!friend.body.contains("cannot add"))
         model.askRemoveGroupMember(id, member: MockRaven.samAddress)
         let error = await model.confirmGroupRemoval()
         #expect(error == nil && model.groupRemoval == nil)
