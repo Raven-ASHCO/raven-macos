@@ -505,20 +505,35 @@ struct ToastPill: View {
     @Environment(\.palette) private var p
 
     var body: some View {
-        HStack(spacing: 7) {
+        // A pill while it is one line; an error that needs more lines keeps them (it was cut to one,
+        // so the one next step it names was lost), with the problem icon and the danger colour.
+        let shape = RoundedRectangle(cornerRadius: 15, style: .continuous)
+        HStack(alignment: .firstTextBaseline, spacing: 7) {
             switch toast.tone {
-            case .success: StatusIcon(kind: .delivered)
-            case .warning: StatusIcon(kind: .waiting)
+            case .success: StatusIcon(kind: .delivered).alignmentGuide(.firstTextBaseline) { d in d[.bottom] - 3 }
+            case .warning: StatusIcon(kind: .waiting).alignmentGuide(.firstTextBaseline) { d in d[.bottom] - 3 }
+            case .danger: StatusIcon(kind: .problem).alignmentGuide(.firstTextBaseline) { d in d[.bottom] - 3 }
             default: EmptyView()
             }
-            Text(toast.text).lineLimit(1).truncationMode(.tail)
+            Text(toast.text).lineLimit(3).truncationMode(.tail)
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .font(.system(size: 12))
-        .foregroundColor(toast.tone == .success ? p.success : toast.tone == .warning ? p.warning : p.textSecondary)
+        .foregroundColor(ToastPill.color(toast.tone, p))
         .padding(.horizontal, 14)
         .padding(.vertical, 7)
-        .background(Capsule().fill(p.surface).ravenShadow(p.cardShadow))
-        .overlay(Capsule().strokeBorder(p.border, lineWidth: 1))
+        .background(shape.fill(p.surface).ravenShadow(p.cardShadow))
+        .overlay(shape.strokeBorder(p.border, lineWidth: 1))
         .accessibilityElement(children: .combine)
+    }
+
+    static func color(_ tone: AppModel.Tone, _ p: Palette) -> Color {
+        switch tone {
+        case .success: return p.success
+        case .warning: return p.warning
+        case .danger: return p.danger
+        default: return p.textSecondary
+        }
     }
 }

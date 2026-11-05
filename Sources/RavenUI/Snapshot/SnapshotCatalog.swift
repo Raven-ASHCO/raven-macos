@@ -241,6 +241,14 @@ public enum SnapshotCatalog {
         newGroup.toast = nil
         shots.append(windowShot("68-group-new-empty", newGroup))
 
+        // The smallest window: an error toast on two lines, the draft kept in the composer.
+        let (refused, _) = await readyModel(after: 2)
+        refused.select(MockRaven.aliAddress)
+        refused.composerText = "See you at seven"
+        refused.showToast(tr(.errorInternal), .danger)
+        shots.append(Shot(name: "70-main-error-smallest-window", width: Theme.shared.layout.minWidth,
+                          height: Theme.shared.layout.minHeight, model: refused, view: AnyView(RootView())))
+
         // Details of a delivered message.
         let (delivered, _) = await readyModel(after: 2)
         if case .success(let d) = await delivered.details("m2") {

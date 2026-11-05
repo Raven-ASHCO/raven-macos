@@ -823,6 +823,7 @@ struct ComposerBar: View {
                 }
             }
             .frame(maxWidth: 680)
+            .padding(.horizontal, 22)
             .alignmentGuide(.top) { d in d[.bottom] + 2 }
             .animation(motionOff ? nil : Theme.shared.curve("toast", Theme.shared.motion.toastIn), value: model.toast)
         }
