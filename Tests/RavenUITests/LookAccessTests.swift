@@ -63,6 +63,24 @@ import Testing
         }
     }
 
+    /// A still draws a scrolling page as the window shows it: the page at its own height, cut at the
+    /// window's edge. It squeezed the page into the window instead, so texts lost lines a scroll view
+    /// keeps (the Security page in the smallest window ended a line with "the la…").
+    @Test func aStillCutsAScrollingPageInsteadOfSqueezingIt() throws {
+        let words = String(repeating: "Words that wrap over many lines. ", count: 12)
+        for bottomAligned in [false, true] {
+            let placed = PlacedHeight()
+            let renderer = ImageRenderer(content: RScroll(bottomAligned: bottomAligned) {
+                HeightProbe(placed: placed) { Text(words) }
+            }
+            .frame(width: 200, height: 60)
+            .environment(\.ravenSnapshot, true))
+            renderer.scale = 1
+            _ = try #require(renderer.cgImage)
+            #expect(placed.height > 120, "bottom aligned \(bottomAligned): the text got \(placed.height) points")
+        }
+    }
+
     // MARK: Colours, contrast and focus
 
     /// The WCAG contrast of two opaque colours (1 to 21).
@@ -154,5 +172,22 @@ import Testing
         renderer.scale = 1
         renderer.proposedSize = ProposedViewSize(width: width, height: nil)
         return CGFloat(try #require(renderer.cgImage).width)
+    }
+}
+
+/// The height a `HeightProbe` last placed its view at.
+final class PlacedHeight { var height: CGFloat = 0 }
+
+/// Lays out its one view as offered and notes the height it places it at.
+struct HeightProbe: Layout {
+    let placed: PlacedHeight
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        subviews.first?.sizeThatFits(proposal) ?? .zero
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        placed.height = bounds.height
+        subviews.first?.place(at: bounds.origin, proposal: ProposedViewSize(bounds.size))
     }
 }

@@ -361,7 +361,8 @@ public struct RMenu: View {
 
 // MARK: - Scroll view
 
-/// A vertical scroll view; a clipped stack in snapshots (ImageRenderer cannot draw NSScrollView).
+/// A vertical scroll view; in snapshots, what it shows at its top (or, bottom aligned, at its end),
+/// cut at its edge (ImageRenderer cannot draw NSScrollView).
 public struct RScroll<Content: View>: View {
     var bottomAligned: Bool
     let content: Content
@@ -374,16 +375,32 @@ public struct RScroll<Content: View>: View {
 
     public var body: some View {
         if snapshot {
-            VStack(spacing: 0) {
-                if bottomAligned { Spacer(minLength: 0) }
-                content
-                if !bottomAligned { Spacer(minLength: 0) }
-            }
-            .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity, alignment: bottomAligned ? .bottom : .top)
-            .clipped()
+            ScrollStill(bottomAligned: bottomAligned) { content }
+                .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
+                .clipped()
         } else {
             ScrollView(.vertical) { content }
         }
+    }
+}
+
+/// Lays its content out as a vertical scroll view does: offered the width and no height, so the
+/// content takes its own height and is cut by the clip, never squeezed into fewer lines to fit (a
+/// clipped stack offered the window's height made texts in a small window end in "…").
+struct ScrollStill: Layout {
+    var bottomAligned = false
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let content = subviews.first?.sizeThatFits(ProposedViewSize(width: proposal.width, height: nil)) ?? .zero
+        return CGSize(width: proposal.width ?? content.width, height: proposal.height ?? content.height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        guard let content = subviews.first else { return }
+        let offer = ProposedViewSize(width: bounds.width, height: nil)
+        let size = content.sizeThatFits(offer)
+        content.place(at: CGPoint(x: bounds.midX - size.width / 2, y: bottomAligned ? bounds.maxY - size.height : bounds.minY),
+                      anchor: .topLeading, proposal: offer)
     }
 }
 
