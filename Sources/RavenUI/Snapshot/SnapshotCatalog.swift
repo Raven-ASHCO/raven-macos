@@ -157,6 +157,99 @@ public enum SnapshotCatalog {
         return shots
     }
 
+    /// A card MockRaven reads, for a friend added in a picture (`lan`: an address to reach them).
+    static func demoCard(_ n: Int, lan: Bool = true) -> String {
+        let address = "rvn1q" + String(repeating: "x", count: 30) + String(format: "%05d", n)
+        return lan ? "raven-card/1 address=\(address) pub_hex=00 fingerprint=Ab3d-Ef56-Gh78 lan=friend\(n).example:7420"
+            : "raven-card/1 address=\(address) pub_hex=00 fingerprint=Ab3d-Ef56-Gh78"
+    }
+
+    /// The main window's other states: a new friend's empty chat, no friends yet, a search that finds
+    /// nothing, the background program stopped, a message that was not delivered, long names and
+    /// messages with many friends, a friend with no address, and a new group with no messages.
+    static func mainWindowShots() async -> [Shot] {
+        var shots: [Shot] = []
+        // Rena before her first message: the empty chat of a friend not verified yet.
+        let (fresh, _) = await readyModel(after: 0)
+        fresh.select(MockRaven.renaAddress)
+        shots.append(windowShot("60-main-new-friend-empty", fresh))
+
+        // A profile with no friends yet (setup done, nothing added).
+        let clock = MockClock(fixed: baseDate)
+        let empty = AppModel(engine: MockRaven(start: .new, demo: false, clock: clock, identityDelay: 0), now: { clock.now })
+        await empty.bootstrap()
+        empty.beginSetup()
+        await empty.chooseReceive(true)
+        await empty.finishSetup()
+        shots.append(windowShot("61-main-no-friends", empty))
+
+        let (search, _) = await readyModel(after: 2)
+        search.searchText = "Plumber"
+        shots.append(windowShot("62-main-search-nothing-found", search))
+
+        // The background program stopped: the heartbeat says so.
+        let (offline, _) = await readyModel(after: 2)
+        await offline.stopNode()
+        offline.toast = nil
+        shots.append(windowShot("63-main-background-program-stopped", offline))
+
+        // Stop trying: the message was not delivered; Send again and Delete under it.
+        let (stopped, _) = await readyModel(after: 2)
+        stopped.select(MockRaven.minaAddress)
+        await stopped.stopTrying("m3")
+        stopped.toast = nil
+        shots.append(windowShot("64-main-not-delivered", stopped))
+
+        // Many friends, long names and a long message.
+        let (long, _) = await readyModel(after: 2)
+        let names = ["The neighbour from the third floor who lends us the ladder every spring",
+                     "Football coach", "Bakery on the corner", "Piano teacher", "Night shift at the clinic",
+                     "Cousin abroad", "Book shop", "Landlord", "Tennis partner"]
+        for (i, name) in names.enumerated() {
+            _ = try? await long.addContact(text: demoCard(i + 1), name: name)
+        }
+        if let first = long.contacts.first(where: { $0.name.hasPrefix("The neighbour") }) {
+            long.select(first.address)
+            await long.send("Thank you for the ladder. We finished the window frames on Sunday and the paint is dry now, so you can have it back whenever you like.\n\nShall I bring it up on Thursday evening, or is the weekend better for you?", to: first.address)
+            long.clock.set(baseDate.addingTimeInterval(3))
+            long.tick()
+            await long.pollNow()
+        }
+        long.toast = nil
+        long.liftIDs = []   // the sent message has lifted out of the composer
+        shots.append(windowShot("65-main-long-names", long))
+
+        // A friend whose card has no address: a first message needs you both online.
+        let (meet, _) = await readyModel(after: 2)
+        if let c = try? await meet.addContact(text: demoCard(20, lan: false), name: "Cousin") {
+            await meet.send("Hello from the new computer", to: c.address)
+        }
+        meet.toast = nil
+        meet.liftIDs = []
+        shots.append(windowShot("66-main-meet-first", meet))
+
+        // The smallest window with a friend away (the away card at its narrowest).
+        let (narrowAway, _) = await readyModel(after: 2)
+        narrowAway.select(MockRaven.minaAddress)
+        narrowAway.toast = nil
+        shots.append(Shot(name: "67-main-smallest-window-away", width: Theme.shared.layout.minWidth,
+                          height: Theme.shared.layout.minHeight, model: narrowAway, view: AnyView(RootView())))
+
+        // A new group: nothing written yet.
+        let (newGroup, _) = await readyModel(after: 2)
+        _ = await newGroup.createGroup(name: "Weekend trip", members: [MockRaven.aliAddress, MockRaven.minaAddress])
+        newGroup.toast = nil
+        shots.append(windowShot("68-group-new-empty", newGroup))
+
+        // Details of a delivered message.
+        let (delivered, _) = await readyModel(after: 2)
+        if case .success(let d) = await delivered.details("m2") {
+            shots.append(sheetShot("69-message-details-delivered", delivered, width: 480,
+                                   MessageDetailsSheet(id: "m2", preset: d, showDetail: true)))
+        }
+        return shots
+    }
+
     static func sheetShot<V: View>(_ name: String, _ model: AppModel, width: CGFloat, _ view: V) -> Shot {
         Shot(name: name, width: width, height: nil, model: model, view: AnyView(view))
     }
@@ -297,6 +390,7 @@ public enum SnapshotCatalog {
 
         shots += await networkShots()
         shots += await groupShots()
+        shots += await mainWindowShots()
 
         var dmg = sheetShot("dmg-background", main, width: 600, DmgBackground())
         dmg.dark = false
