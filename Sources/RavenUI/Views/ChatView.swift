@@ -561,19 +561,29 @@ struct AwayCard: View {
             return tr(.messageStatusWaiting, ["name": contact.name, "time": TimeText.deadline(ms: until, now: clock.now),
                                               "left": TimeText.left(left)])
         }()
+        let words = VStack(alignment: .leading, spacing: 4) {
+            Text(tr(.chatAwayTitle, ["name": contact.name])).font(.system(size: 14.5, weight: .semibold))
+                .fixedSize(horizontal: false, vertical: true)
+            Text(status).font(.system(size: 13)).foregroundColor(p.textSecondary).fixedSize(horizontal: false, vertical: true)
+            if held {
+                Text(tr(.chatAwayHeld, ["name": contact.name])).font(.system(size: 13)).foregroundColor(p.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        let trio = AwayTrio(contact: contact, held: held, retry: model.retryPulses[contact.address] ?? 0)
         VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .center, spacing: 18) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(tr(.chatAwayTitle, ["name": contact.name])).font(.system(size: 14.5, weight: .semibold))
-                        .fixedSize(horizontal: false, vertical: true)
-                    Text(status).font(.system(size: 13)).foregroundColor(p.textSecondary).fixedSize(horizontal: false, vertical: true)
-                    if held {
-                        Text(tr(.chatAwayHeld, ["name": contact.name])).font(.system(size: 13)).foregroundColor(p.textSecondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
+            // The trio beside the words while they keep `wordsMinWidth`; in a narrow chat under them
+            // (beside them, the words stood one or two to a line).
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .center, spacing: 18) {
+                    words.frame(minWidth: AwayCard.wordsMinWidth, idealWidth: AwayCard.wordsMinWidth,
+                                maxWidth: .infinity, alignment: .leading)
+                    trio
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                AwayTrio(contact: contact, held: held, retry: model.retryPulses[contact.address] ?? 0)
+                VStack(alignment: .leading, spacing: 12) {
+                    words.frame(maxWidth: .infinity, alignment: .leading)
+                    trio
+                }
             }
             HStack(spacing: 8) {
                 Button(tr(.messageTryNow)) { Task { await model.retry(message.id) } }.buttonStyle(RButtonStyle(.secondary))
@@ -591,6 +601,9 @@ struct AwayCard: View {
         .padding(.bottom, 6)
         .accessibilityElement(children: .contain)
     }
+
+    /// The narrowest the words get beside the trio.
+    static let wordsMinWidth: CGFloat = 280
 }
 
 /// You ── (a friend holding a sealed copy) ┄┄ the friend, faded while away; a retry rings the friend.
