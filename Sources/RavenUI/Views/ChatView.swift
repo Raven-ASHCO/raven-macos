@@ -49,6 +49,8 @@ struct ChatHeader: View {
 
     // At the narrowest window (560 px, the sidebar beside it) the status text truncates first, then
     // the path and the name; the Routes button always shows whole (E1: on Windows it was cut off).
+    // The name keeps at least 120 points and Verified or Not verified always shows whole: the path
+    // pill and Routes took the whole header and left one letter of the name.
     var body: some View {
         let status = Display.headerStatus(contact, now: clock.now)   // "Not verified" is beside the name
         let kind = model.lastPathKind(contact.address)
@@ -87,8 +89,8 @@ struct ChatHeader: View {
                 .foregroundColor(status.tone == .warning ? p.warning : p.textSecondary)
                 .lineLimit(1)
             }
+            .frame(minWidth: 120, maxWidth: .infinity, alignment: .leading)
             .layoutPriority(1)
-            Spacer(minLength: 8)
             // The path pill only where there is room; Routes always shows whole (E1). Not while
             // messages to the friend wait: the last path isn't how they are reached now (E1).
             ViewThatFits(in: .horizontal) {
@@ -718,21 +720,43 @@ struct NotVerifiedBanner: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.palette) private var p
 
+    // Side by side where the words get a readable width; in a narrow chat the button goes under the
+    // words, which were a column of two or three words a line, taller than the chat could show.
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "checkmark.shield").foregroundColor(p.warning).accessibilityHidden(true)
-            Text(tr(.macHomeBannerNotVerified, ["name": contact.name]))
-                .font(.system(size: 13))
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            Button(tr(.homeBannerNotVerifiedAction)) { model.presentCheckWords(contact.address) }
-                .buttonStyle(RButtonStyle(.primary))
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 12) {
+                shield
+                words.frame(minWidth: 0, idealWidth: 240, maxWidth: .infinity, alignment: .leading)
+                check
+            }
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                    shield
+                    words.frame(maxWidth: .infinity, alignment: .leading)
+                }
+                check
+            }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
         .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(p.warningSoft))
         .padding(.top, 12)
         .padding(.bottom, 4)
+    }
+
+    private var shield: some View {
+        Image(systemName: "checkmark.shield").foregroundColor(p.warning).accessibilityHidden(true)
+    }
+
+    private var words: some View {
+        Text(tr(.macHomeBannerNotVerified, ["name": contact.name]))
+            .font(.system(size: 13))
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private var check: some View {
+        Button(tr(.homeBannerNotVerifiedAction)) { model.presentCheckWords(contact.address) }
+            .buttonStyle(RButtonStyle(.primary))
     }
 }
 

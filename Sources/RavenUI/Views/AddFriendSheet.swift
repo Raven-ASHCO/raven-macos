@@ -27,8 +27,21 @@ public final class AddFriendState: ObservableObject {
         self.check = check
     }
 
+    /// The card always matches the switch: an answer that comes after the switch moved again (on,
+    /// then quickly off) is dropped, or a card with your address would sit under a switch that is off.
     func loadCard(_ model: AppModel) async {
-        do { card = try await model.makeCard(includeAddress: includeAddress) } catch { card = nil }
+        let include = includeAddress
+        let made = try? await model.makeCard(includeAddress: include)
+        guard include == includeAddress else { return }
+        card = made
+    }
+
+    /// The switch moved (then `loadCard`). Off takes the card with your address off the screen at
+    /// once, and Copy waits for the new card: the old one can not be copied while it comes.
+    func switchAddress(_ include: Bool) {
+        includeAddress = include
+        copied = false
+        if !include { card = nil }
     }
 
     /// Parses whatever was pasted. On success the raw text leaves the screen and only a summary
@@ -112,11 +125,10 @@ public struct AddFriendSheet: View {
                 .background(RoundedRectangle(cornerRadius: Theme.shared.radius.control).fill(p.surfaceMuted))
                 .overlay(RoundedRectangle(cornerRadius: Theme.shared.radius.control).stroke(p.border, lineWidth: 0.5))
             Toggle(isOn: Binding(get: { state.includeAddress }, set: { v in
-                state.includeAddress = v
-                state.copied = false
+                state.switchAddress(v)
                 Task { await state.loadCard(model) }
             })) {
-                Text(Display.includeAddressLabel(card: state.card, node: model.node))
+                Text(Display.includeAddressLabel)
                     .font(RFont.smallish)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -274,25 +286,34 @@ struct StepStrip: View {
     private func item(_ n: Int, _ title: String) -> some View {
         let current = n == step
         let done = n < step
-        return Button { if canGoTo(n) && n != step { go(n) } } label: {
-            HStack(spacing: 6) {
-                ZStack {
-                    Circle().fill(current ? p.accentFill : (done ? p.accentSoft : Color.clear))
-                    Circle().stroke(current || done ? Color.clear : p.borderStrong, lineWidth: 0.5)
-                    if done {
-                        Image(systemName: "checkmark").font(.system(size: 9, weight: .bold)).foregroundColor(p.accent)
-                    } else {
-                        Text("\(n)").font(.system(size: 11, weight: .semibold)).foregroundColor(current ? p.onAccent : p.textSecondary)
-                    }
+        let label = HStack(spacing: 6) {
+            ZStack {
+                Circle().fill(current ? p.accentFill : (done ? p.accentSoft : Color.clear))
+                Circle().stroke(current || done ? Color.clear : p.borderStrong, lineWidth: 0.5)
+                if done {
+                    Image(systemName: "checkmark").font(.system(size: 9, weight: .bold)).foregroundColor(p.accent)
+                } else {
+                    Text("\(n)").font(.system(size: 11, weight: .semibold)).foregroundColor(current ? p.onAccent : p.textSecondary)
                 }
-                .frame(width: 18, height: 18)
-                Text(title)
-                    .font(RFont.smallish)
-                    .fontWeight(current ? .semibold : .regular)
-                    .foregroundColor(current ? p.textPrimary : p.textSecondary)
+            }
+            .frame(width: 18, height: 18)
+            Text(title)
+                .font(RFont.smallish)
+                .fontWeight(current ? .semibold : .regular)
+                .foregroundColor(current ? p.textPrimary : p.textSecondary)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(title)
+        .accessibilityValue(done ? tr(.commonDone) : "")
+        .accessibilityAddTraits(current ? .isSelected : [])
+        // Only a step you can go to is a button: the others did nothing when clicked, and VoiceOver
+        // still called them buttons.
+        return Group {
+            if canGoTo(n) && !current {
+                Button { go(n) } label: { label }.buttonStyle(.plain)
+            } else {
+                label
             }
         }
-        .buttonStyle(.plain)
-        .accessibilityAddTraits(current ? .isSelected : [])
     }
 }

@@ -97,9 +97,11 @@ public final class CheckWordsState: ObservableObject {
         let rest = WordInput.endsWithSeparator(field) ? "" : (tokens.last ?? "")
         if !finished.isEmpty {
             field = rest
-            for token in finished {
+            for (i, token) in finished.enumerated() {
                 guard await accept(token, model) else {
-                    field = ([token] + (rest.isEmpty ? [] : [rest])).joined(separator: " ")
+                    // The word Raven does not know stays in the field with every word after it:
+                    // nothing pasted is lost.
+                    field = (Array(finished[i...]) + (rest.isEmpty ? [] : [rest])).joined(separator: " ")
                     return
                 }
             }
@@ -242,11 +244,17 @@ struct CheckWordsBody: View {
                 Button { state.remove(at: i) } label: { Chip(word, removable: !state.matched && !state.stopped) }
                     .buttonStyle(.plain)
                     .disabled(state.matched || state.stopped)
+                    // Says what a click does: VoiceOver read only the word.
+                    .accessibilityLabel(state.matched || state.stopped ? word : tr(.macCheckRemoveWord, ["word": word]))
+                    .help(state.matched || state.stopped ? "" : tr(.macCheckRemoveWord, ["word": word]))
             }
         }
         .frame(minHeight: 26, alignment: .topLeading)
         if !state.matched && !state.complete && !state.stopped {
-            RField("", text: $state.field, focused: $focused) { Task { await state.submit(model) } }
+            // Which word comes next: the field had no placeholder at all.
+            RField(tr(.macCheckField, ["n": String(state.typed.count + 1)]), text: $state.field, focused: $focused) {
+                Task { await state.submit(model) }
+            }
                 .onChange(of: state.field) { _ in Task { await state.fieldChanged(model) } }
             hintRow
         }
@@ -289,7 +297,8 @@ struct CheckWordsBody: View {
         SectionLabel(tr(.checkOldCodeTheirs, ["name": name]))
             .padding(.top, 6)
         if state.matched {
-            Text(state.oldCode).font(RFont.mono).foregroundColor(p.textSecondary)
+            // In groups of four like yours above, not as typed (dashes, no spaces).
+            Text(WordInput.oldCodeGroups(state.oldCode)).font(RFont.mono).foregroundColor(p.textSecondary)
         } else {
             RField(tr(.checkOldCodeField), text: $state.oldCode, mono: true, focused: $focused) {
                 Task { await state.check(model) }
@@ -373,9 +382,12 @@ struct CheckWordsButtons: View {
                 .buttonStyle(RButtonStyle(.secondary))
                 .keyboardShortcut(.cancelAction)
             if !state.stopped {
+                // Return checks once Check can: after the tenth word the field goes away and Return
+                // did nothing. Only then, so Return in the field still takes the word typed.
                 Button(tr(.checkVerify)) { Task { await state.check(model) } }
                     .buttonStyle(RButtonStyle(.primary))
                     .disabled(!state.canCheck)
+                    .keyboardShortcut(state.canCheck ? .defaultAction : nil)
             }
         }
     }
