@@ -301,10 +301,12 @@ struct ContactStatusText: View {
     var body: some View {
         // The row shows "Not verified" beside the name; the line says when you were last in touch.
         let line = Display.statusLine(contact, now: clock.now, verifiedShown: true)
+        // Two lines at most: "1 waiting · until Wed 12:05 (UTC+2)" lost its time zone at one line.
         Text(line.text)
             .font(.system(size: 12))
             .foregroundColor(p.tone(line.tone))
-            .lineLimit(1)
+            .lineLimit(2)
+            .fixedSize(horizontal: false, vertical: true)
     }
 }
 
