@@ -98,17 +98,25 @@ struct CalmItem<Control: View>: View {
 }
 
 /// Words and a control: side by side as in an HStack (the words fill, the control keeps its own width
-/// at the trailing edge, both centred on one line) while the words keep at least `minWords` points;
-/// else the control goes under the words at the leading edge, offered the whole width. The first
-/// subview is the words, the others the control (in a row).
+/// at the trailing edge, all centred on one line) while the words keep at least `minWords` points;
+/// else the control goes under the words, lined up with their text and offered its width. The first
+/// `words` subviews make the words, in a row (an icon and its text: all but the last keep their own
+/// width, the last fills); the others are the control, in a row.
 struct BesideOrUnder: Layout {
+    /// The space between the parts of the words.
     var spacing: CGFloat = 18
-    /// The narrowest the words get beside a control.
+    /// How many of the first subviews make the words.
+    var words = 1
+    /// The narrowest the words' text (their last part) gets beside a control.
     var minWords: CGFloat = 150
+    /// The space between the words and a control beside them (nil: `spacing`).
+    var controlGap: CGFloat?
     /// The gap between the words and a control under them.
     var gap: CGFloat = 10
+    /// The space between the parts of the control.
+    static let controlSpacing: CGFloat = 8
 
-    /// Whether a control `control` points wide goes beside the words in a row `width` points wide.
+    /// Whether a control `control` points wide goes beside a text that has `width` points with it.
     static func beside(width: CGFloat, control: CGFloat, spacing: CGFloat = 18, minWords: CGFloat = 150) -> Bool {
         control <= 0 || width - spacing - control >= minWords
     }
@@ -124,52 +132,64 @@ struct BesideOrUnder: Layout {
         }
     }
 
-    /// The size of the row and each subview's frame in it, for a row `width` points wide (nil: as
-    /// wide as it would like).
+    /// The size of the whole and each subview's frame in it, `width` points wide (nil: as wide as it
+    /// would like). The size says what it really takes: a part that cannot narrow enough makes it
+    /// wider than offered, as in a stack, so the card around it shows the overflow instead of hiding it.
     private func arrange(width: CGFloat?, _ subviews: Subviews) -> (size: CGSize, frames: [CGRect]) {
-        guard let words = subviews.first else { return (.zero, []) }
-        let controls = Array(subviews.dropFirst())
+        let n = min(max(words, 1), subviews.count)
+        guard n > 0 else { return (.zero, []) }
+        let lead = subviews.prefix(n - 1).map { $0.sizeThatFits(.unspecified) }
+        let text = subviews[n - 1]
+        let controls = Array(subviews.dropFirst(n))
         let ideal = controls.map { $0.sizeThatFits(.unspecified) }
-        let controlWidth = ideal.map(\.width).reduce(0, +) + 8 * CGFloat(max(0, controls.count - 1))
-        let gapBeside = controls.isEmpty ? 0 : spacing
+        let controlWidth = ideal.map(\.width).reduce(0, +) + Self.controlSpacing * CGFloat(max(0, controls.count - 1))
+        let indent = lead.reduce(0) { $0 + $1.width + spacing }
+        let gapBeside = controls.isEmpty ? 0 : (controlGap ?? spacing)
+
+        // The words in a row with the text offered `textWidth`, and the controls beside them, all
+        // centred on one line: the frames, where the row ends and its height.
+        func row(textWidth: CGFloat?, beside: [CGSize]) -> (frames: [CGRect], end: CGFloat, height: CGFloat) {
+            let t = text.sizeThatFits(ProposedViewSize(width: textWidth, height: nil))
+            let height = max(t.height, lead.map(\.height).max() ?? 0, beside.map(\.height).max() ?? 0)
+            var frames: [CGRect] = []
+            var x: CGFloat = 0
+            for size in lead {
+                frames.append(CGRect(x: x, y: (height - size.height) / 2, width: size.width, height: size.height))
+                x += size.width + spacing
+            }
+            let textFrame = max(textWidth ?? 0, t.width)
+            frames.append(CGRect(x: x, y: (height - t.height) / 2, width: textFrame, height: t.height))
+            x += textFrame
+            for (i, size) in beside.enumerated() {
+                x += i == 0 ? gapBeside : Self.controlSpacing
+                frames.append(CGRect(x: x, y: (height - size.height) / 2, width: size.width, height: size.height))
+                x += size.width
+            }
+            return (frames, x, height)
+        }
+
         guard let width else {
-            let w = words.sizeThatFits(.unspecified)
-            let height = max(w.height, ideal.map(\.height).max() ?? 0)
-            return (CGSize(width: w.width + gapBeside + controlWidth, height: height),
-                    framesBeside(wordsWidth: w.width, wordsHeight: w.height, ideal, height: height))
+            let r = row(textWidth: nil, beside: ideal)
+            return (CGSize(width: r.end, height: r.height), r.frames)
         }
-        // The size says what the row really takes: a part that cannot narrow enough makes it wider
-        // than offered, as in a stack, so the card around it shows the overflow instead of hiding it.
-        if Self.beside(width: width, control: controlWidth, spacing: spacing, minWords: minWords) {
-            let wordsWidth = max(0, width - gapBeside - controlWidth)
-            let w = words.sizeThatFits(ProposedViewSize(width: wordsWidth, height: nil))
-            let height = max(w.height, ideal.map(\.height).max() ?? 0)
-            return (CGSize(width: max(width, w.width + gapBeside + controlWidth), height: height),
-                    framesBeside(wordsWidth: max(wordsWidth, w.width), wordsHeight: w.height, ideal, height: height))
+        if Self.beside(width: width - indent, control: controlWidth, spacing: gapBeside, minWords: minWords) {
+            let r = row(textWidth: max(0, width - indent - gapBeside - controlWidth), beside: ideal)
+            return (CGSize(width: max(width, r.end), height: r.height), r.frames)
         }
-        // Under the words: one control is offered the whole width (a field narrows, a segmented
-        // control turns into radio rows); several keep their own widths in a row.
-        let w = words.sizeThatFits(ProposedViewSize(width: width, height: nil))
-        var frames = [CGRect(x: 0, y: 0, width: max(width, w.width), height: w.height)]
-        var x: CGFloat = 0
+        // Under the words, lined up with the text: one control is offered the text's width (a field
+        // narrows, a segmented control turns into radio rows); several keep their own widths in a row.
+        let r = row(textWidth: max(0, width - indent), beside: [])
+        var frames = r.frames
+        var x = indent
         var height: CGFloat = 0
-        for (control, size) in zip(controls, ideal) {
-            let s = controls.count == 1 ? control.sizeThatFits(ProposedViewSize(width: width, height: nil)) : size
-            frames.append(CGRect(x: x, y: w.height + gap, width: s.width, height: s.height))
-            x += s.width + 8
+        for (i, (control, size)) in zip(controls, ideal).enumerated() {
+            let s = controls.count == 1 ? control.sizeThatFits(ProposedViewSize(width: width - indent, height: nil)) : size
+            if i > 0 { x += Self.controlSpacing }
+            frames.append(CGRect(x: x, y: r.height + gap, width: s.width, height: s.height))
+            x += s.width
             height = max(height, s.height)
         }
-        return (CGSize(width: max(width, w.width, x - 8), height: w.height + gap + height), frames)
-    }
-
-    private func framesBeside(wordsWidth: CGFloat, wordsHeight: CGFloat, _ ideal: [CGSize], height: CGFloat) -> [CGRect] {
-        var frames = [CGRect(x: 0, y: (height - wordsHeight) / 2, width: wordsWidth, height: wordsHeight)]
-        var x = wordsWidth + spacing
-        for size in ideal {
-            frames.append(CGRect(x: x, y: (height - size.height) / 2, width: size.width, height: size.height))
-            x += size.width + 8
-        }
-        return frames
+        return (CGSize(width: max(width, r.end, x), height: r.height + gap + height), frames)
     }
 }
 

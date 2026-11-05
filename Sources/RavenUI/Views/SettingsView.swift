@@ -430,17 +430,15 @@ struct LockSettingsSection: View {
             Lead(tr(.lockV2Body)).padding(.bottom, -22)
             CalmGroup {
                 // Lock now goes under the words where both do not fit (a small window cut it to "Loc…").
-                BesideOrUnder(spacing: 22, minWords: 170, gap: 12) {
-                    HStack(spacing: 14) {
-                        LockIcon(closed: lock?.locked == true)
-                            .foregroundColor(p.success)
-                            .frame(width: 42, height: 42)
-                            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(p.successFill.opacity(0.14)))
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(lock?.locked == true ? tr(.lockIsLocked) : tr(.lockIsOpen)).font(.system(size: 14, weight: .semibold))
-                            Text(Display.lockNote(lock)).font(.system(size: 12.5)).foregroundColor(p.textSecondary)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
+                BesideOrUnder(spacing: 14, words: 2, minWords: 120, controlGap: 36, gap: 12) {
+                    LockIcon(closed: lock?.locked == true)
+                        .foregroundColor(p.success)
+                        .frame(width: 42, height: 42)
+                        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(p.successFill.opacity(0.14)))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(lock?.locked == true ? tr(.lockIsLocked) : tr(.lockIsOpen)).font(.system(size: 14, weight: .semibold))
+                        Text(Display.lockNote(lock)).font(.system(size: 12.5)).foregroundColor(p.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                     Button(tr(.lockNowEllipsis)) { model.requestLock() }
                         .buttonStyle(RButtonStyle(.primary))
