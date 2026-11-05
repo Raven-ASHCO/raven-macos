@@ -236,18 +236,20 @@ public enum Display {
         return c.name + " · " + statusLine(c, now: now).text
     }
 
-    /// The listening chip of the Network panel.
+    /// The listening chip of the Network panel. No port or address: those are under Technical details
+    /// (`thisComputerDetails`), as the owner's privacy rule asks.
     public static func listening(_ node: NodeStatus?) -> (text: String, tone: AppModel.Tone, busy: Bool) {
         guard let node, node.running else { return (tr(.netProcessNone), .danger, false) }
         if !node.receive { return (tr(.netOff), .secondary, false) }
         if node.starting { return (tr(.netStarting), .secondary, true) }
-        if node.localOnly { return (tr(.netLocalOnly), .warning, false) }
-        return (tr(.netListening, ["port": node.port ?? "7420"]), .success, false)
+        if node.localOnly { return (tr(.macNetworkLocalOnly), .warning, false) }
+        return (tr(.macNetworkListening), .success, false)
     }
 
+    /// The background program line, without its process number (under Technical details).
     public static func process(_ node: NodeStatus?) -> String {
-        guard let node, node.running, let pid = node.pid else { return tr(.netProcessNone) }
-        return node.startedByApp ? tr(.netProcessApp, ["pid": String(pid)]) : tr(.netProcessEarlier, ["pid": String(pid)])
+        guard let node, node.running, node.pid != nil else { return tr(.netProcessNone) }
+        return node.startedByApp ? tr(.macNetworkProcessApp) : tr(.macNetworkProcessEarlier)
     }
 
     // MARK: Network screens

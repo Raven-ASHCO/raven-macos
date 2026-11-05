@@ -193,7 +193,7 @@ struct GeneralSection: View {
                     .onDisappear { saveName() }
                     .accessibilityLabel(tr(.settingsName))
                 }
-                CalmItem(tr(.settingsReceive), tr(.setupReceiveBody)) {
+                CalmItem(tr(.settingsReceive), tr(.macSettingsReceiveBody)) {
                     RSwitch(tr(.settingsReceive), isOn: settingBinding(model, \.receive, "receive") { .bool($0) })
                 }
             }

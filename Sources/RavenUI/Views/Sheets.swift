@@ -175,9 +175,8 @@ public struct NetworkContent: View {
             .padding(.vertical, 4)
             .overlay(Capsule().stroke(p.borderStrong, lineWidth: 0.5))
             Text(Display.process(node)).font(RFont.smallish)
-            if let addr = node?.address {
-                Text(tr(.netAddress, ["addr": addr])).font(RFont.smallish).selectable()
-            }
+            // The port, the addresses and the process number: one click away (owner rule).
+            TechnicalDetails(lines: Display.thisComputerDetails(status: model.network.status, node: node))
 
             SectionLabel(tr(.netWays)).padding(.top, 8)
             // The same states as the Network page (`network.status`, read from the running raven-node):
