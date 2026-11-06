@@ -292,10 +292,41 @@ struct FriendRow: View {
         }
         .accessibilityElement(children: .combine)
         // Right-click: rename, check words, routes (E1; the terminal app's friend page has them).
-        .contextMenu {
-            Button(tr(.contactRename)) { model.presentRename(contact.address) }
-            Button(tr(.homeBannerNotVerifiedAction)) { model.presentCheckWords(contact.address) }
-            Button(tr(.networkRoutesTitle, ["name": contact.name])) { model.presentRoutes(contact.address) }
+        // VoiceOver offers the same items as actions of the row (VO-Command-Space).
+        .contextMenu { actionButtons }
+        .accessibilityActions { actionButtons }
+    }
+
+    /// The row's actions, for the menu and for VoiceOver alike.
+    private var actionButtons: some View {
+        ForEach(FriendRowAction.allCases, id: \.self) { action in
+            Button(action.title(contact)) { model.perform(action, for: contact.address) }
+        }
+    }
+}
+
+/// What a friend row offers besides opening the chat, in the order of its right-click menu. The menu
+/// and the row's VoiceOver actions are both made from this list, so neither has an item the other lacks.
+public enum FriendRowAction: CaseIterable, Equatable, Sendable {
+    case rename, checkWords, routes
+
+    /// The item's text, from the string table: the menu item and the VoiceOver action say the same.
+    public func title(_ contact: Contact) -> String {
+        switch self {
+        case .rename: return tr(.contactRename)
+        case .checkWords: return tr(.homeBannerNotVerifiedAction)
+        case .routes: return tr(.networkRoutesTitle, ["name": contact.name])
+        }
+    }
+}
+
+extension AppModel {
+    /// A friend row's action: each opens its sheet for that friend; the open chat stays.
+    public func perform(_ action: FriendRowAction, for address: String) {
+        switch action {
+        case .rename: presentRename(address)
+        case .checkWords: presentCheckWords(address)
+        case .routes: presentRoutes(address)
         }
     }
 }
